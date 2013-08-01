@@ -1,13 +1,13 @@
-# lib-php-common-platform
+# oasys
 
-## Common DSP Components for the DreamFactory Services Platform&trade;
+## DreamFactory Open Authentication System
 
 ## Installation
 
 Add a line to your "require" section in your composer configuration:
 
 	"require":           {
-		"dreamfactory/lib-php-common-platform": "dev-master"
+		"dreamfactory/oasys": "*"
 	}
 
 Run a composer update:
