@@ -1,0 +1,38 @@
+{
+	"name":              "dreamfactory/oasys",
+	"version":           "1.0.0",
+	"description":       "DreamFactory Open Authentication System",
+	"keywords":          ["oasis", "dsp", "dsp-core", "dreamfactory", "openid", "facebook", "google", "twitter", "oauth"],
+	"homepage":          "http://dreamfactorysoftware.github.io",
+	"type":              "library",
+	"license":           "Apache-2.0",
+	"authors":           [
+		{
+			"name":  "Jerry Ablan",
+			"email": "jerryablan@dreamfactory.com",
+			"role":  "Lead Developer"
+		}
+	],
+	"support":           {
+		"email": "support@dreamfactory.com"
+	},
+	"repositories":      [
+		{
+			"type": "pear",
+			"url":  "http://pear.php.net"
+		}
+	],
+	"require":           {
+		"php":                                  ">=5.3.10",
+		"ext-curl":                             "*",
+		"kisma/kisma":                          ">=0.1.3",
+		"dreamfactory/lib-php-common-platform": "*"
+	},
+	"autoload":          {
+		"psr-0": {
+			"DreamFactory\\Platform\\Oasys": ""
+		}
+	},
+	"target-dir":        "DreamFactory/Platform/Oasys",
+	"minimum-stability": "dev"
+}
