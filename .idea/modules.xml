@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/authtastic.iml" filepath="$PROJECT_DIR$/.idea/authtastic.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/oasys.iml" filepath="$PROJECT_DIR$/.idea/oasys.iml" />
     </modules>
   </component>
 </project>
