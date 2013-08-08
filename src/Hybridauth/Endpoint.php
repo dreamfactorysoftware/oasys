@@ -171,14 +171,14 @@ final class Endpoint
 	// --------------------------------------------------------------------
 
 	/**
-	* redirect the user to hauth_return_to (the callback url)
+	* redirect the user to oasys_redirect_uri (the callback url)
 	*/
 	private function _returnToCallbackUrl( $providerId )
 	{
-		$callback_url = $this->storage->get( "{$providerId}.hauth_return_to" );
+		$callback_url = $this->storage->get( "{$providerId}.oasys_redirect_uri" );
 
-		$this->storage->delete( "{$providerId}.hauth_return_to"    );
-		$this->storage->delete( "{$providerId}.hauth_endpoint"     );
+		$this->storage->delete( "{$providerId}.oasys_redirect_uri"    );
+		$this->storage->delete( "{$providerId}.oasys_endpoint"     );
 		$this->storage->delete( "{$providerId}.options" );
 
 		Util::redirect( $callback_url );

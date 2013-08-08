@@ -50,7 +50,7 @@ abstract class BaseOasysProvider extends GateKeeper
 			$this->_parameters = $this->_consumer->getStorage()->get( $this->_providerId . '.options' );
 		}
 
-		$this->_endpoint = $this->_endpoint ? : $this->_consumer->getStorage()->get( $this->_providerId . '.hauth_endpoint' );
+		$this->_endpoint = $this->_endpoint ? : $this->_consumer->getStorage()->get( $this->_providerId . '.oasys_endpoint' );
 
 		$this->configure();
 	}
@@ -74,8 +74,8 @@ abstract class BaseOasysProvider extends GateKeeper
 
 		foreach ( $this->_consumer->getStorage()->config( 'providers' ) as $_providerId => $_options )
 		{
-			$this->_consumer->getStorage()->remove( "{$idpid}.hauth_return_to" );
-			$this->_consumer->getStorage()->remove( "{$idpid}.hauth_endpoint" );
+			$this->_consumer->getStorage()->remove( "{$idpid}.oasys_redirect_uri" );
+			$this->_consumer->getStorage()->remove( "{$idpid}.oasys_endpoint" );
 			$this->_consumer->getStorage()->remove( "{$idpid}.options" );
 		}
 
@@ -84,15 +84,15 @@ abstract class BaseOasysProvider extends GateKeeper
 		$base_url = $this->getHybridauthConfig( 'base_url' );
 
 		$defaults = array(
-			'hauth_return_to' => Util::getCurrentUrl(),
-			'hauth_endpoint'  => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "hauth.done={$this->providerId}",
-			'hauth_start_url' => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "hauth.start={$this->providerId}&hauth.time=" . time(),
+			'oasys_redirect_uri' => Util::getCurrentUrl(),
+			'oasys_endpoint'  => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.complete={$this->providerId}",
+			'hauth_start_url' => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.start={$this->providerId}&oasys.time=" . time(),
 		);
 
 		$parameters = array_merge( $defaults, (array)$parameters );
 
-		$this->_consumer->getStorage()->set( $this->providerId . ".hauth_return_to", $parameters["hauth_return_to"] );
-		$this->_consumer->getStorage()->set( $this->providerId . ".hauth_endpoint", $parameters["hauth_endpoint"] );
+		$this->_consumer->getStorage()->set( $this->providerId . ".oasys_redirect_uri", $parameters["oasys_redirect_uri"] );
+		$this->_consumer->getStorage()->set( $this->providerId . ".oasys_endpoint", $parameters["oasys_endpoint"] );
 		$this->_consumer->getStorage()->set( $this->providerId . ".options", $parameters );
 
 		// store config

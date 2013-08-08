@@ -17,66 +17,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Stores;
-
-use DreamFactory\Oasys\Exceptions\OasysException;
-use Kisma\Core\Exceptions;
-use Kisma\Core\Interfaces;
-use Kisma\Core\Utility\Inflector;
-use Kisma\Core\Utility\Option;
-use Kisma\Core\Utility;
+namespace DreamFactory\Oasys\Interfaces;
 
 /**
- * Session
- * Session store for auth data
+ * OasysStorageProvider
  */
-class Session extends BaseOasysStore
+interface OasysStorageProvider
 {
 	//*************************************************************************
-	//	Constants
+	//* Constants
 	//*************************************************************************
 
 	/**
 	 * @var string
 	 */
-	const KEY_PREFIX = 'oasys.session.';
+	const KEY_PREFIX = 'oasys.';
 
 	//*************************************************************************
-	//	Methods
+	//* Methods
 	//*************************************************************************
 
 	/**
-	 * @param array $contents
+	 * @param string|array $key
+	 * @param mixed        $defaultValue
+	 * @param bool         $burnAfterReading
 	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
+	 * @return mixed
 	 */
-	public function __construct( $contents = array() )
-	{
-		if ( PHP_SESSION_ACTIVE != session_status() )
-		{
-			throw new OasysException( 'No session active. Session storage not available.' );
-		}
-
-		parent::__construct(
-			array_merge(
-				json_decode( Option::get( $_SESSION, static::KEY_PREFIX . 'data', json_encode( array() ) ) ),
-				$contents
-			)
-		);
-	}
+	public function get( $key = null, $defaultValue = null, $burnAfterReading = false );
 
 	/**
-	 * Save off the data to the session
+	 * @param string|array $key
+	 * @param mixed        $value
+	 * @param bool         $overwrite
+	 *
+	 * @return void|mixed
 	 */
-	public function __destruct()
-	{
-		if ( PHP_SESSION_ACTIVE != session_status() )
-		{
-			throw new OasysException( 'No session active. Session storage not available.' );
-		}
+	public function set( $key, $value = null, $overwrite = true );
 
-		$_SESSION[static::KEY_PREFIX . 'data'] = json_encode( $this->contents() );
+	/**
+	 * @param string|array $key
+	 *
+	 * @return bool
+	 */
+	public function remove( $key );
 
-		parent::__destruct();
-	}
+	/**
+	 * @param string $pattern The preg pattern to match on the key(s) to remove
+	 *
+	 * @return mixed|void
+	 */
+	public function removeMany( $pattern );
 }

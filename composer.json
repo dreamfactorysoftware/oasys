@@ -1,6 +1,6 @@
 {
 	"name":              "dreamfactory/oasys",
-	"version":           "1.0.0",
+	"version":           "0.1.0",
 	"description":       "DreamFactory Oasys (Open Authentication SYStem)",
 	"keywords":          ["oasis", "dsp", "dsp-core", "dreamfactory", "openid", "facebook", "google", "twitter", "oauth"],
 	"homepage":          "http://dreamfactorysoftware.github.io",
@@ -16,23 +16,17 @@
 	"support":           {
 		"email": "support@dreamfactory.com"
 	},
-	"repositories":      [
-		{
-			"type": "pear",
-			"url":  "http://pear.php.net"
-		}
-	],
 	"require":           {
-		"php":                                  ">=5.3.10",
-		"ext-curl":                             "*",
-		"guzzle/guzzle":                        "*",
-		"dreamfactory/lib-php-common-platform": "*"
+		"php":           ">=5.3.10",
+		"ext-curl":      "*",
+		"kisma/kisma":   "*",
+		"guzzle/guzzle": "*"
 	},
 	"autoload":          {
 		"psr-0": {
 			"DreamFactory\\Platform\\Oasys": ""
 		}
 	},
-	"target-dir":        "DreamFactory/Platform/Oasys",
+	"target-dir":        "DreamFactory/Oasys",
 	"minimum-stability": "dev"
 }

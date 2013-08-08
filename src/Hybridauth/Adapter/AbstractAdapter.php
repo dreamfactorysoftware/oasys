@@ -49,7 +49,7 @@ abstract class AbstractAdapter
 
 		$this->setAdapterConfig( $config );
 
-		$this->setHybridauthEndpointUri( $this->storage->get( $providerId . '.hauth_endpoint' ) );
+		$this->setHybridauthEndpointUri( $this->storage->get( $providerId . '.oasys_endpoint' ) );
 
 		$this->initialize();
 	}
@@ -66,8 +66,8 @@ abstract class AbstractAdapter
 		}
 
 		foreach( $this->getHybridauthConfig( 'providers' ) as $idpid => $params ){
-			$this->storage->delete( "{$idpid}.hauth_return_to"    );
-			$this->storage->delete( "{$idpid}.hauth_endpoint"     );
+			$this->storage->delete( "{$idpid}.oasys_redirect_uri"    );
+			$this->storage->delete( "{$idpid}.oasys_endpoint"     );
 			$this->storage->delete( "{$idpid}.options" );
 		}
 
@@ -76,15 +76,15 @@ abstract class AbstractAdapter
 		$base_url = $this->getHybridauthConfig( 'base_url' );
 
 		$defaults = array(
-			'hauth_return_to' => Util::getCurrentUrl(),
-			'hauth_endpoint'  => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "hauth.done={$this->providerId}",
-			'hauth_start_url' => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "hauth.start={$this->providerId}&hauth.time=" . time(),
+			'oasys_redirect_uri' => Util::getCurrentUrl(),
+			'oasys_endpoint'  => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.complete={$this->providerId}",
+			'hauth_start_url' => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.start={$this->providerId}&oasys.time=" . time(),
 		);
 
 		$parameters = array_merge( $defaults, (array) $parameters );
 
-		$this->storage->set( $this->providerId . ".hauth_return_to"    , $parameters["hauth_return_to"] );
-		$this->storage->set( $this->providerId . ".hauth_endpoint"     , $parameters["hauth_endpoint"]  );
+		$this->storage->set( $this->providerId . ".oasys_redirect_uri"    , $parameters["oasys_redirect_uri"] );
+		$this->storage->set( $this->providerId . ".oasys_endpoint"     , $parameters["oasys_endpoint"]  );
 		$this->storage->set( $this->providerId . ".options" , $parameters );
 
 		// store config

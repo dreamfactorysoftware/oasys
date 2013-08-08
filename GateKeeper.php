@@ -1,8 +1,26 @@
 <?php
-namespace DreamFactory\Platform\Oasys;
+/**
+ * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
+ *
+ * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
+ * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+namespace DreamFactory\Oasys;
 
-use DreamFactory\Platform\Exceptions\OasysException;
-use DreamFactory\Platform\Oasys\Stores\Session;
+use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
+use DreamFactory\Oasys\OasysException;
 use Kisma\Core\Seed;
 
 /**
@@ -15,9 +33,17 @@ class GateKeeper extends Seed
 	//*************************************************************************
 
 	/**
-	 * @var Session
+	 * @var OasysStorageProvider
 	 */
 	protected $_store = null;
+	/**
+	 * @var KeyMaster
+	 */
+	protected $_client = null;
+	/**
+	 * @var array Oasys configuration options
+	 */
+	protected $_options = array();
 
 	//*************************************************************************
 	//* Methods
@@ -40,13 +66,12 @@ class GateKeeper extends Seed
 
 		if ( empty( $settings ) || !is_array( $settings ) )
 		{
-			throw new \InvalidArgumentException( '"$settings" must be either an array of settings or a path to an include-able file.' );
+			throw new \InvalidArgumentException( '"settings" must be either an array of settings or a path to an include-able file.' );
 		}
 
 		parent::__construct( $settings );
 
-		// setup storage manager
-		$this->_storage = $this->_store ? : new Session();
+		$this->_store = $this->_store ? : new Session();
 
 		//	Render any stored errors
 		if ( null !== ( $_error = $this->_store->get( 'error', null, true ) ) )
@@ -63,108 +88,121 @@ class GateKeeper extends Seed
 		}
 	}
 
+	/**
+	 * @param string $providerId
+	 * @param array  $parameters
+	 *
+	 * @return mixed
+	 */
 	public function authenticate( $providerId, $parameters = array() )
 	{
 		return $this->getClient( $providerId )->authenticate( $parameters );
 	}
 
 	/**
-	 * Return the client instance for a provider
-	 */
-	public function getClient( $providerId = null )
-	{
-		return Provider::createClient( $this, $providerId );
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
 	 * Return true if current user is connected with a given provider
 	 */
-	function isConnected( $providerId )
+	public function connected( $providerId )
 	{
-		return $this->getClient( $providerId )->isAuthorized();
+		return $this->getClient( $providerId )->authorized();
 	}
-
-	// --------------------------------------------------------------------
 
 	/**
 	 * Return a list of authenticated providers
 	 */
-	function getConnectedProviders()
+	public function connectedProviders()
 	{
-		$idps = array();
+		$_response = array();
 
-		foreach ( $this->options ['providers'] as $idpid => $params )
+		foreach ( $this->_options['providers'] as $_providerId => $_config )
 		{
-			if ( $this->isConnectedWith( $idpid ) )
+			if ( $this->connected( $_providerId ) )
 			{
-				$idps[] = $idpid;
+				$_response[] = $_providerId;
 			}
 		}
 
-		return $idps;
+		return $_response;
 	}
 
-	// --------------------------------------------------------------------
+	public function getProvider( $providerId )
+	{
+	}
 
 	/**
-	 * Return a list of enabled providers as well as a flag if you are connected.
+	 * Return all available providers and their status
 	 */
-	function getEnabledProviders()
+	public function getProviders()
 	{
-		$idps = array();
+		$_response = array();
 
-		foreach ( $this->options ['providers'] as $idpid => $params )
+		foreach ( $this->_options['providers'] as $_providerId => $_config )
 		{
-			if ( $params['enabled'] )
-			{
-				$idps[$idpid] = array( 'connected' => false );
-
-				if ( $this->isConnectedWith( $idpid ) )
-				{
-					$idps[$idpid]['connected'] = true;
-				}
-			}
+			$_response[$_providerId] = array(
+				'connected' => $this->connected( $_providerId )
+			);
 		}
 
-		return $idps;
+		return $_response;
 	}
 
-	// --------------------------------------------------------------------
+	/**
+	 * Deauthorize a single provider
+	 */
+	public function unlinkProvider( $providerId )
+	{
+		return $this->getProvider( $providerId )->logout();
+	}
 
 	/**
-	 * A generic function to logout all connected provider at once
+	 * Deauthorize all linked providers
 	 */
-	function logoutAllProviders()
+	public function unlinkProviders()
 	{
-		$idps = $this->getConnectedProviders();
-
-		foreach ( $idps as $idp )
+		foreach ( $this->connectedProviders() as $_providerId )
 		{
-			$adapter = $this->getClient( $idp );
-
-			$adapter->logout();
+			$this->unlinkProvider( $_providerId );
 		}
 	}
 
 	/**
-	 * @param \DreamFactory\Platform\Oasys\Stores\Session $storage
+	 * @param \DreamFactory\Oasys\KeyMaster $client
 	 *
 	 * @return GateKeeper
 	 */
-	public function setStorage( $storage )
+	public function setClient( $client )
 	{
-		$this->_storage = $storage;
+		$this->_client = $client;
 
 		return $this;
 	}
 
 	/**
-	 * @return \DreamFactory\Platform\Oasys\Stores\Session
+	 * @return \DreamFactory\Oasys\KeyMaster
 	 */
-	public function getStorage()
+	public function getClient()
 	{
-		return $this->_storage;
+		return $this->_client;
 	}
+
+	/**
+	 * @param \DreamFactory\Oasys\Interfaces\OasysStorageProvider $store
+	 *
+	 * @return GateKeeper
+	 */
+	public function setStore( $store )
+	{
+		$this->_store = $store;
+
+		return $this;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\Interfaces\OasysStorageProvider
+	 */
+	public function getStore()
+	{
+		return $this->_store;
+	}
+
 }
