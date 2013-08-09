@@ -46,6 +46,10 @@ class GateKeeper extends Seed
 	 * @var array Oasys configuration options
 	 */
 	protected $_options = array();
+	/**
+	 * @var array
+	 */
+	protected $_providerCache = array();
 
 	//*************************************************************************
 	//* Methods
@@ -125,10 +129,6 @@ class GateKeeper extends Seed
 		}
 
 		return $_response;
-	}
-
-	public function getProvider( $providerId )
-	{
 	}
 
 	/**
@@ -255,5 +255,19 @@ class GateKeeper extends Seed
 	public function set( $key, $value = null, $overwrite = true )
 	{
 		return Option::set( $this->_options, $key, $value, $overwrite );
+	}
+
+	/**
+	 * @param string $providerId
+	 *
+	 * @return KeyMaster
+	 */
+	public function getProvider( $providerId = null )
+	{
+		if ( null === $providerId && 1 == sizeof( $this->_providerCache ) )
+		{
+			return current( $this->_providerCache );
+		}
+		//	Generate a new provider object
 	}
 }

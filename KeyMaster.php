@@ -21,6 +21,7 @@ namespace DreamFactory\Oasys;
 
 use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
 use Kisma\Core\Seed;
+use Kisma\Core\SeedBag;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Option;
 
@@ -34,7 +35,7 @@ abstract class KeyMaster extends Seed
 	//*************************************************************************
 
 	/**
-	 * @var mixed
+	 * @var SeedBag
 	 */
 	protected $_request;
 	/**
@@ -62,6 +63,7 @@ abstract class KeyMaster extends Seed
 	 */
 	protected $_endpoint;
 
+
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
@@ -69,16 +71,30 @@ abstract class KeyMaster extends Seed
 	/**
 	 * @param GateKeeper $gateKeeper
 	 * @param array      $settings
+	 *
+	 * @throws OasysException
 	 */
 	public function __construct( GateKeeper $gateKeeper, $settings = array() )
 	{
 		$this->_gatekeeper = $gateKeeper;
 		$this->_store = $gateKeeper->getStore();
 
-		if ( null === $this->_store )
+		if ( empty( $this->_store ) )
 		{
 			throw new OasysException( 'No storage mechanism configured.' );
 		}
+
+		if ( empty( $this->_providerId ) )
+		{
+			throw new OasysException( 'No provider specified.' );
+		}
+
+		$_provider = $this->_gatekeeper->getProvider( $this->_providerId );
+
+
+		$_provider->
+
+		$this->set( $settings );
 
 		parent::__construct( $settings );
 
@@ -91,6 +107,20 @@ abstract class KeyMaster extends Seed
 		$this->_endpoint = $this->_endpoint ? : $this->get( 'oasys_endpoint' );
 
 		$this->initialize();
+	}
+
+	/**
+	 * Wrapper around GateKeeper's options
+	 *
+	 * @param string $key
+	 * @param mixed  $defaultValue
+	 * @param bool   $burnAfterReading
+	 *
+	 * @return mixed
+	 */
+	public function getConfig( $key, $defaultValue = null, $burnAfterReading = false )
+	{
+		return $this->_gatekeeper->get( $key, $defaultValue, $burnAfterReading );
 	}
 
 	/**
@@ -168,7 +198,7 @@ abstract class KeyMaster extends Seed
 
 		$this->disconnect();
 
-		$_baseUrl = $this->_gatekeeper->get( 'base_url' );
+		$_baseUrl = $this->getConfig( 'base_url' );
 		$_baseUrl .= ( strpos( $_baseUrl, '?' ) ? '&' : '?' );
 
 		$_options = array(
@@ -184,7 +214,7 @@ abstract class KeyMaster extends Seed
 		$this->set( 'options', $_parameters );
 
 		//	Store the configuration
-		$this->set( 'config', $this->_providerOptions );
+		$this->getConfig( ' 'config', $this->_providerOptions );
 
 		// redirect user to start url
 		header( 'Location: ' . $_parameters['oasys_startpoint'] );
@@ -210,28 +240,20 @@ abstract class KeyMaster extends Seed
 	}
 
 	/**
-	 * @param        $result
-	 * @param string $parser
+	 * @param string $result
 	 *
-	 * @return mixed|\StdClass
+	 * @return \Kisma\Core\SeedBag
 	 */
-	protected function parseRequestResult( $result, $parser = 'json_decode' )
+	protected function parseRequestResult( $result )
 	{
-		if ( json_decode( $result ) )
+		if ( is_string( $result ) && false !== json_decode( $result ) )
 		{
 			return json_decode( $result );
 		}
 
-		parse_str( $result, $ouput );
+		parse_str( $result, $_query );
 
-		$result = new \StdClass();
-
-		foreach ( $ouput as $k => $v )
-		{
-			$result->$k = $v;
-		}
-
-		return $result;
+		return $this->_request = new SeedBag( $_query );
 	}
 
 	/**
