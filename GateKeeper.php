@@ -21,7 +21,9 @@ namespace DreamFactory\Oasys;
 
 use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
 use DreamFactory\Oasys\OasysException;
+use DreamFactory\Oasys\Stores\Session;
 use Kisma\Core\Seed;
+use Kisma\Core\Utility\Option;
 
 /**
  * GateKeeper
@@ -205,4 +207,53 @@ class GateKeeper extends Seed
 		return $this->_store;
 	}
 
+	/**
+	 * @param array $options
+	 *
+	 * @return GateKeeper
+	 */
+	public function setOptions( $options )
+	{
+		$this->_options = $options;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getOptions()
+	{
+		return $this->_options;
+	}
+
+	/**
+	 * Convenience shortcut to the GateKeeper's goodie bag
+	 *
+	 * @param string $key
+	 * @param mixed  $defaultValue
+	 * @param bool   $burnAfterReading
+	 *
+	 * @throws OasysException
+	 * @return mixed
+	 */
+	public function get( $key, $defaultValue = null, $burnAfterReading = false )
+	{
+		return Option::get( $this->_options, $key, $defaultValue, $burnAfterReading );
+	}
+
+	/**
+	 * Convenience shortcut to the GateKeeper's goodie bag
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 * @param bool   $overwrite
+	 *
+	 * @throws OasysException
+	 * @return mixed|void
+	 */
+	public function set( $key, $value = null, $overwrite = true )
+	{
+		return Option::set( $this->_options, $key, $value, $overwrite );
+	}
 }
