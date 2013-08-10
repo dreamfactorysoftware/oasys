@@ -63,7 +63,6 @@ abstract class KeyMaster extends Seed
 	 */
 	protected $_endpoint;
 
-
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
@@ -90,10 +89,6 @@ abstract class KeyMaster extends Seed
 		}
 
 		$_provider = $this->_gatekeeper->getProvider( $this->_providerId );
-
-
-		$_provider->
-
 		$this->set( $settings );
 
 		parent::__construct( $settings );
@@ -105,8 +100,7 @@ abstract class KeyMaster extends Seed
 		}
 
 		$this->_endpoint = $this->_endpoint ? : $this->get( 'oasys_endpoint' );
-
-		$this->initialize();
+		//$this->initialize();
 	}
 
 	/**
@@ -214,7 +208,7 @@ abstract class KeyMaster extends Seed
 		$this->set( 'options', $_parameters );
 
 		//	Store the configuration
-		$this->getConfig( ' 'config', $this->_providerOptions );
+		$this->getConfig( 'config', $this->_providerOptions );
 
 		// redirect user to start url
 		header( 'Location: ' . $_parameters['oasys_startpoint'] );
@@ -286,9 +280,9 @@ abstract class KeyMaster extends Seed
 	 */
 	function process( $request = null )
 	{
-		$this->request = $request;
+		$this->_request = $request;
 
-		if ( is_null( $this->request ) )
+		if ( is_null( $this->_request ) )
 		{
 			if ( strrpos( $_SERVER["QUERY_STRING"], '?' ) )
 			{
@@ -297,15 +291,15 @@ abstract class KeyMaster extends Seed
 				parse_str( $_SERVER["QUERY_STRING"], $_REQUEST );
 			}
 
-			$this->request = $_REQUEST;
+			$this->_request = $_REQUEST;
 		}
 
-		if ( isset( $this->request["oasys_start"] ) )
+		if ( isset( $this->_request["oasys_start"] ) )
 		{
 			$this->processAdapterLoginBegin();
 		}
 
-		elseif ( isset( $this->request["oasys_done"] ) )
+		elseif ( isset( $this->_request["oasys_done"] ) )
 		{
 			$this->processAdapterLoginFinish();
 		}
@@ -317,7 +311,7 @@ abstract class KeyMaster extends Seed
 	{
 		$this->_authInit();
 
-		$provider_id = trim( strip_tags( $this->request["oasys_start"] ) );
+		$provider_id = trim( strip_tags( $this->_request["oasys_start"] ) );
 
 		$adapterFactory = new AdapterFactory( $this->config( "CONFIG" ), $this->_store );
 
@@ -351,7 +345,7 @@ abstract class KeyMaster extends Seed
 	{
 		$this->_authInit();
 
-		$provider_id = trim( strip_tags( $this->request["oasys_done"] ) );
+		$provider_id = trim( strip_tags( $this->_request["oasys_done"] ) );
 
 		$adapterFactory = new AdapterFactory( $this->get( 'config' ), $this->_store );
 
