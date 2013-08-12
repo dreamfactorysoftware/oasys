@@ -23,7 +23,7 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->_gk = new GateKeeper( dirname( __DIR__ ) . '/config/oasys.config.php' );
+		$this->_gk = new GateKeeper( require_once( __DIR__ . '/config/oasys.config.php' ) );
 
 		parent::setUp();
 	}

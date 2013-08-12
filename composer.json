@@ -28,7 +28,10 @@
 	},
 	"autoload":          {
 		"psr-0": {
-			"DreamFactory\\Platform\\Oasys": ""
+			"DreamFactory\\Platform\\Oasys": "",
+			"files":                         [
+				"GateKeeper.php"
+			]
 		}
 	},
 	"target-dir":        "DreamFactory/Oasys",

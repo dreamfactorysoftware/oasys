@@ -28,6 +28,7 @@
 		</whitelist>
 		<exclude>
 			<directory>./tests/metrics</directory>
+			<directory>./tests/config</directory>
 		</exclude>
 	</filter>
 	<logging>
