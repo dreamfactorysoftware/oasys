@@ -1,19 +1,22 @@
 <?php
 namespace DreamFactory\Platform\Oasys\Providers;
 
-use DreamFactory\Platform\Exceptions\OasysException;
-use DreamFactory\Platform\Oasys\Exception;
-use DreamFactory\Platform\Oasys\GateKeeper;
-use DreamFactory\Platform\Oasys\Option;
-use DreamFactory\Platform\Oasys\Stores\Session;
+use DreamFactory\Oasys\GateKeeper;
+use DreamFactory\Oasys\Interfaces\OasysProviderClient;
+use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
+use Kisma\Core\SeedBag;
 
 /**
  * BaseOasysProvider
  *
  * @package DreamFactory\Platform\Oasys\Providers
  */
-abstract class BaseOasysProvider extends GateKeeper
+abstract class BaseOasysProvider extends SeedBag
 {
+	//*************************************************************************
+	//* Members
+	//*************************************************************************
+
 	/**
 	 * @var string
 	 */
@@ -21,38 +24,60 @@ abstract class BaseOasysProvider extends GateKeeper
 	/**
 	 * @var GateKeeper
 	 */
-	protected $_consumer;
+	protected $_gatekeeper;
+	/**
+	 * @var OasysStorageProvider
+	 */
+	protected $_store;
+	/**
+	 * @var OasysProviderClient
+	 */
+	protected $_client;
 	/**
 	 * @var array
 	 */
-	protected $_parameters;
-	/**
-	 * @var mixed
-	 */
-	protected $_endpoint;
+	protected $_settings;
 
 	//*************************************************************************
 	//* Methods
 	//*************************************************************************
 
 	/**
-	 * @param GateKeeper $consumer
+	 * @param GateKeeper $gatekeeper
 	 * @param array      $settings
 	 */
-	public function __construct( $consumer, $settings = array() )
+	public function __construct( $gatekeeper, $settings = array() )
 	{
-		$this->_consumer = $consumer;
+		$this->_setGateKeeper( $gatekeeper );
+
+		$this->_settings = $this->_store->get( $this->_providerId . '.options' );
+
 		parent::__construct( $settings );
 
-		# init the IDp adapter parameters, get them from the cache if possible
-		if ( empty( $this->_parameters ) )
-		{
-			$this->_parameters = $this->_consumer->getStorage()->get( $this->_providerId . '.options' );
-		}
-
-		$this->_endpoint = $this->_endpoint ? : $this->_consumer->getStorage()->get( $this->_providerId . '.oasys_endpoint' );
+		$this->_endpoint = $this->_endpoint ? : $this->_gatekeeper->getStorage()->get( $this->_providerId . '.oasys_endpoint' );
 
 		$this->configure();
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\GateKeeper $gatekeeper
+	 *
+	 * @return BaseOasysProvider
+	 */
+	protected function _setGatekeeper( $gatekeeper )
+	{
+		$this->_gatekeeper = $gatekeeper;
+		$this->_store = $gatekeeper->getStore();
+
+		return $this;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\GateKeeper
+	 */
+	public function getGatekeeper()
+	{
+		return $this->_gatekeeper;
 	}
 
 	/**
@@ -72,31 +97,31 @@ abstract class BaseOasysProvider extends GateKeeper
 			return $this;
 		}
 
-		foreach ( $this->_consumer->getStorage()->config( 'providers' ) as $_providerId => $_options )
+		foreach ( $this->_gatekeeper->getStorage()->config( 'providers' ) as $_providerId => $_options )
 		{
-			$this->_consumer->getStorage()->remove( "{$idpid}.oasys_redirect_uri" );
-			$this->_consumer->getStorage()->remove( "{$idpid}.oasys_endpoint" );
-			$this->_consumer->getStorage()->remove( "{$idpid}.options" );
+			$this->_gatekeeper->getStorage()->remove( "{$idpid}.oasys_redirect_uri" );
+			$this->_gatekeeper->getStorage()->remove( "{$idpid}.oasys_endpoint" );
+			$this->_gatekeeper->getStorage()->remove( "{$idpid}.options" );
 		}
 
-		$this->_consumer->getStorage()->removeMany( "{$this->providerId}." );
+		$this->_gatekeeper->getStorage()->removeMany( "{$this->providerId}." );
 
 		$base_url = $this->getHybridauthConfig( 'base_url' );
 
 		$defaults = array(
 			'oasys_redirect_uri' => Util::getCurrentUrl(),
-			'oasys_endpoint'  => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.complete={$this->providerId}",
-			'hauth_start_url' => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.start={$this->providerId}&oasys.time=" . time(),
+			'oasys_endpoint'     => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.complete={$this->providerId}",
+			'hauth_start_url'    => $base_url . ( strpos( $base_url, '?' ) ? '&' : '?' ) . "oasys.start={$this->providerId}&oasys.time=" . time(),
 		);
 
 		$parameters = array_merge( $defaults, (array)$parameters );
 
-		$this->_consumer->getStorage()->set( $this->providerId . ".oasys_redirect_uri", $parameters["oasys_redirect_uri"] );
-		$this->_consumer->getStorage()->set( $this->providerId . ".oasys_endpoint", $parameters["oasys_endpoint"] );
-		$this->_consumer->getStorage()->set( $this->providerId . ".options", $parameters );
+		$this->_gatekeeper->getStorage()->set( $this->providerId . ".oasys_redirect_uri", $parameters["oasys_redirect_uri"] );
+		$this->_gatekeeper->getStorage()->set( $this->providerId . ".oasys_endpoint", $parameters["oasys_endpoint"] );
+		$this->_gatekeeper->getStorage()->set( $this->providerId . ".options", $parameters );
 
 		// store config
-		$this->_consumer->getStorage()->config( "CONFIG", $this->getHybridauthConfig() );
+		$this->_gatekeeper->getStorage()->config( "CONFIG", $this->getHybridauthConfig() );
 
 		// redirect user to start url
 		Util::redirect( $parameters["hauth_start_url"] );
@@ -119,7 +144,7 @@ abstract class BaseOasysProvider extends GateKeeper
 	 */
 	function disconnect()
 	{
-		$this->_consumer->getStorage()->removeMany( "{$this->providerId}." );
+		$this->_gatekeeper->getStorage()->removeMany( "{$this->providerId}." );
 	}
 
 	// ====================================================================
@@ -147,7 +172,7 @@ abstract class BaseOasysProvider extends GateKeeper
 	 */
 	public final function getTokens()
 	{
-		return $this->_consumer->getStorage()->get( $this->providerId . '.tokens' ) ? $this->_consumer->getStorage()->get( $this->providerId . '.tokens' ) : $this->tokens;
+		return $this->_gatekeeper->getStorage()->get( $this->providerId . '.tokens' ) ? $this->_gatekeeper->getStorage()->get( $this->providerId . '.tokens' ) : $this->tokens;
 	}
 
 	// --------------------------------------------------------------------
@@ -159,7 +184,7 @@ abstract class BaseOasysProvider extends GateKeeper
 	{
 		$this->tokens = $tokens;
 
-		$this->_consumer->getStorage()->set( $this->providerId . '.tokens', $this->tokens );
+		$this->_gatekeeper->getStorage()->set( $this->providerId . '.tokens', $this->tokens );
 	}
 
 	// ====================================================================

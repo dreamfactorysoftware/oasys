@@ -19,25 +19,25 @@
  */
 namespace DreamFactory\Oasys;
 
+use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\OasysProvider;
+use DreamFactory\Oasys\Interfaces\OasysProviderClient;
 use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
 use Kisma\Core\Seed;
 use Kisma\Core\SeedBag;
 use Kisma\Core\Utility\Curl;
+use Kisma\Core\Utility\FilterInput;
 use Kisma\Core\Utility\Option;
 
 /**
  * KeyMaster
  */
-abstract class KeyMaster extends Seed
+abstract class KeyMaster extends Seed implements OasysProvider
 {
 	//*************************************************************************
 	//* Members
 	//*************************************************************************
 
-	/**
-	 * @var SeedBag
-	 */
-	protected $_request;
 	/**
 	 * @var GateKeeper
 	 */
@@ -51,17 +51,21 @@ abstract class KeyMaster extends Seed
 	 */
 	protected $_providerId;
 	/**
-	 * @var array
+	 * @var OasysProviderClient Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK)
 	 */
-	protected $_providerOptions;
+	protected $_client;
 	/**
 	 * @var array
 	 */
-	protected $_parameters;
+	protected $_settings;
 	/**
-	 * @var string
+	 * @var bool If true, the user will be redirected if necessary. Otherwise the URL of the expected redirect is returned
 	 */
-	protected $_endpoint;
+	protected $_interactive = false;
+	/**
+	 * @var mixed
+	 */
+	protected $_request;
 
 	//*************************************************************************
 	//	Methods
@@ -71,7 +75,8 @@ abstract class KeyMaster extends Seed
 	 * @param GateKeeper $gateKeeper
 	 * @param array      $settings
 	 *
-	 * @throws OasysException
+	 * @throws \InvalidArgumentException
+	 * @return \DreamFactory\Oasys\KeyMaster
 	 */
 	public function __construct( GateKeeper $gateKeeper, $settings = array() )
 	{
@@ -80,27 +85,330 @@ abstract class KeyMaster extends Seed
 
 		if ( empty( $this->_store ) )
 		{
-			throw new OasysException( 'No storage mechanism configured.' );
+			throw new \InvalidArgumentException( 'No storage mechanism configured.' );
 		}
 
 		if ( empty( $this->_providerId ) )
 		{
-			throw new OasysException( 'No provider specified.' );
+			throw new \InvalidArgumentException( 'No provider specified.' );
 		}
-
-		$_provider = $this->_gatekeeper->getProvider( $this->_providerId );
-		$this->set( $settings );
 
 		parent::__construct( $settings );
+	}
 
-		//	Get default settings...
-		if ( empty( $this->_parameters ) )
+	/**
+	 * Process the current request
+	 *
+	 * $request - The current request parameters. Leave as NULL to default to use $_REQUEST.
+	 */
+
+	/**
+	 * @param array $payload If empty, request query string is used
+	 */
+	public function process( $payload = null )
+	{
+		$this->_parseResult( $payload );
+
+		if ( empty( $this->_request ) )
 		{
-			$this->_parameters = $this->get( 'options' );
+			if ( null !== ( $_query = Option::server( 'QUERY_STRING' ) ) && false !== strrpos( $_query, '?' ) )
+			{
+				$this->_parseResult( str_replace( '?', '&', $_query ) );
+			}
 		}
 
-		$this->_endpoint = $this->_endpoint ? : $this->get( 'oasys_endpoint' );
-		//$this->initialize();
+		if ( false === ( $_authorized = Option::getBool( $this->_request, 'oasys.authorized' ) ) )
+		{
+			if ( !$this->getConfig( 'config' ) )
+			{
+				header( 'HTTP/1.1 404 Not Found' );
+				die( 'You didn\'t say the magic word.' );
+			}
+
+			$this->_startAuthorization();
+		}
+
+		$this->_completeAuthorization();
+	}
+
+	/**
+	 * @return bool
+	 */
+	abstract public function authorized();
+
+	/**
+	 * @param array $options
+	 *
+	 * @throws Exceptions\RedirectRequiredException
+	 * @return $this|void
+	 */
+	public function authenticate( $options = array() )
+	{
+		if ( $this->authorized() )
+		{
+			return $this;
+		}
+
+		foreach ( $this->_gatekeeper->getProviders() as $_providerId => $_options )
+		{
+			$this->_resetAuthorization( $_providerId );
+		}
+
+		$this->deauthorize();
+
+		$_baseUrl = $this->getConfig( 'base_url' );
+		$_baseUrl .= ( false !== strpos( $_baseUrl, '?' ) ? '&' : '?' );
+		$_ticket = sha1( $this->getId() . '.' . time() );
+		$_startpoint = $_baseUrl . 'oasys.provider=' . $this->_providerId . '&oasys.ticket=' . $_ticket;
+
+		$this->set( 'oasys.ticket', $_ticket );
+
+		$_options = array_merge(
+			array(
+				 'oasys.redirect_uri' => Curl::currentUrl(),
+				 'oasys.authorized'   => false,
+				 'oasys.startpoint'   => $_startpoint,
+				 'oasys.endpoint'     => $_baseUrl . 'oasys.endpoint=' . $this->_providerId,
+				 'settings'           => $this->_settings,
+			),
+			Option::clean( $options )
+		);
+
+		//	Save options
+		$this->set( $_options );
+
+		//	Do it
+		$this->_redirect( $_startpoint );
+	}
+
+	/**
+	 * @return mixed
+	 */
+	abstract protected function _startAuthorization();
+
+	/**
+	 * @return mixed
+	 */
+	abstract protected function _completeAuthorization();
+
+	/**
+	 * Clear out any settings for this provider
+	 */
+	public function deauthorize()
+	{
+		$this->removeMany( '/oasys\\.' . $this->_providerId . '\\./' );
+	}
+
+	/**
+	 * @param string $providerId
+	 *
+	 * @return $this
+	 */
+	protected function _resetAuthorization( $providerId = null )
+	{
+		$providerId = $providerId ? : $this->_providerId;
+		$_settings = $this->_store->get( $providerId . '.' . 'settings', array() );
+
+		Option::remove( $_settings, $providerId . '.oasys.redirect_uri' );
+		Option::remove( $_settings, $providerId . '.oasys.endpoint' );
+		Option::remove( $_settings, $providerId . '.options' );
+
+		$this->set( 'settings', $_settings );
+
+		return $this;
+	}
+
+	/**
+	 * @param string $providerId
+	 */
+	protected function _resetAndRedirect( $providerId = null )
+	{
+		$providerId = $providerId ? : $this->_providerId;
+		$_url = $this->_store->get( $providerId . '.oasys.redirect_uri' );
+		$this->_resetAuthorization( $providerId );
+
+		$this->_redirect( $_url );
+	}
+
+	/**
+	 * Internally used redirect method.
+	 *
+	 * @param string $uri
+	 *
+	 * @throws Exceptions\RedirectRequiredException
+	 */
+	protected function _redirect( $uri )
+	{
+		//	Throw redirect exception for non-interactive
+		if ( false === $this->_interactive )
+		{
+			throw new RedirectRequiredException( $uri );
+		}
+
+		//	Redirect!
+		header( 'Location: ' . $uri );
+
+		//	And... we're spent
+		die();
+	}
+
+	/**
+	 * @param string $result
+	 *
+	 * @return \Kisma\Core\SeedBag
+	 */
+	protected function _parseResult( $result )
+	{
+		if ( is_string( $result ) && false !== json_decode( $result ) )
+		{
+			$_query = json_decode( $result );
+		}
+		else
+		{
+			parse_str( $result, $_query );
+		}
+
+		return $this->_request = new SeedBag( $_query );
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\Interfaces\OasysProviderClient $client
+	 *
+	 * @return KeyMaster
+	 */
+	public function setClient( $client )
+	{
+		$this->_client = $client;
+
+		return $this;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\Interfaces\OasysProviderClient
+	 */
+	public function getClient()
+	{
+		return $this->_client;
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\GateKeeper $gatekeeper
+	 *
+	 * @return KeyMaster
+	 */
+	public function setGatekeeper( $gatekeeper )
+	{
+		$this->_gatekeeper = $gatekeeper;
+
+		return $this;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\GateKeeper
+	 */
+	public function getGatekeeper()
+	{
+		return $this->_gatekeeper;
+	}
+
+	/**
+	 * @param string $providerId
+	 *
+	 * @return KeyMaster
+	 */
+	public function setProviderId( $providerId )
+	{
+		$this->_providerId = $providerId;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getProviderId()
+	{
+		return $this->_providerId;
+	}
+
+	/**
+	 * @param mixed $request
+	 *
+	 * @return KeyMaster
+	 */
+	public function setRequest( $request )
+	{
+		$this->_request = $request;
+
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getRequest()
+	{
+		return $this->_request;
+	}
+
+	/**
+	 * @param array $settings
+	 *
+	 * @return KeyMaster
+	 */
+	public function setSettings( $settings )
+	{
+		$this->_settings = $settings;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getSettings()
+	{
+		return $this->_settings;
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\Interfaces\OasysStorageProvider $store
+	 *
+	 * @return KeyMaster
+	 */
+	public function setStore( $store )
+	{
+		$this->_store = $store;
+
+		return $this;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\Interfaces\OasysStorageProvider
+	 */
+	public function getStore()
+	{
+		return $this->_store;
+	}
+
+	/**
+	 * @param boolean $interactive
+	 *
+	 * @return KeyMaster
+	 */
+	public function setInteractive( $interactive )
+	{
+		$this->_interactive = $interactive;
+
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getInteractive()
+	{
+		return $this->_interactive;
 	}
 
 	/**
@@ -171,269 +479,5 @@ abstract class KeyMaster extends Seed
 	public function removeMany( $pattern )
 	{
 		return $this->_store->removeMany( $pattern );
-	}
-
-	/**
-	 * @param array $parameters
-	 *
-	 * @return $this|void
-	 */
-	public function authenticate( $parameters = array() )
-	{
-		if ( $this->authorized() )
-		{
-			return $this;
-		}
-
-		foreach ( $this->_gatekeeper->getProviders() as $_providerId => $_options )
-		{
-			$this->_clearProvider( $_providerId );
-		}
-
-		$this->disconnect();
-
-		$_baseUrl = $this->getConfig( 'base_url' );
-		$_baseUrl .= ( strpos( $_baseUrl, '?' ) ? '&' : '?' );
-
-		$_options = array(
-			'oasys_redirect_uri' => Curl::currentUrl(),
-			'oasys_startpoint'   => $_baseUrl . 'oasys.start=' . $this->_providerId . '&oasys.timestamp=' . time(),
-			'oasys_endpoint'     => $_baseUrl . 'oasys.complete=' . $this->_providerId,
-		);
-
-		$_parameters = array_merge( $_options, Option::clean( $parameters ) );
-
-		$this->set( 'oasys_redirect_uri', $_parameters['oasys_redirect_uri'] );
-		$this->set( 'oasys_endpoint', $_parameters['oasys_endpoint'] );
-		$this->set( 'options', $_parameters );
-
-		//	Store the configuration
-		$this->getConfig( 'config', $this->_providerOptions );
-
-		// redirect user to start url
-		header( 'Location: ' . $_parameters['oasys_startpoint'] );
-
-		//	And... we're spent
-		die();
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function authorized()
-	{
-		return false;
-	}
-
-	/**
-	 * Clear out this connection
-	 */
-	public function disconnect()
-	{
-		$this->removeMany( '/^' . $this->_providerId . '\\./' );
-	}
-
-	/**
-	 * @param string $result
-	 *
-	 * @return \Kisma\Core\SeedBag
-	 */
-	protected function parseRequestResult( $result )
-	{
-		if ( is_string( $result ) && false !== json_decode( $result ) )
-		{
-			return json_decode( $result );
-		}
-
-		parse_str( $result, $_query );
-
-		return $this->_request = new SeedBag( $_query );
-	}
-
-	/**
-	 * @return string
-	 */
-	function debug()
-	{
-		$title = 'Hybridauth Adapter Debug';
-
-		$html = sprintf( ' < h1>%s </h1 > ', $title );
-		$html .= sprintf( '<pre >%s </pre > ', print_r( $this, 1 ) );
-		$html .= '<h2 > Session</h2 > ';
-		$html .= sprintf( '<pre >%s </pre > ', print_r( $_SESSION, 1 ) );
-		$html .= '<h2 > Backtrace</h2 > ';
-		$html .= sprintf( '<pre >%s </pre > ', print_r( debug_backtrace(), 1 ) );
-
-		return sprintf(
-			"<html><head><title>%s</title><style>body{margin:0;padding:30px;font:12px/1.5 Helvetica,Arial,Verdana,sans-serif;}h1{margin:0;font-size:38px;font-weight:normal;line-height:48px;}strong{display:inline-block;width:65px;}</style></head><body>%s</body></html>",
-			$title,
-			$html
-		);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Process the current request
-	 *
-	 * $request - The current request parameters. Leave as NULL to default to use $_REQUEST.
-	 */
-	function process( $request = null )
-	{
-		$this->_request = $request;
-
-		if ( is_null( $this->_request ) )
-		{
-			if ( strrpos( $_SERVER["QUERY_STRING"], '?' ) )
-			{
-				$_SERVER["QUERY_STRING"] = str_replace( "?", "&", $_SERVER["QUERY_STRING"] );
-
-				parse_str( $_SERVER["QUERY_STRING"], $_REQUEST );
-			}
-
-			$this->_request = $_REQUEST;
-		}
-
-		if ( isset( $this->_request["oasys_start"] ) )
-		{
-			$this->processAdapterLoginBegin();
-		}
-
-		elseif ( isset( $this->_request["oasys_done"] ) )
-		{
-			$this->processAdapterLoginFinish();
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	function processAdapterLoginBegin()
-	{
-		$this->_authInit();
-
-		$provider_id = trim( strip_tags( $this->_request["oasys_start"] ) );
-
-		$adapterFactory = new AdapterFactory( $this->config( "CONFIG" ), $this->_store );
-
-		$adapter = $adapterFactory->setup( $provider_id );
-
-		if ( !$adapter )
-		{
-			header( "HTTP/1.0 404 Not Found" );
-
-			die( "Invalid parameter! Please return to the login page and try again." );
-		}
-
-		try
-		{
-			$adapter->loginBegin();
-		}
-		catch ( Exception $e )
-		{
-			$this->set( "error.status", 1 );
-			$this->set( "error.message", $e->getMessage() );
-			$this->set( "error.code", $e->getCode() );
-			$this->set( "error.exception", $e );
-
-			$this->_returnToCallbackUrl( $provider_id );
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	function processAdapterLoginFinish()
-	{
-		$this->_authInit();
-
-		$provider_id = trim( strip_tags( $this->_request["oasys_done"] ) );
-
-		$adapterFactory = new AdapterFactory( $this->get( 'config' ), $this->_store );
-
-		$adapter = $adapterFactory->setup( $provider_id );
-
-		if ( !$adapter )
-		{
-			header( "HTTP/1.0 404 Not Found" );
-
-			die( "Invalid parameter! Please return to the login page and try again." );
-		}
-
-		try
-		{
-			$adapter->loginFinish();
-		}
-		catch ( Exception $e )
-		{
-			$this->set( "error.status", 1 );
-			$this->set( "error.message", $e->getMessage() );
-			$this->set( "error.code", $e->getCode() );
-			$this->set( "error.exception", $e );
-		}
-
-		$this->_returnToCallbackUrl( $provider_id );
-	}
-
-	/**
-	 * @param string $providerId
-	 */
-	protected function _clearProvider( $providerId )
-	{
-		$this->remove( $providerId . '.oasys_redirect_uri' );
-		$this->remove( $providerId . '.oasys_endpoint' );
-		$this->remove( $providerId . '.options' );
-	}
-
-	/**
-	 * @return void
-	 */
-	protected function _authInit()
-	{
-		if ( !$this->get( 'config' ) )
-		{
-			header( 'HTTP/1.1 404 Not Found' );
-			die( 'You didn\'t say the magic word.' );
-		}
-	}
-
-	/**
-	 * @param string $providerId
-	 */
-	protected function _returnToCallbackUrl( $providerId )
-	{
-		$_url = $this->get( $providerId . '.oasys_redirect_uri' );
-		$this->_clearProvider( $providerId );
-
-		//	Redirect
-		header( 'Location: ' . $_url );
-
-		//	And... we're spent
-		die();
-	}
-
-	/**
-	 * @param string|null $key
-	 *
-	 * @return array|mixed
-	 */
-	protected function _getParameters( $key = null )
-	{
-		if ( null === $key )
-		{
-			return $this->_parameters;
-		}
-
-		return Option::get( $this->_parameters, $key );
-	}
-
-	/**
-	 * @param array $parameters
-	 *
-	 * @return $this
-	 */
-	protected function _setParameters( $parameters = array() )
-	{
-		$this->_parameters = $parameters;
-
-		return $this;
 	}
 }

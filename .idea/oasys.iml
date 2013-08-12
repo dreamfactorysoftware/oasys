@@ -14,10 +14,18 @@
     <orderEntry type="module-library">
       <library name="PHP">
         <CLASSES>
+          <root url="file://$MODULE_DIR$/vendor/composer" />
+          <root url="file://$MODULE_DIR$/vendor/kisma/kisma" />
           <root url="file:///usr/share/php" />
+          <root url="file://$MODULE_DIR$/vendor/guzzle/guzzle" />
+          <root url="file://$MODULE_DIR$/vendor/symfony/event-dispatcher" />
         </CLASSES>
         <SOURCES>
+          <root url="file://$MODULE_DIR$/vendor/composer" />
+          <root url="file://$MODULE_DIR$/vendor/kisma/kisma" />
           <root url="file:///usr/share/php" />
+          <root url="file://$MODULE_DIR$/vendor/guzzle/guzzle" />
+          <root url="file://$MODULE_DIR$/vendor/symfony/event-dispatcher" />
         </SOURCES>
       </library>
     </orderEntry>
