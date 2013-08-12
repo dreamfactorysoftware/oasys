@@ -16,7 +16,7 @@
 	<php>
 		<ini name="memory_limit" value="2048M"/>
 	</php>
-	<testsuite name="DreamFactory Oasys Test Suite">
+	<testsuite name="Release">
 		<directory>./tests</directory>
 		<exclude>
 			<directory>./tests/metrics</directory>
