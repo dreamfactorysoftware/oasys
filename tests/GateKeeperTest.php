@@ -9,6 +9,8 @@ namespace DreamFactory\Tests\Oasys;
 
 use DreamFactory\Oasys\GateKeeper;
 
+require_once dirname( __DIR__ ) . '/GateKeeper.php';
+
 /**
  * GateKeeperTest
  */
