@@ -1,7 +1,15 @@
 <?php
 namespace DreamFactory;
 
-class Test extends \PHPUnit_Extensions_PhptTestCase
+/**
+ * Test
+ */
+class Test extends \PHPUnit_Framework_TestCase
 {
+	//	Sample test class
 
+	public function test()
+	{
+		$this->assertTrue( true );
+	}
 }
