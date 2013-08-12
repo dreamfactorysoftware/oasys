@@ -3,3 +3,5 @@ vendor
 .idea/tasks.xml
 composer.lock
 orig
+src
+example
