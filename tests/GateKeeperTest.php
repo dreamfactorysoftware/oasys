@@ -5,8 +5,9 @@
  * Date: 8/11/13
  * Time: 10:37 PM
  */
+namespace DreamFactory\Tests\Oasys;
 
-namespace DreamFactory\Oasys;
+use DreamFactory\Oasys\GateKeeper;
 
 /**
  * GateKeeperTest
