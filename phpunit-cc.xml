@@ -8,7 +8,7 @@
 		 processIsolation="false"
 		 syntaxCheck="true"
 		 verbose="true"
-		 strict="false"
+		 strict="true"
 		 stopOnError="false"
 		 stopOnFailure="false"
 		 stopOnIncomplete="false"

@@ -2,7 +2,7 @@
 <html lang="en">
  <head>
   <meta charset="UTF-8">
-  <title>Dashboard for /opt/dreamfactory/lib/oasys/tests</title>
+  <title>Dashboard for /opt/dreamfactory/lib/oasys/tests/config</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
@@ -17,7 +17,8 @@
     <div class="row">
      <div class="span12">
       <ul class="breadcrumb">
-        <li><a href="index.html">/opt/dreamfactory/lib/oasys/tests</a></li>
+        <li><a href="index.html">/opt/dreamfactory/lib/oasys/tests</a> <span class="divider">/</span></li>
+        <li><a href="config.html">config</a></li>
         <li class="active">(Dashboard)</li>
 
       </ul>
@@ -81,7 +82,7 @@
               labels: {style: {fontSize: '8px'}},
           },
           series: [{
-              data: [0,0,0,0,0,0,0,0,0,0,0,2]
+              data: [0,0,0,0,0,0,0,0,0,0,0,0]
           }],
         });
 
@@ -107,7 +108,7 @@
               }
           },
           series: [{
-            data: [[100,4,"<a href=\"GateKeeperTest.php.html#18\">GateKeeperTest<\/a>"],[100,1,"<a href=\"Test.php.html#7\">Test<\/a>"]],
+            data: [],
             marker: {
                 symbol: 'diamond'
             }

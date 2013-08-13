@@ -28,7 +28,7 @@
 	},
 	"autoload":          {
 		"psr-0": {
-			"DreamFactory\\Oasys": ""
+			"DreamFactory\\Oasys": "./src"
 		}
 	},
 	"target-dir":        "DreamFactory/Oasys",

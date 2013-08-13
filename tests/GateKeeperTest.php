@@ -8,6 +8,7 @@
 namespace DreamFactory\Tests\Oasys;
 
 use DreamFactory\Oasys\GateKeeper;
+use DreamFactory\Oasys\Stores\FileSystem;
 
 require_once dirname( __DIR__ ) . '/GateKeeper.php';
 
@@ -23,23 +24,26 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->_gk = new GateKeeper( require_once( __DIR__ . '/config/oasys.config.php' ) );
+		$_store = new FileSystem( __FILE__ );
+
+		$this->_gk = new GateKeeper( array_merge( array( 'store' => $_store ), require( __DIR__ . '/config/oasys.config.php' ) ) );
 
 		parent::setUp();
 	}
 
-	public function testGetClient()
+	public function testGetSet()
 	{
-		$_client = $this->_gk->getClient();
+		$_id = 1234567;
+		$_store = $this->_gk->getStore();
 
-		$this->assertTrue( $_client == 'client' );
-	}
+		$_store->set( 'id', $_id );
 
-	public function testSetClient()
-	{
-		$this->_gk->setClient( 'client' );
+		foreach ( $_SERVER as $_key => $_value )
+		{
+			$_store->set( $_key, $_value );
+		}
 
-		$this->assertTrue( $this->_gk->getClient() == 'client' );
+		$this->assertEquals( sizeof( $_SERVER ) + 1, sizeof( $_store->get() ) );
 	}
 
 	protected function tearDown()
