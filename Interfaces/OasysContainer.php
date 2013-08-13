@@ -19,35 +19,12 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
+use Kisma\Core\Interfaces\BagLike;
+
 /**
- * OasysStorageProvider
+ * OasysContainer
+ * A simple Oasys container
  */
-interface OasysStorageProvider extends OasysContainer
+interface OasysContainer extends BagLike
 {
-	//*************************************************************************
-	//* Constants
-	//*************************************************************************
-
-	/**
-	 * @var string
-	 */
-	const KEY_PREFIX = 'oasys.';
-
-	//*************************************************************************
-	//* Methods
-	//*************************************************************************
-
-	/**
-	 * @param string|array $key
-	 *
-	 * @return bool
-	 */
-	public function remove( $key );
-
-	/**
-	 * @param string $pattern The preg pattern to match on the key(s) to remove
-	 *
-	 * @return mixed|void
-	 */
-	public function removeMany( $pattern );
 }

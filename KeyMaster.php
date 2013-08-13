@@ -20,9 +20,11 @@
 namespace DreamFactory\Oasys;
 
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\OasysContainer;
 use DreamFactory\Oasys\Interfaces\OasysProvider;
 use DreamFactory\Oasys\Interfaces\OasysProviderClient;
 use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
+use DreamFactory\Tests\Oasys\GateKeeperTest;
 use Kisma\Core\Seed;
 use Kisma\Core\SeedBag;
 use Kisma\Core\Utility\Curl;
@@ -51,13 +53,13 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 */
 	protected $_providerId;
 	/**
+	 * @var OasysProviderConfig The configuration options for this provider
+	 */
+	protected $_config;
+	/**
 	 * @var OasysProviderClient Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK)
 	 */
 	protected $_client;
-	/**
-	 * @var array
-	 */
-	protected $_settings;
 	/**
 	 * @var bool If true, the user will be redirected if necessary. Otherwise the URL of the expected redirect is returned
 	 */
@@ -149,17 +151,12 @@ abstract class KeyMaster extends Seed implements OasysProvider
 			return $this;
 		}
 
-		foreach ( $this->_gatekeeper->getProviders() as $_providerId => $_options )
-		{
-			$this->_resetAuthorization( $_providerId );
-		}
-
-		$this->deauthorize();
+		$this->_resetAuthorization();
 
 		$_baseUrl = $this->getConfig( 'base_url' );
 		$_baseUrl .= ( false !== strpos( $_baseUrl, '?' ) ? '&' : '?' );
 		$_ticket = sha1( $this->getId() . '.' . time() );
-		$_startpoint = $_baseUrl . 'oasys.provider=' . $this->_providerId . '&oasys.ticket=' . $_ticket;
+		$_startpoint = $_baseUrl . 'oasys.pid=' . $this->_providerId . '&oasys.ticket=' . $_ticket;
 
 		$this->set( 'oasys.ticket', $_ticket );
 
@@ -193,10 +190,15 @@ abstract class KeyMaster extends Seed implements OasysProvider
 
 	/**
 	 * Clear out any settings for this provider
+	 *
+	 * @return $this
 	 */
 	public function deauthorize()
 	{
-		$this->removeMany( '/oasys\\.' . $this->_providerId . '\\./' );
+		//	Clear out any configurations for this provider
+		$this->removeMany( '/' . constant( get_class( $this->_store ) . '::KEY_PREFIX' ) . '\\.' . $this->_providerId . '\\./' );
+
+		return $this;
 	}
 
 	/**
@@ -221,12 +223,12 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	/**
 	 * @param string $providerId
 	 */
-	protected function _resetAndRedirect( $providerId = null )
+	protected function _resetRedirect( $providerId = null )
 	{
 		$providerId = $providerId ? : $this->_providerId;
 		$_url = $this->_store->get( $providerId . '.oasys.redirect_uri' );
-		$this->_resetAuthorization( $providerId );
 
+		$this->_resetAuthorization( $providerId );
 		$this->_redirect( $_url );
 	}
 
@@ -276,7 +278,7 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setClient( $client )
+	protected function _setClient( $client )
 	{
 		$this->_client = $client;
 
@@ -296,7 +298,7 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setGatekeeper( $gatekeeper )
+	protected function _setGatekeeper( $gatekeeper )
 	{
 		$this->_gatekeeper = $gatekeeper;
 
@@ -316,7 +318,7 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setProviderId( $providerId )
+	protected function _setProviderId( $providerId )
 	{
 		$this->_providerId = $providerId;
 
@@ -336,9 +338,9 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setRequest( $request )
+	public function _setRequest( $request )
 	{
-		$this->_request = $request;
+		$this->_parseResult( $request );
 
 		return $this;
 	}
@@ -356,7 +358,7 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setSettings( $settings )
+	protected function _setSettings( $settings )
 	{
 		$this->_settings = $settings;
 
@@ -376,7 +378,7 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setStore( $store )
+	protected function _setStore( $store )
 	{
 		$this->_store = $store;
 
@@ -396,7 +398,7 @@ abstract class KeyMaster extends Seed implements OasysProvider
 	 *
 	 * @return KeyMaster
 	 */
-	public function setInteractive( $interactive )
+	protected function _setInteractive( $interactive )
 	{
 		$this->_interactive = $interactive;
 
