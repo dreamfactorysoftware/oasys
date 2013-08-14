@@ -1,12 +1,12 @@
 <?php
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Configs\OAuthProvider;
-use DreamFactory\Oasys\Enum\OasysEndpointTypes;
+use DreamFactory\Oasys\Components\BaseOAuthProvider;
+use DreamFactory\Oasys\Enum\EndpointTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\GenericUser;
-use DreamFactory\Oasys\Interfaces\OasysUser;
+use DreamFactory\Oasys\Interfaces\UserLike;
 use Hybridauth\Exception;
 use Kisma\Core\Utility\Option;
 
@@ -14,16 +14,12 @@ use Kisma\Core\Utility\Option;
  * Facebook
  * A facebook provider
  */
-class Facebook extends OAuthProvider
+class Facebook extends BaseOAuthProvider
 {
 	//*************************************************************************
 	//	Constants
 	//*************************************************************************
 
-	/**
-	 * @var string The base API url
-	 */
-	const BASE_API_URL = 'https://graph.facebook.com';
 	/**
 	 * @var string
 	 */
@@ -48,23 +44,23 @@ class Facebook extends OAuthProvider
 
 		if ( empty( $this->_scope ) )
 		{
-			$this->setScope( static::DEFAULT_SCOPE );
+			$this->get( 'scope' );
 		}
 
 		//	Map the Facebook endpoints...
 		$this->mapEndpoint(
 			array(
 				 array(
-					 OasysEndpointTypes::SERVICE => static::BASE_API_URL
+					 EndpointTypes::SERVICE => static::BASE_API_URL
 				 ),
 				 array(
-					 OasysEndpointTypes::AUTHORIZE => array(
+					 EndpointTypes::AUTHORIZE => array(
 						 'endpoint'   => 'https://www.facebook.com/dialog/oauth',
 						 'parameters' => array( 'display' => 'page' ),
 					 ),
 				 ),
 				 array(
-					 OasysEndpointTypes::REQUEST_TOKEN => static::BASE_API_URL . '/oauth/access_token'
+					 EndpointTypes::REQUEST_TOKEN => static::BASE_API_URL . '/oauth/access_token'
 				 ),
 			)
 		);
@@ -76,7 +72,7 @@ class Facebook extends OAuthProvider
 	 * @param \stdClass|array $profile
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return OasysUser
+	 * @return UserLike
 	 */
 	public function toGenericUser( $profile = null )
 	{
@@ -114,14 +110,14 @@ class Facebook extends OAuthProvider
 	}
 
 	/**
-	 * @throws OasysProviderException
-	 * @return OasysUser
+	 * @throws ProviderLikeException
+	 * @return UserLike
 	 */
 	public function getUserData()
 	{
 		if ( false === ( $_response = $this->fetch( '/me' ) ) || isset( $_response->error ) || !isset( $_response->id ) )
 		{
-			throw new OasysProviderException( 'Error retrieving authenticated resource.' );
+			throw new ProviderLikeException( 'Error retrieving authenticated resource.' );
 		}
 
 		$_data = static::toGenericUser( $_response );

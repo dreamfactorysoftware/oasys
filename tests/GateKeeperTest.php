@@ -10,7 +10,7 @@ namespace DreamFactory\Tests\Oasys;
 use DreamFactory\Oasys\GateKeeper;
 use DreamFactory\Oasys\Stores\FileSystem;
 
-require_once dirname( __DIR__ ) . '/GateKeeper.php';
+require_once dirname( __DIR__ ) . '/src/GateKeeper.php';
 
 /**
  * GateKeeperTest
@@ -27,6 +27,8 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 		$_store = new FileSystem( __FILE__ );
 
 		$this->_gk = new GateKeeper( array_merge( array( 'store' => $_store ), require( __DIR__ . '/config/oasys.config.php' ) ) );
+
+		$this->_gk->getProvider( 'facebook' );
 
 		parent::setUp();
 	}

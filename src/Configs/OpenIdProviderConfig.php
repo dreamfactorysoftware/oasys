@@ -17,41 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Interfaces;
+namespace DreamFactory\Oasys\Configs;
+
+use DreamFactory\Oasys\Components\BaseProviderConfig;
 
 /**
- * OasysEndpointTypes
- * The types of endpoints
+ * OpenIdProviderConfig
+ * A generic OpenId provider
  */
-interface OasysEndpointTypes
+class OpenIdProviderConfig extends BaseProviderConfig
 {
 	//*************************************************************************
-	//* Constants
+	//* Methods
 	//*************************************************************************
 
 	/**
-	 * @var int OAuth 1.0
+	 * @param array $contents
 	 */
-	const AUTHORIZE = 0;
-	/**
-	 * @var int OAuth 1.0
-	 */
-	const REQUEST_TOKEN = 1;
-	/**
-	 * @var int OAuth 1.0
-	 */
-	const ACCESS_TOKEN = 2;
-	/**
-	 * @var int OAuth 1.0
-	 */
-	const REFRESH_TOKEN = 3;
-	/**
-	 * @var int OAuth 2.0
-	 */
-	const AUTHENTICATION = 4;
-	/**
-	 * @var int OAuth 2.0
-	 */
-	const SERVICE = 5;
+	public function __construct( $contents = array() )
+	{
+		Option::set( $contents, 'type', static::OPENID );
 
+		parent::__construct( $contents );
+	}
 }

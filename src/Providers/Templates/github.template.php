@@ -17,40 +17,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Interfaces;
-
-use Kisma\Core\Interfaces\BagLike;
+use DreamFactory\Oasys\Enum\EndpointTypes;
+use DreamFactory\Oasys\Enum\ProviderConfigTypes;
 
 /**
- * OasysProvider
+ * github.config.php.dist
+ *
+ * This is the template for connecting GitHub.
+ *
+ * GitHub scopes are listed here: http://developer.github.com/v3/oauth/#scopes
  */
-interface OasysProvider extends BagLike
-{
-	//*************************************************************************
-	//* Methods
-	//*************************************************************************
-
-	/**
-	 * Checks to see if user is authorized with this provider
-	 *
-	 * @return bool
-	 */
-	public function authorized();
-
-	/**
-	 * Unlink/disconnect/logout user from provider locally.
-	 * Does nothing on the provider end
-	 *
-	 * @return void
-	 */
-	public function deauthorize();
-
-	/**
-	 * Returns true/false if user is authorized to talk to this provider
-	 *
-	 * @param array $options Authentication options
-	 *
-	 * @return $this|OasysProvider|void
-	 */
-	public function authenticate( $options = array() );
-}
+return array(
+	'type'          => ProviderConfigTypes::OAUTH,
+	'client_id'     => '{{client_id}}',
+	'client_secret' => '{{client_secret}}',
+	'scope'         => 'user:email',
+	'endpoint_map'  => array(
+		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
+		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
+		EndpointTypes::SERVICE      => 'https://api.github.com',
+	),
+);

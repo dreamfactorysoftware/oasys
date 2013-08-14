@@ -19,36 +19,51 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
-use DreamFactory\Oasys\Interfaces\OasysEndpoint;
+use Kisma\Core\Interfaces\BagLike;
 
 /**
- * OasysProviderConfigTypes
- * The supported types of provider configurations
+ * StorageProviderLike
  */
-interface OasysProviderConfigTypes
+interface StorageProviderLike extends BagLike
 {
 	//*************************************************************************
-	//	Constants
+	//* Constants
 	//*************************************************************************
 
 	/**
-	 * @var int OAuth 2.0 (default)
+	 * @var string
 	 */
-	const OAUTH = 0;
+	const KEY_PREFIX = 'oasys.';
+
+	//*************************************************************************
+	//* Methods
+	//*************************************************************************
+
 	/**
-	 * @var int OAuth 1.0
+	 * @param string|array $key
+	 *
+	 * @return bool
 	 */
-	const LEGACY_OAUTH = 1;
+	public function remove( $key );
+
 	/**
-	 * @var int OpenID
+	 * @param string $pattern The preg pattern to match on the key(s) to remove
+	 *
+	 * @return mixed|void
 	 */
-	const OPENID = 2;
+	public function removeMany( $pattern );
+
 	/**
-	 * @var int LDAP
+	 * Empty the bag
+	 *
+	 * @return void
 	 */
-	const LDAP = 3;
+	public function clear();
+
 	/**
-	 * @var int Active Directory
+	 * Synchronize any in-memory data with the store itself
+	 *
+	 * @return bool True if work was done
 	 */
-	const ACTIVE_DIRECTORY = 4;
+	public function sync();
 }

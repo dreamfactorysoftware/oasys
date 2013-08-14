@@ -17,21 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+namespace DreamFactory\Oasys\Enum;
+
+use DreamFactory\Oasys\Interfaces\OasysEndpoint;
+use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use Kisma\Core\Enums\SeedEnum;
+
 /**
- * facebook.config.php.dist
- *
- * This is the template for connecting Facebook.
+ * ProviderConfigTypes
+ * The supported types of provider configurations
  */
-return array(
-	'class'         => 'DreamFactory\\Oasys\\Providers\\Facebook.php',
-	'client_id'     => 'client_id',
-	'client_secret' => 'client_secret',
-	'scope'         => 'email, user_about_me, user_birthday, user_hometown, user_website, read_stream, offline_access, publish_stream, read_friendlists',
-	'form'          => array(
-		'fields' => array(
-			'client_id'     => array( 'type' => 'text', 'maxlength' => 64, 'class' => 'input-large' ),
-			'client_secret' => array( 'type' => 'text', 'maxlength' => 1024, 'class' => 'input-xlarge' ),
-			'scope'         => array( 'type' => 'select', 'multiple' => 'multiple', 'class' => 'input-medium' ),
-		)
-	)
-);
+class ProviderConfigTypes extends SeedEnum implements ProviderConfigLike
+{
+}

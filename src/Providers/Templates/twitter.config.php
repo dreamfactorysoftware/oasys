@@ -17,25 +17,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Configs;
+use DreamFactory\Oasys\Enum\EndpointTypes;
+use DreamFactory\Oasys\Enum\ProviderConfigTypes;
 
 /**
- * OpenIdProvider
- * A generic OpenId provider
+ * googleplus.config.php.dist
+ *
+ * This is the template for connecting Google Plus.
  */
-class OpenIdProvider extends BaseProviderConfig
-{
-	//*************************************************************************
-	//* Methods
-	//*************************************************************************
-
-	/**
-	 * @param array $contents
-	 */
-	public function __construct( $contents = array() )
-	{
-		Option::set( $contents, 'type', static::OPENID );
-
-		parent::__construct( $contents );
-	}
-}
+return array(
+	'type'            => ProviderConfigTypes::LEGACY_OAUTH,
+	'consumer_id'     => '{{consumer_id}}',
+	'consumer_secret' => '{{consumer_secret}}',
+	'endpoint_map'    => array(
+		EndpointTypes::SERVICE       => 'https://api.twitter.com/1.1',
+		EndpointTypes::AUTHORIZE     => 'https://api.twitter.com/oauth/authenticate',
+		EndpointTypes::REQUEST_TOKEN => 'https://api.twitter.com/oauth/request_token',
+		EndpointTypes::ACCESS_TOKEN  => 'https://api.twitter.com/oauth/access_token',
+	),
+);

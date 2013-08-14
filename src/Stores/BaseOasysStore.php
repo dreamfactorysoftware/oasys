@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Stores;
 
-use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
+use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\SeedBag;
@@ -30,7 +30,7 @@ use Kisma\Core\Utility;
  * BaseOasysStore
  * A base class for storing Oasys data
  */
-abstract class BaseOasysStore extends SeedBag implements OasysStorageProvider
+abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 {
 	//*************************************************************************
 	//* Methods

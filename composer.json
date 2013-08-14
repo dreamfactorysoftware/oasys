@@ -21,10 +21,10 @@
 		"email": "support@dreamfactory.com"
 	},
 	"require":           {
-		"php":           ">=5.3.10",
-		"ext-curl":      "*",
-		"kisma/kisma":   "*",
-		"guzzle/guzzle": "*"
+		"php":         ">=5.3.10",
+		"ext-curl":    "*",
+		"kisma/kisma": "*",
+		"twig/twig":   "1.*"
 	},
 	"autoload":          {
 		"psr-0": {

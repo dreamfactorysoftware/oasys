@@ -17,15 +17,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Enum;
-
-use DreamFactory\Oasys\Interfaces\OasysEndpoint;
-use Kisma\Core\Enums\SeedEnum;
+namespace DreamFactory\Oasys\Interfaces;
 
 /**
- * OasysEndpointTypes
- * Convenience enum
+ * ProviderConfigLike
+ * The supported types of provider configurations
  */
-class OasysEndpointTypes extends SeedEnum implements \DreamFactory\Oasys\Interfaces\OasysEndpointTypes
+interface ProviderConfigLike
 {
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
+
+	/**
+	 * @var int OAuth 2.0 (default)
+	 */
+	const OAUTH = 0;
+	/**
+	 * @var int OAuth 1.0
+	 */
+	const LEGACY_OAUTH = 1;
+	/**
+	 * @var int OpenID
+	 */
+	const OPENID = 2;
+	/**
+	 * @var int LDAP
+	 */
+	const LDAP = 3;
+	/**
+	 * @var int Active Directory
+	 */
+	const ACTIVE_DIRECTORY = 4;
 }

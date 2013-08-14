@@ -17,26 +17,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Configs;
+namespace DreamFactory\Oasys\Interfaces;
 
 /**
- * LdapProvider
- * A generic OpenId provider
+ * EndpointLike
+ * Acts like an endpoint
  */
-class LdapProvider extends BaseProviderConfig
+interface EndpointLike
 {
 	//*************************************************************************
-	//* Methods
+	//* Constants
 	//*************************************************************************
 
 	/**
-	 * @param array $contents
+	 * @var int
 	 */
-	public function __construct( $contents = array() )
-	{
-		Option::set( $contents, 'type', static::LDAP );
-
-		parent::__construct( $contents );
-	}
+	const AUTHORIZE = 0;
+	/**
+	 * @var int
+	 */
+	const REQUEST_TOKEN = 1;
+	/**
+	 * @var int
+	 */
+	const ACCESS_TOKEN = 2;
+	/**
+	 * @var int
+	 */
+	const REFRESH_TOKEN = 3;
+	/**
+	 * @var int
+	 */
+	const SERVICE = 4;
 
 }

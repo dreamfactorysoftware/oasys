@@ -17,15 +17,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Enum;
+namespace DreamFactory\Oasys\Configs;
 
-use DreamFactory\Oasys\Interfaces\OasysEndpoint;
-use Kisma\Core\Enums\SeedEnum;
+use DreamFactory\Oasys\Components\BaseProviderConfig;
 
 /**
- * OasysProviderConfigTypes
- * The supported types of provider configurations
+ * LdapProviderConfig
+ * A generic OpenId provider
  */
-class OasysProviderConfigTypes extends SeedEnum implements \DreamFactory\Oasys\Interfaces\OasysProviderConfigTypes
+class LdapProviderConfig extends BaseProviderConfig
 {
+	//*************************************************************************
+	//* Methods
+	//*************************************************************************
+
+	/**
+	 * @param array $contents
+	 */
+	public function __construct( $contents = array() )
+	{
+		Option::set( $contents, 'type', static::LDAP );
+
+		parent::__construct( $contents );
+	}
+
 }

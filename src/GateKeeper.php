@@ -19,8 +19,8 @@
  */
 namespace DreamFactory\Oasys;
 
-use DreamFactory\Oasys\Configs\BaseProviderConfig;
-use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
+use DreamFactory\Oasys\Components\BaseProviderConfig;
+use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
 use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
@@ -39,7 +39,7 @@ class GateKeeper extends Seed
 	//*************************************************************************
 
 	/**
-	 * @var OasysStorageProvider
+	 * @var StorageProviderLike
 	 */
 	protected $_store = null;
 	/**
@@ -50,6 +50,14 @@ class GateKeeper extends Seed
 	 * @var array
 	 */
 	protected static $_providerCache = array();
+	/**
+	 * @var array
+	 */
+	protected static $_classMap = array();
+	/**
+	 * @var array A namespace => path mapping of provider classes
+	 */
+	protected static $_providerPaths = array();
 
 	//*************************************************************************
 	//* Methods
@@ -65,6 +73,12 @@ class GateKeeper extends Seed
 	 */
 	public function __construct( $settings = array() )
 	{
+		//	Set the default Providers path.
+		if ( empty( static::$_providerPaths ) )
+		{
+			static::$_providerPaths = array( __NAMESPACE__ . '\\Providers' => __DIR__ . '/Providers' );
+		}
+
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
 		{
 			$settings = file_get_contents( $settings );
@@ -84,9 +98,9 @@ class GateKeeper extends Seed
 		}
 
 		//	No redirect URI, make one...
-		if ( null === $this->get( 'redirect_uri' ) )
+		if ( null === $this->getGlobal( 'redirect_uri' ) )
 		{
-			$this->set( 'redirect_uri', Curl::currentUrl() );
+			$this->setGlobal( 'redirect_uri', Curl::currentUrl() );
 		}
 
 		//	Render any stored errors
@@ -102,36 +116,44 @@ class GateKeeper extends Seed
 				throw new OasysException( Option::get( $_error, 'message' ), Option::get( $_error, 'code', 500 ) );
 			}
 		}
+
+		$this->_mapProviders();
 	}
 
 	/**
 	 * Create a provider and return it
 	 *
-	 * @param string                                               $providerId
-	 * @param array|\DreamFactory\Oasys\Configs\BaseProviderConfig $config
+	 * @param string                                                  $providerId
+	 * @param array|\DreamFactory\Oasys\Components\BaseProviderConfig $config
 	 *
-	 * @return BaseProviderConfig
+	 * @throws \RuntimeException
+	 * @throws \InvalidArgumentException
+	 * @return BaseProviderConfig|bool
 	 */
-	public function createProvider( $providerId, $config = null )
+	public function getProvider( $providerId, BaseProviderConfig $config = null )
 	{
+		$providerId = $this->_cleanProviderId( $providerId );
+
 		//	Cached?
 		if ( null === ( $_provider = Option::get( static::$_providerCache, $providerId ) ) )
 		{
-			//	No config, no provider
-			if ( empty( $config ) )
+			//	Get the class mapping...
+			if ( null === ( $_map = Option::get( static::$_classMap, $providerId ) ) )
 			{
-				return null;
+				throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
 			}
 
-			if ( !( $config instanceof BaseProviderConfig ) )
-			{
-				$config = static::createProviderConfig( $providerId, $config );
-			}
+			/** @noinspection PhpIncludeInspection */
+			require $_map['path'];
+
+			$_className = $_map['namespace'] . '\\' . $_map['class_name'];
+			$_mirror = new \ReflectionClass( $_className );
+			$_provider = $_mirror->newInstanceArgs( array( $this, $providerId, $config ) );
 
 			Option::set(
 				static::$_providerCache,
 				$providerId,
-				$_provider = new KeyMaster( $this, $providerId, $config )
+				$_provider
 			);
 		}
 
@@ -149,38 +171,6 @@ class GateKeeper extends Seed
 	 */
 	public function createProviderConfig( $providerId, array $config = array() )
 	{
-		$_defaults = array();
-		$providerId = $this->_cleanProviderId( $providerId );
-
-		//	See if there is a default template
-		$_template = __DIR__ . '/Configs/Templates/Providers/' . $providerId . 'config.php.dist';
-
-		if ( is_file( $_template ) && is_readable( $_template ) )
-		{
-			$_defaults = array_merge( $_defaults, @include( $_template ) );
-		}
-
-		$_options = array_merge( $_defaults, $config );
-
-		if ( null === ( $_class = Option::get( $_options, 'class' ) ) )
-		{
-			throw new \InvalidArgumentException( 'Provider template not found, does not contain a "class" element, or no "class" element found in $config parameter.' );
-		}
-
-		return new $_class( array_merge( $_defaults, $config ) );
-	}
-
-	/**
-	 * Returns the cached provider if any, or, if $config is not empty, creates a new provider
-	 *
-	 * @param string $providerId
-	 * @param array  $config
-	 *
-	 * @return KeyMaster
-	 */
-	public function getProvider( $providerId, $config = array() )
-	{
-		return $this->createProvider( $providerId, $config );
 	}
 
 	/**
@@ -267,7 +257,35 @@ class GateKeeper extends Seed
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Interfaces\OasysStorageProvider $store
+	 * Makes a hash of providers and their associated classes
+	 */
+	protected function _mapProviders()
+	{
+		$_classMap = array();
+
+		foreach ( static::$_providerPaths as $_namespace => $_path )
+		{
+			$_classes = glob( $_path . '/*.php' );
+
+			foreach ( $_classes as $_class )
+			{
+				$_className = str_ireplace( '.php', null, basename( $_class ) );
+				$_providerId = Inflector::neutralize( $_className );
+				$_classMap[$_providerId] = array( 'class_name' => $_className, 'path' => $_class, 'namespace' => $_namespace );
+
+				unset( $_className, $_providerId, $_class );
+			}
+		}
+
+		//	Merge in the found classes
+		static::$_classMap = array_merge(
+			static::$_classMap,
+			$_classMap
+		);
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\Interfaces\StorageProviderLike $store
 	 *
 	 * @return GateKeeper
 	 */
@@ -279,7 +297,7 @@ class GateKeeper extends Seed
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\Interfaces\OasysStorageProvider
+	 * @return \DreamFactory\Oasys\Interfaces\StorageProviderLike
 	 */
 	public function getStore()
 	{
@@ -316,7 +334,7 @@ class GateKeeper extends Seed
 	 * @throws OasysException
 	 * @return mixed
 	 */
-	public function get( $key, $defaultValue = null, $burnAfterReading = false )
+	public function getGlobal( $key, $defaultValue = null, $burnAfterReading = false )
 	{
 		return Option::get( $this->_options, $key, $defaultValue, $burnAfterReading );
 	}
@@ -331,8 +349,73 @@ class GateKeeper extends Seed
 	 * @throws OasysException
 	 * @return mixed|void
 	 */
-	public function set( $key, $value = null, $overwrite = true )
+	public function setGlobal( $key, $value = null, $overwrite = true )
 	{
 		return Option::set( $this->_options, $key, $value, $overwrite );
 	}
+
+	/**
+	 * @param array $providerPaths
+	 *
+	 * @return GateKeeper
+	 */
+	public function setProviderPaths( $providerPaths )
+	{
+		static::$_providerPaths = $providerPaths;
+		$this->_mapProviders();
+
+		return $this;
+	}
+
+	/**
+	 * @param string $path
+	 *
+	 * @return $this
+	 */
+	public function addProviderPath( $path )
+	{
+		static::$_providerPaths[] = $path;
+		$this->_mapProviders();
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getProviderPaths()
+	{
+		return static::$_providerPaths;
+	}
+
+	/**
+	 * @param array $classMap
+	 *
+	 * @return $this
+	 */
+	public function setClassMap( $classMap )
+	{
+		static::$_classMap = $classMap;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function getClassMap()
+	{
+		return static::$_classMap;
+	}
+
+	/**
+	 * @param string $providerId
+	 *
+	 * @return array Hash of [ class_name, namespace, path ] of provider handler
+	 */
+	public function getClassMapping( $providerId )
+	{
+		return Option::get( static::$_classMap, $providerId );
+	}
+
 }

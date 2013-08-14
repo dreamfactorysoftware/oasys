@@ -1,7 +1,7 @@
 <?php
 namespace DreamFactory\Oasys;
 
-use DreamFactory\Oasys\Interfaces\OasysUser;
+use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Convert;
@@ -11,7 +11,7 @@ use Kisma\Core\Utility\Option;
  * GenericUser
  * A base class for a user base on the Portable Contact format (poco). See http://portablecontacts.net/ for more information.
  */
-class GenericUser extends Seed implements OasysUser
+class GenericUser extends Seed implements UserLike
 {
 	//*************************************************************************
 	//* Members

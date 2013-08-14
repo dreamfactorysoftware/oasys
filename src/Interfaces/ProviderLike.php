@@ -19,66 +19,38 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
+use Kisma\Core\Interfaces\BagLike;
+
 /**
- * OasysUser
- * A generic Oasys user object
+ * ProviderLike
  */
-interface OasysUser
+interface ProviderLike extends BagLike
 {
 	//*************************************************************************
-	//	Methods
+	//* Methods
 	//*************************************************************************
 
 	/**
-	 * @return int|string
-	 */
-	public function getId();
-
-	/**
-	 * @return int|string
-	 */
-	public function getUserId();
-
-	/**
-	 * @param int|string $userId
+	 * Checks to see if user is authorized with this provider
 	 *
-	 * @return $this
+	 * @return bool
 	 */
-	public function setUserId( $userId );
+	public function authorized();
 
 	/**
-	 * @return string The ID of the providers
-	 */
-	public function getProviderId();
-
-	/**
-	 * @param string $providerId
+	 * Unlink/disconnect/logout user from provider locally.
+	 * Does nothing on the provider end
 	 *
-	 * @return $this
+	 * @return void
 	 */
-	public function setProviderId( $providerId );
+	public function deauthorize();
 
 	/**
-	 * @return string
-	 */
-	public function getUserName();
-
-	/**
-	 * @param string $userName
+	 * Returns true/false if user is authorized to talk to this provider
 	 *
-	 * @return $this
-	 */
-	public function setUserName( $userName );
-
-	/**
-	 * @return array|\stdClass The provider-supplied user profile for this user, if any
-	 */
-	public function getUserData();
-
-	/**
-	 * @param array|\stdClass $userData
+	 * @param array $options Authentication options
 	 *
-	 * @return $this
+	 * @return $this|ProviderLike|void
 	 */
-	public function setUserData( $userData = array() );
+	public function authenticate( $options = array() );
 }

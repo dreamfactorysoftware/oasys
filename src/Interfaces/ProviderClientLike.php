@@ -20,41 +20,8 @@
 namespace DreamFactory\Oasys\Interfaces;
 
 /**
- * OasysStorageProvider
+ * ProviderClientLike
  */
-interface OasysStorageProvider extends OasysContainer
+interface ProviderClientLike
 {
-	//*************************************************************************
-	//* Constants
-	//*************************************************************************
-
-	/**
-	 * @var string
-	 */
-	const KEY_PREFIX = 'oasys.';
-
-	//*************************************************************************
-	//* Methods
-	//*************************************************************************
-
-	/**
-	 * @param string|array $key
-	 *
-	 * @return bool
-	 */
-	public function remove( $key );
-
-	/**
-	 * @param string $pattern The preg pattern to match on the key(s) to remove
-	 *
-	 * @return mixed|void
-	 */
-	public function removeMany( $pattern );
-
-	/**
-	 * Synchronize any in-memory data with the store itself
-	 *
-	 * @return bool True if work was done
-	 */
-	public function sync();
 }

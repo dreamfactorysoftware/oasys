@@ -19,10 +19,12 @@
  */
 namespace DreamFactory\Oasys\Configs;
 
+use DreamFactory\Oasys\Components\BaseProviderConfig;
+
 /**
- * LegacyOAuthProvider
+ * LegacyOAuthProviderConfig
  */
-class LegacyOAuthProvider extends BaseProviderConfig
+class LegacyOAuthProviderConfig extends BaseProviderConfig
 {
 	//*************************************************************************
 	//* Members
@@ -39,23 +41,19 @@ class LegacyOAuthProvider extends BaseProviderConfig
 	/**
 	 * @var string
 	 */
-	protected $_token;
-	/**
-	 * @var string
-	 */
 	protected $_signatureMethod = OAUTH_SIG_METHOD_HMACSHA1;
 	/**
 	 * @var string
 	 */
-	protected $_timestamp;
-	/**
-	 * @var string
-	 */
-	protected $_nonce;
-	/**
-	 * @var string
-	 */
 	protected $_version = '1.0';
+	/**
+	 * @var string The redirect URI registered with provider
+	 */
+	protected $_redirectUri;
+	/**
+	 * @var array The scope of the authorization
+	 */
+	protected $_scope;
 
 	//*************************************************************************
 	//* Methods
@@ -65,44 +63,44 @@ class LegacyOAuthProvider extends BaseProviderConfig
 	 * @param array $contents
 	 *
 	 * @throws \RuntimeException
+	 * @return \DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig
 	 */
 	public function __construct( $contents = array() )
 	{
 		//	Require pecl oauth library...
 		if ( !extension_loaded( 'oauth' ) )
 		{
-			throw new \RuntimeException( 'Use of the LegacyOAuthProvider requires the PECL "oauth" extension.' );
+			throw new \RuntimeException( 'Use of the LegacyOAuthProviderConfig requires the PECL "oauth" extension.' );
 		}
 
 		Option::set( $contents, 'type', static::LEGACY_OAUTH );
+		parent::__construct( $contents );
 
-		if ( null !== ( $_uri = Option::get( $contents, 'authorize_uri', null, true ) ) )
+		if ( null !== ( $_uri = Option::get( $contents, 'authorization_endpoint', null, true ) ) )
 		{
 			$this->mapEndpoint( static::AUTHORIZE, $_uri );
 		}
 
-		if ( null !== ( $_uri = Option::get( $contents, 'request_token_uri', null, true ) ) )
+		if ( null !== ( $_uri = Option::get( $contents, 'request_token_endpoint', null, true ) ) )
 		{
 			$this->mapEndpoint( static::REQUEST_TOKEN, $_uri );
 		}
 
-		if ( null !== ( $_uri = Option::get( $contents, 'access_token_uri', null, true ) ) )
+		if ( null !== ( $_uri = Option::get( $contents, 'access_token_endpoint', null, true ) ) )
 		{
 			$this->mapEndpoint( static::ACCESS_TOKEN, $_uri );
 		}
 
-		if ( null !== ( $_uri = Option::get( $contents, 'refresh_token_uri', null, true ) ) )
+		if ( null !== ( $_uri = Option::get( $contents, 'refresh_token_endpoint', null, true ) ) )
 		{
 			$this->mapEndpoint( static::REFRESH_TOKEN, $_uri );
 		}
-
-		parent::__construct( $contents );
 	}
 
 	/**
 	 * @param string $consumerKey
 	 *
-	 * @return LegacyOAuthProvider
+	 * @return LegacyOAuthProviderConfig
 	 */
 	public function setConsumerKey( $consumerKey )
 	{
@@ -122,7 +120,7 @@ class LegacyOAuthProvider extends BaseProviderConfig
 	/**
 	 * @param string $consumerSecret
 	 *
-	 * @return LegacyOAuthProvider
+	 * @return LegacyOAuthProviderConfig
 	 */
 	public function setConsumerSecret( $consumerSecret )
 	{
@@ -140,29 +138,9 @@ class LegacyOAuthProvider extends BaseProviderConfig
 	}
 
 	/**
-	 * @param string $nonce
-	 *
-	 * @return LegacyOAuthProvider
-	 */
-	public function setNonce( $nonce )
-	{
-		$this->_nonce = $nonce;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getNonce()
-	{
-		return $this->_nonce;
-	}
-
-	/**
 	 * @param string $signatureMethod
 	 *
-	 * @return LegacyOAuthProvider
+	 * @return LegacyOAuthProviderConfig
 	 */
 	public function setSignatureMethod( $signatureMethod )
 	{
@@ -180,49 +158,9 @@ class LegacyOAuthProvider extends BaseProviderConfig
 	}
 
 	/**
-	 * @param string $timestamp
-	 *
-	 * @return LegacyOAuthProvider
-	 */
-	public function setTimestamp( $timestamp )
-	{
-		$this->_timestamp = $timestamp;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getTimestamp()
-	{
-		return $this->_timestamp;
-	}
-
-	/**
-	 * @param string $token
-	 *
-	 * @return LegacyOAuthProvider
-	 */
-	public function setToken( $token )
-	{
-		$this->_token = $token;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getToken()
-	{
-		return $this->_token;
-	}
-
-	/**
 	 * @param string $version
 	 *
-	 * @return LegacyOAuthProvider
+	 * @return LegacyOAuthProviderConfig
 	 */
 	public function setVersion( $version )
 	{
@@ -237,5 +175,45 @@ class LegacyOAuthProvider extends BaseProviderConfig
 	public function getVersion()
 	{
 		return $this->_version;
+	}
+
+	/**
+	 * @param array $scope
+	 *
+	 * @return LegacyOAuthProviderConfig
+	 */
+	public function setScope( $scope )
+	{
+		$this->_scope = $scope;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getScope()
+	{
+		return $this->_scope;
+	}
+
+	/**
+	 * @param string $redirectUri
+	 *
+	 * @return LegacyOAuthProviderConfig
+	 */
+	public function setRedirectUri( $redirectUri )
+	{
+		$this->_redirectUri = $redirectUri;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getRedirectUri()
+	{
+		return $this->_redirectUri;
 	}
 }

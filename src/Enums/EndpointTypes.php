@@ -17,14 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Interfaces;
+namespace DreamFactory\Oasys\Enum;
 
-use Kisma\Core\Interfaces\BagLike;
+use DreamFactory\Oasys\Interfaces\EndpointLike;
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * OasysContainer
- * A simple Oasys container
+ * EndpointTypes
+ * Convenience enum
  */
-interface OasysContainer extends BagLike
+class EndpointTypes extends SeedEnum implements EndpointLike
 {
 }
