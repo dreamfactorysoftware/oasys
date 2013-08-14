@@ -23,8 +23,7 @@
 	"require":           {
 		"php":         ">=5.3.10",
 		"ext-curl":    "*",
-		"kisma/kisma": "*",
-		"twig/twig":   "1.*"
+		"kisma/kisma": "*"
 	},
 	"autoload":          {
 		"psr-0": {
