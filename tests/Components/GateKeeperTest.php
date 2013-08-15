@@ -26,13 +26,13 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 
 		$this->_gk = new GateKeeper( array_merge( array( 'store' => $_store ), require( dirname( __DIR__ ) . '/config/oasys.config.php' ) ) );
 
-		$this->_gk->getProvider(
-			'facebook',
-			array(
-				 'client_id'     => '1392217090991437',
-				 'client_secret' => 'd5dd3a24b1ec6c5f204a300ed24c60d0',
-			)
-		);
+//		$this->_gk->getProvider(
+//			'facebook',
+//			array(
+//				 'client_id'     => '1392217090991437',
+//				 'client_secret' => 'd5dd3a24b1ec6c5f204a300ed24c60d0',
+//			)
+//		);
 
 		parent::setUp();
 	}

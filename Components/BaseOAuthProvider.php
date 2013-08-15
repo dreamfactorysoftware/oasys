@@ -50,8 +50,7 @@ class BaseOAuthProvider extends BaseProvider implements OAuthServiceLike, HttpMe
 		// have an access token?
 		if ( $this->api->access_token )
 		{
-
-ww			// have to refresh?
+			// have to refresh?
 			if ( $this->api->refresh_token && $this->api->access_token_expires_at )
 			{
 
