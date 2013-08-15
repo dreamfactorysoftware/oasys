@@ -1,9 +1,9 @@
 <?php
 /**
- * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
+ * This file is part of the DreamFactory Services Platform(tm) (DSP)
  *
- * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * DreamFactory Services Platform(tm) <http://github.com/dreamfactorysoftware/dsp-core>
+ * Copyright 2012-2013 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Enums;
+namespace DreamFactory\Oasys\Components\OAuth\Interfaces;
 
-use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use Kisma\Core\Enums\SeedEnum;
+use DreamFactory\Oasys\Interfaces\ProviderLike;
 
 /**
- * ProviderConfigTypes
- * The supported types of provider configurations
+ * OAuthServiceLike
+ * An oauth service
  */
-abstract class ProviderConfigTypes extends SeedEnum implements ProviderConfigLike
+interface OAuthServiceLike extends ProviderLike
 {
 }

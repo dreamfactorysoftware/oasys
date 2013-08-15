@@ -1,9 +1,9 @@
 <?php
 /**
- * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
+ * This file is part of the DreamFactory Services Platform(tm) (DSP)
  *
- * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * DreamFactory Services Platform(tm) <http://github.com/dreamfactorysoftware/dsp-core>
+ * Copyright 2012-2013 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,50 +17,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Interfaces;
+namespace DreamFactory\Oasys\Components\OAuth\Interfaces;
 
 /**
- * ProviderConfigLike
- * The supported types of provider configurations
+ * GrantTypeLike
  */
-interface ProviderConfigLike
+interface GrantTypeLike
 {
 	//*************************************************************************
 	//	Constants
 	//*************************************************************************
 
 	/**
-	 * @var int OAuth 2.0 (default)
+	 * @var string
 	 */
-	const OAUTH = 0;
+	const AUTHORIZATION_CODE = 'authorization_code';
 	/**
-	 * @var int OAuth 1.0
+	 * @var string
 	 */
-	const LEGACY_OAUTH = 1;
+	const PASSWORD = 'password';
 	/**
-	 * @var int OpenID
+	 * @var string
 	 */
-	const OPENID = 2;
+	const CLIENT_CREDENTIALS = 'client_credentials';
 	/**
-	 * @var int LDAP
+	 * @var string
 	 */
-	const LDAP = 3;
-	/**
-	 * @var int Active Directory
-	 */
-	const ACTIVE_DIRECTORY = 4;
+	const REFRESH_TOKEN = 'refresh_token';
 
 	//*************************************************************************
-	//* Methods
+	//	Methods
 	//*************************************************************************
 
 	/**
-	 * @return string
+	 * @param array|\stdClass $payload
+	 *
+	 * @return array|\stdClass
 	 */
-	public function toJson();
-
-	/**
-	 * @return array
-	 */
-	public function toArray();
+	public static function validatePayload( $payload );
 }
+

@@ -198,6 +198,12 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function init()
 	{
+		//	Store our config in the store...
+		foreach ( Option::clean( $this->_config->toArray() ) as $_key => $_value )
+		{
+			$this->set( $_key, $_value );
+		}
+
 		//	Parse the inbound payload
 		$this->_parseRequest();
 

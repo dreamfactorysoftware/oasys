@@ -52,9 +52,9 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	 */
 	protected $_endpointMap;
 	/**
-	 * @var
+	 * @var string The user agent to use for this provider, if any
 	 */
-	protected $_templateLoader;
+	protected $_userAgent;
 
 	//*************************************************************************
 	//* Methods
@@ -202,13 +202,13 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	{
 		$_json = array();
 
-		foreach ( get_object_vars( $this ) as $_property )
+		foreach ( get_object_vars( $this ) as $_key => $_value )
 		{
-			$_property = ltrim( '_' );
+			$_key = ltrim( $_key, '_' );
 
-			if ( method_exists( $this, 'get' . $_property ) )
+			if ( method_exists( $this, 'get' . $_key ) )
 			{
-				$_json[$_property] = $this->{'get' . $_property}();
+				$_json[Inflector::neutralize( $_key )] = $_value;
 			}
 		}
 

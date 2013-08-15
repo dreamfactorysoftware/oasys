@@ -1,20 +1,24 @@
 <?php
 namespace DreamFactory\Oasys\Components;
 
+use DreamFactory\Oasys\Components\OAuth\Interfaces\OAuthServiceLike;
+use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use Kisma\Core\Interfaces\HttpMethod;
+use Kisma\Core\Utility\Curl;
 
 /**
  * BaseOAuthProvider
  */
-class BaseOAuthProvider extends BaseProvider
+class BaseOAuthProvider extends BaseProvider implements OAuthServiceLike, HttpMethod
 {
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
 
 	/**
-	 * adapter initializer
+	 * Initialize the OAuth provider
 	 */
 	public function init()
 	{
@@ -24,9 +28,6 @@ class BaseOAuthProvider extends BaseProvider
 		{
 			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
-
-		//	Create a new OAuth2 client instance
-		$this->_client = new OAuth2Client( $this->config["keys"]["id"], $this->config["keys"]["secret"], $this->endpoint );
 
 		// If we have an access token, set it
 		if ( $this->token( "access_token" ) )
@@ -50,7 +51,7 @@ class BaseOAuthProvider extends BaseProvider
 		if ( $this->api->access_token )
 		{
 
-			// have to refresh?
+ww			// have to refresh?
 			if ( $this->api->refresh_token && $this->api->access_token_expires_at )
 			{
 
@@ -162,5 +163,59 @@ class BaseOAuthProvider extends BaseProvider
 	 */
 	public function deauthorize()
 	{
+	}
+
+	/**
+	 * Execute a request
+	 *
+	 * @param string $url
+	 * @param mixed  $payload
+	 * @param string $method
+	 * @param array  $headers Array of HTTP headers to send in array( 'header: value', 'header: value', ... ) format
+	 *
+	 * @throws AuthenticationException
+	 * @return array
+	 */
+	protected function _makeRequest( $url, $payload = array(), $method = self::Get, array $headers = null )
+	{
+		$headers = Option::clean( $headers );
+
+		$_agent = $this->get( 'user_agent' );
+
+		if ( !empty( $_agent ) )
+		{
+			$headers[] = 'User-Agent: ' . $_agent;
+		}
+
+		$_curlOptions = array(
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_SSL_VERIFYHOST => 0,
+			CURLOPT_HTTPHEADER     => $headers,
+		);
+
+		if ( static::Get == $method && false === strpos( $url, '?' ) && !empty( $payload ) )
+		{
+			$url .= '?' . ( is_array( $payload ) ? http_build_query( $payload, null, '&' ) : $payload );
+			$payload = array();
+		}
+
+//		if ( !empty( $this->_certificateFile ) )
+//		{
+//			$_curlOptions[CURLOPT_SSL_VERIFYPEER] = true;
+//			$_curlOptions[CURLOPT_SSL_VERIFYHOST] = 2;
+//			$_curlOptions[CURLOPT_CAINFO] = $this->_certificateFile;
+//		}
+
+		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
+		{
+			throw new AuthenticationException( Curl::getErrorAsString() );
+		}
+
+		return array(
+			'result'       => $_result,
+			'code'         => Curl::getLastHttpCode(),
+			'content_type' => Curl::getInfo( 'content_type' ),
+		);
 	}
 }
