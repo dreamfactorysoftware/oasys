@@ -1,5 +1,5 @@
 <?php
-namespace DreamFactory\Oasys;
+namespace DreamFactory\Oasys\Components;
 
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Exceptions\NotImplementedException;

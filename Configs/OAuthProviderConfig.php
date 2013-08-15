@@ -20,8 +20,9 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Components\BaseProviderConfig;
-use DreamFactory\Oasys\Enum\OAuthAccessTypes;
-use DreamFactory\Oasys\Enum\OAuthFlows;
+use DreamFactory\Oasys\Enums\OAuthAccessTypes;
+use DreamFactory\Oasys\Enums\OAuthFlows;
+use Kisma\Core\Utility\Option;
 
 /**
  * OAuthProviderConfig
@@ -250,5 +251,4 @@ class OAuthProviderConfig extends BaseProviderConfig
 	{
 		return $this->_scope;
 	}
-
 }

@@ -17,24 +17,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use DreamFactory\Oasys\Enum\EndpointTypes;
-use DreamFactory\Oasys\Enum\ProviderConfigTypes;
+namespace DreamFactory\Oasys\Providers\Templates;
+
+use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * github.config.php.dist
+ * googleplus.config.php.dist
  *
- * This is the template for connecting GitHub.
- *
- * GitHub scopes are listed here: http://developer.github.com/v3/oauth/#scopes
+ * This is the template for connecting Google Plus.
  */
 return array(
 	'type'          => ProviderConfigTypes::OAUTH,
 	'client_id'     => '{{client_id}}',
 	'client_secret' => '{{client_secret}}',
-	'scope'         => 'user:email',
+	'scope'         => 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.google.com/m8/feeds/',
 	'endpoint_map'  => array(
-		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
-		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
-		EndpointTypes::SERVICE      => 'https://api.github.com',
+		EndpointTypes::AUTHORIZE    => 'https://accounts.google.com/o/oauth2/auth',
+		EndpointTypes::ACCESS_TOKEN => 'https://accounts.google.com/o/oauth2/token',
 	),
 );

@@ -17,21 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use DreamFactory\Oasys\Enum\EndpointTypes;
-use DreamFactory\Oasys\Enum\ProviderConfigTypes;
+namespace DreamFactory\Oasys\Enums;
+
+use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * googleplus.config.php.dist
- *
- * This is the template for connecting Google Plus.
+ * ProviderConfigTypes
+ * The supported types of provider configurations
  */
-return array(
-	'type'          => ProviderConfigTypes::OAUTH,
-	'client_id'     => '{{client_id}}',
-	'client_secret' => '{{client_secret}}',
-	'scope'         => 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.google.com/m8/feeds/',
-	'endpoint_map'  => array(
-		EndpointTypes::AUTHORIZE    => 'https://accounts.google.com/o/oauth2/auth',
-		EndpointTypes::ACCESS_TOKEN => 'https://accounts.google.com/o/oauth2/token',
-	),
-);
+class ProviderConfigTypes extends SeedEnum implements ProviderConfigLike
+{
+}

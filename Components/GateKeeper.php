@@ -17,9 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys;
+namespace DreamFactory\Oasys\Components;
 
-use DreamFactory\Oasys\Components\BaseProviderConfig;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
 use DreamFactory\Oasys\Stores\FileSystem;
@@ -34,6 +33,15 @@ use Kisma\Core\Utility\Option;
  */
 class GateKeeper extends Seed
 {
+	//*************************************************************************
+	//* Constants
+	//*************************************************************************
+
+	/**
+	 * @var string
+	 */
+	const DEFAULT_PROVIDER_NAMESPACE = 'DreamFactory\\Oasys\\Providers';
+
 	//*************************************************************************
 	//* Members
 	//*************************************************************************
@@ -69,14 +77,14 @@ class GateKeeper extends Seed
 	 * @throws
 	 * @throws \InvalidArgumentException
 	 * @throws OasysException
-	 * @return \DreamFactory\Oasys\GateKeeper
+	 * @return \DreamFactory\Oasys\Components\GateKeeper
 	 */
 	public function __construct( $settings = array() )
 	{
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( __NAMESPACE__ . '\\Providers' => __DIR__ . '/Providers' );
+			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => dirname( __DIR__ ) . '/Providers' );
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -125,12 +133,12 @@ class GateKeeper extends Seed
 	 *
 	 * @param string                                                  $providerId
 	 * @param array|\DreamFactory\Oasys\Components\BaseProviderConfig $config
+	 * @param bool                                                    $createIfNotFound If false and provider not already created, NULL is returned
 	 *
-	 * @throws \RuntimeException
 	 * @throws \InvalidArgumentException
-	 * @return BaseProviderConfig|bool
+	 * @return BaseProvider
 	 */
-	public function getProvider( $providerId, BaseProviderConfig $config = null )
+	public function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{
 		$providerId = $this->_cleanProviderId( $providerId );
 
@@ -141,6 +149,11 @@ class GateKeeper extends Seed
 			if ( null === ( $_map = Option::get( static::$_classMap, $providerId ) ) )
 			{
 				throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
+			}
+
+			if ( true !== $createIfNotFound && null === $config )
+			{
+				return null;
 			}
 
 			/** @noinspection PhpIncludeInspection */
@@ -161,19 +174,6 @@ class GateKeeper extends Seed
 	}
 
 	/**
-	 * Provider config factory
-	 *
-	 * @param string $providerId
-	 * @param array  $config
-	 *
-	 * @throws \InvalidArgumentException
-	 * @return BaseProviderConfig
-	 */
-	public function createProviderConfig( $providerId, array $config = array() )
-	{
-	}
-
-	/**
 	 * @param string $providerId
 	 * @param array  $parameters
 	 *
@@ -181,7 +181,7 @@ class GateKeeper extends Seed
 	 */
 	public function authenticate( $providerId, $parameters = array() )
 	{
-		return $this->getProvider( $providerId )->getConfig()->authenticate( $parameters );
+		return $this->getProvider( $providerId )->authenticate( $parameters );
 	}
 
 	/**
@@ -189,7 +189,7 @@ class GateKeeper extends Seed
 	 */
 	public function connected( $providerId )
 	{
-		return $this->getProvider( $providerId )->getConfig()->authorized();
+		return $this->getProvider( $providerId )->authorized();
 	}
 
 	/**
@@ -417,5 +417,4 @@ class GateKeeper extends Seed
 	{
 		return Option::get( static::$_classMap, $providerId );
 	}
-
 }

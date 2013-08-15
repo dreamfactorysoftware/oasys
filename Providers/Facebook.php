@@ -2,7 +2,7 @@
 namespace DreamFactory\Oasys\Providers;
 
 use DreamFactory\Oasys\Components\BaseOAuthProvider;
-use DreamFactory\Oasys\Enum\EndpointTypes;
+use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\GenericUser;

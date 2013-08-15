@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Components;
 
-use DreamFactory\Oasys\Enum\EndpointTypes;
+use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\EndpointLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigTypes;

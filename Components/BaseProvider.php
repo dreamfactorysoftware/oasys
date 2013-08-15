@@ -19,10 +19,9 @@
  */
 namespace DreamFactory\Oasys\Components;
 
-use DreamFactory\Oasys\Enum\ProviderConfigTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
-use DreamFactory\Oasys\GateKeeper;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Enums\HttpMethod;
@@ -106,11 +105,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 		if ( empty( $this->_config ) && ( null === $config || !( $config instanceof BaseProviderConfig ) ) )
 		{
-			if ( empty( $this->_type ) )
-			{
-				throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
-			}
-
 			$this->_config = $this->_createConfiguration( $config );
 		}
 
@@ -143,12 +137,12 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		$_defaults = array();
 
 		//	See if there is a default template and load up the defaults
-		$_template = __DIR__ . '/Providers/Templates/' . $this->_providerId . '.template.php';
+		$_template = dirname( __DIR__ ) . '/Providers/Templates/' . $this->_providerId . '.template.php';
 
 		if ( is_file( $_template ) && is_readable( $_template ) )
 		{
 			/** @noinspection PhpIncludeInspection */
-			$_defaults = array_merge( $_defaults, @include( $_template ) );
+			$_defaults = require( $_template );
 		}
 
 		$_options = array_merge( $_defaults, Option::clean( $config ) );
@@ -156,6 +150,11 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		if ( null === ( $_map = $this->_keeper->getClassMapping( $this->_providerId ) ) )
 		{
 			throw new \InvalidArgumentException( 'The provider "' . $this->_providerId . '" does not appear to be a valid provider.' );
+		}
+
+		if ( null === ( $this->_type = Option::get( $_options, 'type' ) ) )
+		{
+			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
 		}
 
 		//	Build the class name for the type of authentication of this provider
@@ -340,7 +339,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		parse_str( Option::server( 'QUERY_STRING' ), $_query );
 
 		//	Set it and forget it
-		return $this->_payload = array_merge( $_query, $this->_payload );
+		return $this->_payload = array_merge( $_query, Option::clean( $this->_payload ) );
 	}
 
 	/**
@@ -604,5 +603,4 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	{
 		return $this->_config;
 	}
-
 }

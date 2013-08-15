@@ -17,22 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use DreamFactory\Oasys\Enum\EndpointTypes;
-use DreamFactory\Oasys\Enum\ProviderConfigTypes;
+namespace DreamFactory\Oasys\Enums;
+
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * googleplus.config.php.dist
- *
- * This is the template for connecting Google Plus.
+ * OAuthFlows
+ * The types of OAuth flows
  */
-return array(
-	'type'            => ProviderConfigTypes::LEGACY_OAUTH,
-	'consumer_id'     => '{{consumer_id}}',
-	'consumer_secret' => '{{consumer_secret}}',
-	'endpoint_map'    => array(
-		EndpointTypes::SERVICE       => 'https://api.twitter.com/1.1',
-		EndpointTypes::AUTHORIZE     => 'https://api.twitter.com/oauth/authenticate',
-		EndpointTypes::REQUEST_TOKEN => 'https://api.twitter.com/oauth/request_token',
-		EndpointTypes::ACCESS_TOKEN  => 'https://api.twitter.com/oauth/access_token',
-	),
-);
+class OAuthFlows extends SeedEnum
+{
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
+
+	/**
+	 * @var int
+	 */
+	const SERVER_SIDE = 0;
+	/**
+	 * @var int
+	 */
+	const CLIENT_SIDE = 1;
+
+}

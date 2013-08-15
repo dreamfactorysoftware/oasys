@@ -1,37 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1376511119">
-  <project timestamp="1376511119">
-    <package name="DreamFactory\Tests\Oasys">
-      <file name="/opt/dreamfactory/lib/oasys/tests/GateKeeperTest.php">
-        <class name="GateKeeperTest" namespace="DreamFactory\Tests\Oasys">
+<coverage generated="1376525926">
+  <project timestamp="1376525926">
+    <package name="DreamFactory\Tests\Oasys\Components">
+      <file name="/media/storage/opt/dreamfactory/lib/oasys/tests/Components/GateKeeperTest.php">
+        <class name="GateKeeperTest" namespace="DreamFactory\Tests\Oasys\Components">
           <metrics methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="16" coveredstatements="0" elements="19" coveredelements="0"/>
         </class>
         <line num="0" type="stmt" count="0"/>
-        <line num="25" type="method" name="setUp" crap="2" count="0"/>
+        <line num="23" type="method" name="setUp" crap="2" count="0"/>
+        <line num="25" type="stmt" count="0"/>
         <line num="27" type="stmt" count="0"/>
         <line num="29" type="stmt" count="0"/>
         <line num="31" type="stmt" count="0"/>
-        <line num="33" type="stmt" count="0"/>
-        <line num="34" type="stmt" count="0"/>
-        <line num="36" type="method" name="testGetSet" crap="6" count="0"/>
-        <line num="38" type="stmt" count="0"/>
+        <line num="32" type="stmt" count="0"/>
+        <line num="34" type="method" name="testGetSet" crap="6" count="0"/>
+        <line num="36" type="stmt" count="0"/>
+        <line num="37" type="stmt" count="0"/>
         <line num="39" type="stmt" count="0"/>
         <line num="41" type="stmt" count="0"/>
         <line num="43" type="stmt" count="0"/>
-        <line num="45" type="stmt" count="0"/>
+        <line num="44" type="stmt" count="0"/>
         <line num="46" type="stmt" count="0"/>
-        <line num="48" type="stmt" count="0"/>
-        <line num="49" type="stmt" count="0"/>
-        <line num="51" type="method" name="tearDown" crap="2" count="0"/>
+        <line num="47" type="stmt" count="0"/>
+        <line num="49" type="method" name="tearDown" crap="2" count="0"/>
+        <line num="51" type="stmt" count="0"/>
         <line num="53" type="stmt" count="0"/>
-        <line num="55" type="stmt" count="0"/>
-        <line num="56" type="stmt" count="0"/>
-        <line num="103" type="stmt" count="0"/>
-        <metrics loc="57" ncloc="45" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="16" coveredstatements="0" elements="19" coveredelements="0"/>
+        <line num="54" type="stmt" count="0"/>
+        <metrics loc="55" ncloc="43" classes="1" methods="3" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="16" coveredstatements="0" elements="19" coveredelements="0"/>
       </file>
     </package>
     <package name="DreamFactory">
-      <file name="/opt/dreamfactory/lib/oasys/tests/Test.php">
+      <file name="/media/storage/opt/dreamfactory/lib/oasys/tests/Test.php">
         <class name="Test" namespace="DreamFactory">
           <metrics methods="1" coveredmethods="1" conditionals="0" coveredconditionals="0" statements="2" coveredstatements="2" elements="3" coveredelements="3"/>
         </class>
@@ -41,7 +40,7 @@
         <metrics loc="14" ncloc="9" classes="1" methods="1" coveredmethods="1" conditionals="0" coveredconditionals="0" statements="2" coveredstatements="2" elements="3" coveredelements="3"/>
       </file>
     </package>
-    <file name="/opt/dreamfactory/lib/oasys/tests/config/oasys.config.php">
+    <file name="/media/storage/opt/dreamfactory/lib/oasys/tests/config/oasys.config.php">
       <line num="8" type="stmt" count="0"/>
       <line num="12" type="stmt" count="0"/>
       <line num="14" type="stmt" count="0"/>
@@ -75,6 +74,6 @@
       <line num="51" type="stmt" count="0"/>
       <metrics loc="51" ncloc="47" classes="0" methods="0" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="31" coveredstatements="0" elements="31" coveredelements="0"/>
     </file>
-    <metrics files="3" loc="122" ncloc="101" classes="2" methods="4" coveredmethods="1" conditionals="0" coveredconditionals="0" statements="49" coveredstatements="2" elements="53" coveredelements="3"/>
+    <metrics files="3" loc="120" ncloc="99" classes="2" methods="4" coveredmethods="1" conditionals="0" coveredconditionals="0" statements="49" coveredstatements="2" elements="53" coveredelements="3"/>
   </project>
 </coverage>

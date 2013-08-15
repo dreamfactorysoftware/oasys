@@ -17,16 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Enum;
+namespace DreamFactory\Oasys\Enums;
 
-use DreamFactory\Oasys\Interfaces\OasysEndpoint;
-use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use Kisma\Core\Enums\SeedEnum;
 
 /**
- * ProviderConfigTypes
- * The supported types of provider configurations
+ * OAuthAccessTypes
+ * The types of OAuth access
  */
-class ProviderConfigTypes extends SeedEnum implements ProviderConfigLike
+class OAuthAccessTypes extends SeedEnum
 {
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
+
+	/**
+	 * @var int
+	 */
+	const OFFLINE = 0;
+	/**
+	 * @var int
+	 */
+	const ONLINE = 1;
+
 }

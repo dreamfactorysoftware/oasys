@@ -17,27 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Enum;
+namespace DreamFactory\Oasys\Providers\Templates;
 
-use Kisma\Core\Enums\SeedEnum;
+use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * OAuthAccessTypes
- * The types of OAuth access
+ * github.config.php.dist
+ *
+ * This is the template for connecting GitHub.
+ *
+ * GitHub scopes are listed here: http://developer.github.com/v3/oauth/#scopes
  */
-class OAuthAccessTypes extends SeedEnum
-{
-	//*************************************************************************
-	//	Constants
-	//*************************************************************************
-
-	/**
-	 * @var int
-	 */
-	const OFFLINE = 0;
-	/**
-	 * @var int
-	 */
-	const ONLINE = 1;
-
-}
+return array(
+	'type'          => ProviderConfigTypes::OAUTH,
+	'client_id'     => '{{client_id}}',
+	'client_secret' => '{{client_secret}}',
+	'scope'         => 'user:email',
+	'endpoint_map'  => array(
+		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
+		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
+		EndpointTypes::SERVICE      => 'https://api.github.com',
+	),
+);
