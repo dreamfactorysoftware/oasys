@@ -127,17 +127,8 @@ class OAuthProviderConfig extends BaseProviderConfig
 	public function __construct( $contents = array() )
 	{
 		Option::set( $contents, 'type', static::OAUTH );
+
 		parent::__construct( $contents );
-
-		if ( null !== ( $_uri = Option::get( $contents, 'authorization_endpoint', null, true ) ) )
-		{
-			$this->mapEndpoint( static::AUTHORIZE, $_uri );
-		}
-
-		if ( null !== ( $_uri = Option::get( $contents, 'access_token_endpoint', null, true ) ) )
-		{
-			$this->mapEndpoint( static::ACCESS_TOKEN, $_uri );
-		}
 	}
 
 	/**
@@ -183,7 +174,7 @@ class OAuthProviderConfig extends BaseProviderConfig
 
 			if ( method_exists( $this, 'get' . $_key ) )
 			{
-				$_json[Inflector::neutralize( $_key )] = $_value;
+				$_json[$this->_providerId . '.' . Inflector::neutralize( $_key )] = $_value;
 			}
 		}
 

@@ -6,3 +6,4 @@ composer.lock
 orig
 example
 hybridauth
+tests/log

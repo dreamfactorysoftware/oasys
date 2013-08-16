@@ -155,7 +155,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		//	Merge in the template, stored stuff and user supplied stuff
 		$_config = array_merge(
 			$_defaults,
-			$this->_store->get(),
+			$this->_config ? $this->_config->toArray() : $this->_store->get(),
 			Option::clean( $config )
 		);
 
@@ -377,7 +377,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\GateKeeper $keeper
+	 * @param GateKeeper $keeper
 	 *
 	 * @return BaseProvider
 	 */
@@ -389,7 +389,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\GateKeeper
+	 * @return GateKeeper
 	 */
 	public function getKeeper()
 	{
@@ -498,7 +498,9 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function get( $key = null, $defaultValue = null, $burnAfterReading = false )
 	{
-		return $this->_store->get( $this->_cleanStoreKey( $key ), $defaultValue, $burnAfterReading );
+		$_configKey = str_ireplace( $this->_providerId . '.', null, $this->_cleanStoreKey( $key ) );
+
+		return Option::get( $this->_config, $_configKey, $defaultValue, $burnAfterReading );
 	}
 
 	/**
@@ -513,33 +515,9 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function set( $key, $value = null, $overwrite = true )
 	{
-		return $this->_store->set( $this->_cleanStoreKey( $key ), $value, $overwrite );
-	}
+		$_configKey = str_ireplace( $this->_providerId . '.', null, $this->_cleanStoreKey( $key ) );
 
-	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
-	 *
-	 * @param string $key
-	 *
-	 * @throws OasysException
-	 * @return mixed|void
-	 */
-	public function remove( $key )
-	{
-		return $this->_store->remove( $this->_cleanStoreKey( $key ) );
-	}
-
-	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
-	 *
-	 * @param string $pattern preg_match-compatible pattern to match against the keys
-	 *
-	 * @throws OasysException
-	 * @return mixed|void
-	 */
-	public function removeMany( $pattern )
-	{
-		return $this->_store->removeMany( $pattern );
+		return Option::set( $this->_config, $_configKey, $value, $overwrite );
 	}
 
 	/**
