@@ -145,6 +145,7 @@ class GateKeeper extends Seed
 				}
 			}
 
+			//	Save!
 			$this->_store->sync();
 		}
 
@@ -290,7 +291,7 @@ class GateKeeper extends Seed
 						 '.php'
 					),
 					null,
-					basename( $providerId )
+					$providerId
 				)
 			)
 		);

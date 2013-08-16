@@ -25,7 +25,7 @@ use DreamFactory\Oasys\Components\OAuth\GrantTypes\Password;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\RefreshToken;
 use DreamFactory\Oasys\Components\OAuth\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Enums\OAuthFlows;
+use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
@@ -55,6 +55,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 * @var OAuthProviderConfig
 	 */
 	protected $_config;
+	/**
+	 * @var string The base URL of the service endpoint
+	 */
+	protected $_baseEndpoint;
 
 	//**************************************************************************
 	//* Methods
@@ -100,7 +104,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 		{
 			if ( false !== $startFlow )
 			{
-				return $this->checkAuthenticationProgress( OAuthFlows::CLIENT_SIDE == $this->_config->getFlowType() );
+				return $this->checkAuthenticationProgress();
 			}
 
 			return false;
@@ -168,7 +172,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 				$_redirectUrl = $this->_redirectProxyUrl . '?redirect=' . urlencode( $_redirectUrl );
 			}
 
-			if ( OAuthFlows::SERVER_SIDE == $this->_config->getFlowType() )
+			if ( Flows::SERVER_SIDE == $this->_config->getFlowType() )
 			{
 				throw new RedirectRequiredException( $_redirectUrl );
 			}
@@ -213,6 +217,20 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 
 		$this->_config->setAccessToken( Option::get( $_info, 'access_token' ) );
 		$this->_config->setAccessTokenExpires( Option::get( $_info, 'expires' ) );
+
+		if ( null !== ( $_type = Option::get( $_info, 'token_type' ) ) )
+		{
+			switch ( strtolower( $_type ) )
+			{
+				case 'bearer':
+					$this->_config->setAccessTokenType( OAuthTokenTypes::BEARER );
+					break;
+
+				case 'oauth':
+					$this->_config->setAccessTokenType( OAuthTokenTypes::OAUTH );
+					break;
+			}
+		}
 
 		return true;
 	}
@@ -270,7 +288,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 * @throws \Kisma\Core\Exceptions\NotImplementedException
 	 * @return array
 	 */
-	public function fetch( $resource, $payload = array(), $method = 'GET', array $headers = array() )
+	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
 	{
 		$_token = $this->_config->getAccessToken();
 
@@ -307,7 +325,17 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 			}
 		}
 
-		return $this->_makeRequest( $resource, $payload, $method, $headers );
+		$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
+
+		$payload = array_merge(
+			Option::get( $_endpoint, 'parameters', array() ),
+			$payload
+		);
+
+		//	Make the url spiffy
+		$_url = rtrim( $_endpoint['endpoint'], '/' ) . '/' . ltrim( $resource, '/' );
+
+		return $this->_makeRequest( $_url, $payload, $method, $headers );
 	}
 
 	/**

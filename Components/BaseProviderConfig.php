@@ -65,24 +65,37 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	//*************************************************************************
 
 	/**
-	 * @param array $contents
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
+	 * @return string JSON-encoded representation of this config
 	 */
-	public function __construct( $contents = array() )
+	public function toJson( $returnAll = false )
 	{
-		//	Map the endpoints properly
-//		$_map = Option::get( $contents, 'endpoint_map', array(), true );
-//
-//		if ( !empty( $_map ) )
-//		{
-//			$this->mapEndpoint( $_map );
-//		}
+		static $_properties = array(
+			'type',
+			'endpointMap',
+			'userAgent',
+		);
 
-		parent::__construct( $contents );
+		$_json = array();
 
-		if ( empty( $this->_providerId ) )
+		foreach ( get_object_vars( $this ) as $_key => $_value )
 		{
-			$this->_providerId = Inflector::neutralize( str_ireplace( 'provider.php', null, basename( get_class( $this ) ) ) );
+			$_key = ltrim( $_key, '_' );
+
+			//	Filter
+			if ( false === $returnAll && !in_array( $_key, $_properties ) )
+			{
+				continue;
+			}
+
+			if ( method_exists( $this, 'get' . $_key ) )
+			{
+				$_json[Inflector::neutralize( $_key )] = $_value;
+			}
 		}
+
+		return json_encode( $_json );
 	}
 
 	/**
@@ -208,26 +221,6 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
-	 * @param string $providerId
-	 *
-	 * @return BaseProviderConfig
-	 */
-	public function setProviderId( $providerId )
-	{
-		$this->_providerId = $providerId;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getProviderId()
-	{
-		return $this->_providerId;
-	}
-
-	/**
 	 * @param string $userAgent
 	 *
 	 * @return BaseProviderConfig
@@ -245,39 +238,6 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	public function getUserAgent()
 	{
 		return $this->_userAgent;
-	}
-
-	/**
-	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
-	 *
-	 * @return string JSON-encoded representation of this config
-	 */
-	public function toJson( $returnAll = false )
-	{
-		static $_properties = array(
-			'providerId',
-			'type',
-		);
-
-		$_json = array();
-
-		foreach ( get_object_vars( $this ) as $_key => $_value )
-		{
-			$_key = ltrim( $_key, '_' );
-
-			//	Filter
-			if ( false === $returnAll && !in_array( $_key, $_properties ) )
-			{
-				continue;
-			}
-
-			if ( method_exists( $this, 'get' . $_key ) )
-			{
-				$_json[Inflector::neutralize( $_key )] = $_value;
-			}
-		}
-
-		return json_encode( $_json );
 	}
 
 	/**

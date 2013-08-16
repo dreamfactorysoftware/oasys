@@ -1,181 +1,80 @@
 <?php
+/**
+ * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
+ *
+ * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
+ * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\BaseProvider;
-use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Components\BaseOAuthProvider;
+use DreamFactory\Oasys\Interfaces\UserLike;
+use Hybridauth\Exception;
+use Kisma\Core\Utility\Option;
 
 /**
  * GooglePlus
- *
- * @package DreamFactory\Oasys\Providers
+ * A GooglePlus provider
  */
-class GooglePlus extends \Hybrid_Provider_Model_OAuth2
+class GooglePlus extends BaseOAuthProvider
 {
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
+
+	/**
+	 * @var string
+	 */
+	const DEFAULT_SCOPE = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.google.com/m8/feeds/';
+
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
 
 	/**
-	 * Returns user profile
+	 * Returns this user as a GenericUser
 	 *
-	 * Examples:
+	 * @param \stdClass|array $profile
 	 *
-	 *    $data = $hybridauth->authenticate( "Google" )->getUserProfile();
+	 * @throws \InvalidArgumentException
+	 * @return UserLike
 	 */
-	function getUserProfile()
+	public function toGenericUser( $profile = null )
 	{
-		$response = $this->signedRequest( "https://www.googleapis.com/oauth2/v1/userinfo" );
-		$response = json_decode( $response );
+		$_contact = new GenericUser();
 
-		// Provider Errors shall not pass silently
-		if ( !$response || !isset( $response->id ) )
+		$_profile = $profile ? : $this->get( 'user_data' );
+
+		if ( empty( $_profile ) )
 		{
-			throw new
-			Exception(
-				'User profile request failed: Provider returned an invalid response. ' .
-				'HTTP client state: (' . $this->httpClient->getState() . ')',
-				Exception::AUTHENTIFICATION_FAILED,
-				$this
-			);
+			throw new \InvalidArgumentException( 'No profile available to convert.' );
 		}
 
-		$parser = function ( $property ) use ( $response )
-		{
-			return property_exists( $response, $property ) ? $response->$property : null;
-		};
+		$_profileId = Option::get( $_profile, 'id' );
 
-		$profile = new Profile();
+		$_name = array(
+			'formatted'  => Option::get( $_profile, 'name' ),
+			'familyName' => Option::get( $_profile, 'last_name' ),
+			'givenName'  => Option::get( $_profile, 'first_name' ),
+		);
 
-		$profile->setIdentifier( $parser( 'id' ) );
-		$profile->setFirstName( $parser( 'given_name' ) );
-		$profile->setLastName( $parser( 'family_name' ) );
-		$profile->setDisplayName( $parser( 'name' ) );
-		$profile->setPhotoURL( $parser( 'picture' ) );
-		$profile->setProfileURL( $parser( 'link' ) );
-		$profile->setGender( $parser( 'gender' ) );
-		$profile->setEmail( $parser( 'email' ) );
-		$profile->setLanguage( $parser( 'locale' ) );
-
-		if ( $parser( 'birthday' ) )
-		{
-			list( $y, $m, $d ) = explode( '-', $response->birthday );
-
-			$profile->setBirthDay( $d );
-			$profile->setBirthMonth( $m );
-			$profile->setBirthYear( $y );
-		}
-
-		if ( $parser( 'verified_email' ) )
-		{
-			$profile->setEmailVerified( $profile->getEmail() );
-		}
-
-		return $profile;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Returns user contacts list
-	 *
-	 * Examples:
-	 *
-	 *    $data = $hybridauth->authenticate( "Google" )->getUserContacts( array( "max-results" => 10 ) );
-	 */
-	function getUserContacts( $args = array() )
-	{
-		// refresh tokens if needed
-		$this->refreshToken();
-
-		$url = "https://www.google.com/m8/feeds/contacts/default/full?"
-			   . http_build_query( array_merge( array( 'alt' => 'json' ), $args ) );
-
-		$response = $this->signedRequest( $url );
-		$response = json_decode( $response );
-
-		if ( !$response || isset( $response->error ) )
-		{
-			throw new
-			Exception(
-				'User contacts request failed: Provider returned an invalid response. ' .
-				'HTTP client state: (' . $this->httpClient->getState() . ')',
-				Exception::USER_PROFILE_REQUEST_FAILED,
-				$this
-			);
-		}
-
-		$contacts = array();
-
-		if ( isset( $response->feed ) && is_array( $response->feed ) )
-		{
-			foreach ( $response->feed->entry as $idx => $entry )
-			{
-				$profile = new Profile();
-
-				$email = isset( $entry->{'gd$email'} [0]->address ) ? (string)$entry->{'gd$email'} [0]->address : '';
-				$displayName = isset( $entry->title->{'$t'} ) ? (string)$entry->title->{'$t'} : '';
-
-				$profile->setIdentifier( $email );
-				$profile->setDisplayName( $displayName );
-				$profile->setEmail( $email );
-
-				$contacts[] = $profile;
-			}
-		}
-
-		return $contacts;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Updates user status
-	 *
-	 * Examples:
-	 *
-	 *    $data = $hybridauth->authenticate( "Google" )->setUserStatus( _STATUS_ );
-	 */
-	function setUserStatus( $status )
-	{
-		throw new Exception( "Unsupported", Exception::UNSUPPORTED_FEATURE, null, $this );
-	}
-
-	/**
-	 * Begin the authorization process
-	 *
-	 * @throws RedirectRequiredException
-	 */
-	public function startAuthorization()
-	{
-		// TODO: Implement startAuthorization() method.
-	}
-
-	/**
-	 * Complete the authorization process
-	 */
-	public function completeAuthorization()
-	{
-		// TODO: Implement completeAuthorization() method.
-	}
-
-	/**
-	 * Checks to see if user is authorized with this provider
-	 *
-	 * @return bool
-	 */
-	public function authorized()
-	{
-		// TODO: Implement authorized() method.
-	}
-
-	/**
-	 * Unlink/disconnect/logout user from provider locally.
-	 * Does nothing on the provider end
-	 *
-	 * @return void
-	 */
-	public function deauthorize()
-	{
-		// TODO: Implement deauthorize() method.
+		return $_contact->setUserId( $_profileId )->setPublished( Option::get( $_profile, 'updated_time' ) )->setUpdated( Option::get( $_profile, 'updated_time' ) )
+			   ->setDisplayName( $_name['formatted'] )->setName( $_name )->setPreferredUsername( Option::get( $_profile, 'username' ) )->setGender(
+					   Option::get( $_profile, 'gender' )
+				   )->setEmails( array(Option::get( $_profile, 'email' )) )->setUrls( array(Option::get( $_profile, 'link' )) )->setRelationships(
+					   Option::get( $_profile, 'friends' )
+				   )->setPhotos( array(static::BASE_API_URL . '/' . $_profileId . '/picture?width=150&height=150') )->setUserData( $_profile );
 	}
 }

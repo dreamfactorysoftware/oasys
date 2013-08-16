@@ -20,6 +20,7 @@
 namespace DreamFactory\Oasys\Interfaces;
 
 use DreamFactory\Oasys\Components\BaseProviderConfig;
+use Kisma\Core\Enums\HttpMethod;
 
 /**
  * ProviderLike
@@ -60,4 +61,14 @@ interface ProviderLike
 	 * @return $this|ProviderLike|void
 	 */
 	public function authenticate( $options = array() );
+
+	/**
+	 * @param string $resource
+	 * @param array  $payload
+	 * @param string $method
+	 * @param array  $headers
+	 *
+	 * @return mixed
+	 */
+	public function fetch( $resource, $payload = array(), $method = HttpMethod::Get, array $headers = array() );
 }

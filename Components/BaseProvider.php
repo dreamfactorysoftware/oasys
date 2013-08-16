@@ -22,6 +22,7 @@ namespace DreamFactory\Oasys\Components;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Enums\HttpMethod;
@@ -72,7 +73,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_config;
 	/**
-	 * @var mixed Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK)
+	 * @var ProviderClientLike Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK)
 	 */
 	protected $_client;
 	/**
@@ -189,7 +190,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			$_payload = $this->_payload;
 		}
 
-		if ( false === ( $_authorized = Option::getBool( $_payload, 'oasys.authorized' ) ) )
+		if ( !$this->authorized() )
 		{
 			return $this->startAuthorization();
 		}
@@ -357,7 +358,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param mixed $client
+	 * @param ProviderClientLike $client
 	 *
 	 * @return BaseProvider
 	 */
@@ -369,7 +370,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @return mixed
+	 * @return ProviderClientLike
 	 */
 	public function getClient()
 	{

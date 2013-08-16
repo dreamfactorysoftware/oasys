@@ -15,15 +15,6 @@ use Kisma\Core\Utility\Curl;
 abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLike, HttpMethod
 {
 	//*************************************************************************
-	//* Members
-	//*************************************************************************
-
-	/**
-	 * @var OAuthClient
-	 */
-	protected $_client;
-
-	//*************************************************************************
 	//	Methods
 	//*************************************************************************
 
@@ -40,6 +31,27 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		$this->_client = new OAuthClient( $this->_config, $this->_store );
+	}
+
+	/**
+	 * Checks to see if user is authorized with this provider
+	 *
+	 * @return bool
+	 */
+	public function authorized()
+	{
+		return $this->_client->authorized();
+	}
+
+	/**
+	 * Unlink/disconnect/logout user from provider locally.
+	 * Does nothing on the provider end
+	 *
+	 * @return void
+	 */
+	public function deauthorize()
+	{
+		$this->_client->deauthorize();
 	}
 
 	/**
@@ -112,5 +124,18 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			'code'         => Curl::getLastHttpCode(),
 			'content_type' => Curl::getInfo( 'content_type' ),
 		);
+	}
+
+	/**
+	 * @param string $resource
+	 * @param array  $payload
+	 * @param string $method
+	 * @param array  $headers
+	 *
+	 * @return mixed|void
+	 */
+	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
+	{
+		return $this->_client->fetch( $resource, $payload, $method, $headers );
 	}
 }

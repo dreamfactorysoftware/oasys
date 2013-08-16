@@ -20,11 +20,11 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Components\BaseProviderConfig;
+use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthGrantTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTokenTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTypes;
-use DreamFactory\Oasys\Enums\OAuthAccessTypes;
-use DreamFactory\Oasys\Enums\OAuthFlows;
+use DreamFactory\Oasys\Components\OAuth\Enums\AccessTypes;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
@@ -57,11 +57,11 @@ class OAuthProviderConfig extends BaseProviderConfig
 	/**
 	 * @var int
 	 */
-	protected $_flowType = OAuthFlows::SERVER_SIDE;
+	protected $_flowType = Flows::SERVER_SIDE;
 	/**
 	 * @var int
 	 */
-	protected $_accessType = OAuthAccessTypes::OFFLINE;
+	protected $_accessType = AccessTypes::OFFLINE;
 	/**
 	 * @var int
 	 */
@@ -174,7 +174,7 @@ class OAuthProviderConfig extends BaseProviderConfig
 
 			if ( method_exists( $this, 'get' . $_key ) )
 			{
-				$_json[$this->_providerId . '.' . Inflector::neutralize( $_key )] = $_value;
+				$_json[Inflector::neutralize( $_key )] = $_value;
 			}
 		}
 

@@ -17,19 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Interfaces;
+namespace DreamFactory\Oasys\Components\OAuth\Enums;
+
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * ProviderClientLike
+ * AccessTypes
+ * The types of OAuth access
  */
-interface ProviderClientLike extends ProviderLike
+class AccessTypes extends SeedEnum
 {
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
+
 	/**
-	 * Checks the progress of any in-flight OAuth requests
-	 *
-	 * @throws RedirectRequiredException
-	 *
-	 * @return string
+	 * @var int
 	 */
-	public function checkAuthenticationProgress();
+	const OFFLINE = 0;
+	/**
+	 * @var int
+	 */
+	const ONLINE = 1;
 }

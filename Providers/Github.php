@@ -20,19 +20,16 @@
 namespace DreamFactory\Oasys\Providers;
 
 use DreamFactory\Oasys\Components\BaseOAuthProvider;
-use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
-use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\GenericUser;
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Hybridauth\Exception;
 use Kisma\Core\Utility\Option;
 
 /**
- * Facebook
- * A facebook provider
+ * Github
+ * A Github provider
  */
-class Facebook extends BaseOAuthProvider
+class Github extends BaseOAuthProvider
 {
 	//*************************************************************************
 	//	Constants
@@ -41,7 +38,7 @@ class Facebook extends BaseOAuthProvider
 	/**
 	 * @var string
 	 */
-	const DEFAULT_SCOPE = 'email,user_about_me,user_birthday,user_hometown,user_website,read_stream,offline_access,publish_stream,read_friendlists';
+	const DEFAULT_SCOPE = 'user:email';
 
 	//*************************************************************************
 	//	Methods
