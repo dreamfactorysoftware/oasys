@@ -29,6 +29,8 @@
 		<exclude>
 			<directory>./tests/metrics</directory>
 			<directory>./tests/config</directory>
+			<directory>./tests/web</directory>
+			<directory>./tests/log</directory>
 		</exclude>
 	</filter>
 	<logging>

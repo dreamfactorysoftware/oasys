@@ -20,6 +20,7 @@
 namespace DreamFactory\Oasys\Components;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\OAuthFlows;
 use DreamFactory\Oasys\Interfaces\EndpointLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigTypes;
@@ -55,6 +56,10 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	 * @var string The user agent to use for this provider, if any
 	 */
 	protected $_userAgent;
+	/**
+	 * @var array
+	 */
+	protected $_payload;
 
 	//*************************************************************************
 	//* Methods
@@ -65,6 +70,14 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	 */
 	public function __construct( $contents = array() )
 	{
+		//	Map the endpoints properly
+//		$_map = Option::get( $contents, 'endpoint_map', array(), true );
+//
+//		if ( !empty( $_map ) )
+//		{
+//			$this->mapEndpoint( $_map );
+//		}
+
 		parent::__construct( $contents );
 
 		if ( empty( $this->_providerId ) )
@@ -80,7 +93,10 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	 */
 	public function setEndpointMap( $endpointMap )
 	{
-		$this->_endpointMap = $endpointMap;
+		foreach ( Option::clean( $endpointMap ) as $_type => $_endpoint )
+		{
+			$this->mapEndpoint( $_type, $_endpoint );
+		}
 
 		return $this;
 	}
@@ -94,12 +110,14 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
-	 * @param int $type endpoint map type (@see EndpointTypes)
+	 * @param int  $type endpoint map type (@see EndpointTypes)
+	 *
+	 * @param bool $urlOnly
 	 *
 	 * @throws \InvalidArgumentException
 	 * @return array
 	 */
-	public function getEndpoint( $type )
+	public function getEndpoint( $type, $urlOnly = false )
 	{
 		if ( !EndpointTypes::contains( $type ) )
 		{
@@ -116,13 +134,18 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 			$_endpoint = current( $this->_endpointMap );
 		}
 
+		if ( false !== $urlOnly )
+		{
+			return Option::get( $_endpoint, 'endpoint' );
+		}
+
 		return $_endpoint;
 	}
 
 	/**
-	 * @param int|array[] $type       An EndpointTypes constant or an array of mappings
-	 * @param string      $endpoint   Call with null to remove a mapping
-	 * @param array       $parameters KVPs of additional parameters
+	 * @param int|array[]  $type       An EndpointTypes constant or an array of mappings
+	 * @param string|array $endpoint   Call with null to remove a mapping
+	 * @param array        $parameters KVPs of additional parameters
 	 *
 	 * @throws \InvalidArgumentException
 	 * @return BaseProviderConfig
@@ -136,6 +159,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 			{
 				$this->mapEndpoint( $_endpointType, $_endpoint );
 			}
+
+			return $this;
 		}
 
 		if ( !EndpointTypes::contains( $type ) )
@@ -150,7 +175,12 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 			return $this;
 		}
 
-		Option::set( $this->_endpointMap, $type, is_array( $endpoint ) ? $endpoint : array( 'endpoint' => $endpoint, 'parameters' => $parameters ) );
+		if ( is_string( $endpoint ) )
+		{
+			$endpoint = array( 'endpoint' => $endpoint, 'parameters' => $parameters ? : array() );
+		}
+
+		$this->_endpointMap[$type] = $endpoint;
 
 		return $this;
 	}
@@ -196,6 +226,26 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
+	 * @param string $userAgent
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function setUserAgent( $userAgent )
+	{
+		$this->_userAgent = $userAgent;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getUserAgent()
+	{
+		return $this->_userAgent;
+	}
+
+	/**
 	 * @return string JSON-encoded representation of this config
 	 */
 	public function toJson()
@@ -221,5 +271,25 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	public function toArray()
 	{
 		return json_decode( $this->toJson(), true );
+	}
+
+	/**
+	 * @param array $payload
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function setPayload( $payload )
+	{
+		$this->_payload = $payload;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getPayload()
+	{
+		return $this->_payload;
 	}
 }

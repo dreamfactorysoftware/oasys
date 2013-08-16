@@ -30,43 +30,6 @@ class Facebook extends BaseOAuthProvider
 	//*************************************************************************
 
 	/**
-	 * @return bool|void
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
-	 */
-	public function init()
-	{
-		parent::init();
-
-		if ( empty( $this->_clientId ) || empty( $this->_clientSecret ) )
-		{
-			throw new OasysConfigurationException( 'You must supply values for both "client_id" and "client_secret" to use this provider.' );
-		}
-
-		if ( empty( $this->_scope ) )
-		{
-			$this->get( 'scope' );
-		}
-
-		//	Map the Facebook endpoints...
-		$this->mapEndpoint(
-			array(
-				 array(
-					 EndpointTypes::SERVICE => static::BASE_API_URL
-				 ),
-				 array(
-					 EndpointTypes::AUTHORIZE => array(
-						 'endpoint'   => 'https://www.facebook.com/dialog/oauth',
-						 'parameters' => array( 'display' => 'page' ),
-					 ),
-				 ),
-				 array(
-					 EndpointTypes::REQUEST_TOKEN => static::BASE_API_URL . '/oauth/access_token'
-				 ),
-			)
-		);
-	}
-
-	/**
 	 * Returns this user as a GenericUser
 	 *
 	 * @param \stdClass|array $profile
@@ -221,30 +184,23 @@ class Facebook extends BaseOAuthProvider
 	}
 
 	/**
-	 * Begin the authorization process
-	 *
-	 * @throws RedirectRequiredException
-	 */
-	public function startAuthorization()
-	{
-		// TODO: Implement startAuthorization() method.
-	}
-
-	/**
-	 * Complete the authorization process
-	 */
-	public function completeAuthorization()
-	{
-		// TODO: Implement completeAuthorization() method.
-	}
-
-	/**
 	 * Checks to see if user is authorized with this provider
 	 *
 	 * @return bool
 	 */
 	public function authorized()
 	{
-		// TODO: Implement authorized() method.
+		return $this->_client->authorized();
+	}
+
+	/**
+	 * Unlink/disconnect/logout user from provider locally.
+	 * Does nothing on the provider end
+	 *
+	 * @return void
+	 */
+	public function deauthorize()
+	{
+		$this->_client->deauthorize();
 	}
 }

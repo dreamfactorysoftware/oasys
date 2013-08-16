@@ -130,11 +130,13 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	/**
 	 * @param array $config
 	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \InvalidArgumentException
+	 * @return
 	 */
 	protected function _createConfiguration( $config = null )
 	{
-		$_defaults = array();
+		$_defaults = array( 'store' => $this->_store );;
 
 		//	See if there is a default template and load up the defaults
 		$_template = dirname( __DIR__ ) . '/Providers/Templates/' . $this->_providerId . '.template.php';
@@ -248,7 +250,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 		$this->resetAuthorization();
 
-		$_baseUrl = $this->_config->getRedirectUri();
+		$_baseUrl = $this->get( 'redirect_uri' );
 		$_ticket = sha1( $this->getId() . '.' . time() );
 
 		$_startpoint = $_baseUrl . ( false !== strpos( $_baseUrl, '?' ) ? '&' : '?' ) . 'oasys.pid=' . $this->_providerId . '&oasys.ticket=' . $_ticket;
@@ -281,7 +283,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _resetRedirect()
 	{
-		$_uri = $this->_config->getRedirectUri();
+		$_uri = $this->get( 'redirect_uri' );
 		$this->resetAuthorization();
 		$this->_redirect( $_uri );
 	}

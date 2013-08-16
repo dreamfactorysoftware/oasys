@@ -53,7 +53,7 @@ class OAuthProviderConfig extends BaseProviderConfig
 	/**
 	 * @var int
 	 */
-	protected $_flow = OAuthFlows::SERVER_SIDE;
+	protected $_flowType = OAuthFlows::SERVER_SIDE;
 	/**
 	 * @var int
 	 */
@@ -66,6 +66,10 @@ class OAuthProviderConfig extends BaseProviderConfig
 	 * @var string
 	 */
 	protected $_refreshToken;
+	/**
+	 * @var string Full file name of a certificate to use for this connection
+	 */
+	protected $_certificateFile;
 
 	//*************************************************************************
 	//* Methods
@@ -153,26 +157,6 @@ class OAuthProviderConfig extends BaseProviderConfig
 	}
 
 	/**
-	 * @param int $flow
-	 *
-	 * @return OAuthProviderConfig
-	 */
-	public function setFlow( $flow )
-	{
-		$this->_flow = $flow;
-
-		return $this;
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getFlow()
-	{
-		return $this->_flow;
-	}
-
-	/**
 	 * @param string $accessToken
 	 *
 	 * @return OAuthProviderConfig
@@ -250,5 +234,45 @@ class OAuthProviderConfig extends BaseProviderConfig
 	public function getScope()
 	{
 		return $this->_scope;
+	}
+
+	/**
+	 * @param int $flowType
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setFlowType( $flowType )
+	{
+		$this->_flowType = $flowType;
+
+		return $this;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getFlowType()
+	{
+		return $this->_flowType;
+	}
+
+	/**
+	 * @param string $certificateFile
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setCertificateFile( $certificateFile )
+	{
+		$this->_certificateFile = $certificateFile;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getCertificateFile()
+	{
+		return $this->_certificateFile;
 	}
 }

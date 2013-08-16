@@ -16,9 +16,13 @@ use DreamFactory\Oasys\Stores\FileSystem;
 class GateKeeperTest extends \PHPUnit_Framework_TestCase
 {
 	/**
-	 * @var GateKeeper
+	 * @var \DreamFactory\Oasys\Components\GateKeeper
 	 */
 	protected $_gk;
+	/**
+	 * @var \DreamFactory\Oasys\Providers\Facebook
+	 */
+	protected $_provider;
 
 	protected function setUp()
 	{
@@ -26,13 +30,16 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 
 		$this->_gk = new GateKeeper( array_merge( array( 'store' => $_store ), require( dirname( __DIR__ ) . '/config/oasys.config.php' ) ) );
 
-//		$this->_gk->getProvider(
-//			'facebook',
-//			array(
-//				 'client_id'     => '1392217090991437',
-//				 'client_secret' => 'd5dd3a24b1ec6c5f204a300ed24c60d0',
-//			)
-//		);
+		$this->_provider = $this->_gk->getProvider(
+			'facebook',
+			array(
+				 'client_id'     => '1392217090991437',
+				 'client_secret' => 'd5dd3a24b1ec6c5f204a300ed24c60d0',
+			)
+		);
+
+		$this->_provider->authorized();
+		$this->_provider->handleRequest();
 
 		parent::setUp();
 	}
