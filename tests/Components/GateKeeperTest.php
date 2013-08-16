@@ -41,9 +41,6 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 			)
 		);
 
-		$this->_provider->authorized();
-		$this->_provider->handleRequest();
-
 		parent::setUp();
 	}
 
