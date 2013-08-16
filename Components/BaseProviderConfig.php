@@ -68,6 +68,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
 	 *
 	 * @return string JSON-encoded representation of this config
+	 * @return string
 	 */
 	public function toJson( $returnAll = false )
 	{

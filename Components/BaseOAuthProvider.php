@@ -30,7 +30,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
 
-		$this->_client = new OAuthClient( $this->_config, $this->_store );
+		$this->_client = new OAuthClient( $this->_config );
 	}
 
 	/**
@@ -70,6 +70,19 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	public function completeAuthorization()
 	{
 		return $this->_client->checkAuthenticationProgress();
+	}
+
+	/**
+	 * @param string $resource
+	 * @param array  $payload
+	 * @param string $method
+	 * @param array  $headers
+	 *
+	 * @return mixed|void
+	 */
+	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
+	{
+		return $this->_client->fetch( $resource, $payload, $method, $headers );
 	}
 
 	/**
@@ -124,18 +137,5 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			'code'         => Curl::getLastHttpCode(),
 			'content_type' => Curl::getInfo( 'content_type' ),
 		);
-	}
-
-	/**
-	 * @param string $resource
-	 * @param array  $payload
-	 * @param string $method
-	 * @param array  $headers
-	 *
-	 * @return mixed|void
-	 */
-	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
-	{
-		return $this->_client->fetch( $resource, $payload, $method, $headers );
 	}
 }

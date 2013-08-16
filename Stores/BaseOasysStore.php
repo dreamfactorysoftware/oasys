@@ -66,6 +66,16 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 
 	/**
 	 * @param string $key
+	 *
+	 * @return string
+	 */
+	protected function _denormalizeKey( $key )
+	{
+		return str_ireplace( static::KEY_PREFIX, null, $key );
+	}
+
+	/**
+	 * @param string $key
 	 * @param mixed  $defaultValue
 	 * @param bool   $burnAfterReading
 	 *
@@ -76,7 +86,14 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 		//	Return all if null
 		if ( empty( $key ) )
 		{
-			return $this->contents();
+			$_contents = array();
+
+			foreach ( $this->contents() as $_key => $_value )
+			{
+				$_contents[$this->_denormalizeKey( $_key )] = $_value;
+			}
+
+			return $_contents;
 		}
 
 		return parent::get( $this->_normalizeKey( $key ), $defaultValue, $burnAfterReading );

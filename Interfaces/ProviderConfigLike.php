@@ -59,14 +59,14 @@ interface ProviderConfigLike
 	/**
 	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
 	 *
-	 * @return bool JSON-encoded representation of this config
+	 * @return string JSON-encoded representation of this config
 	 */
 	public function toJson( $returnAll = false );
 
 	/**
 	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
 	 *
-	 * @return bool
+	 * @return array
 	 */
 	public function toArray( $returnAll = false );
 }

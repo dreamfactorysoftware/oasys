@@ -156,7 +156,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		//	Merge in the template, stored stuff and user supplied stuff
 		$_config = array_merge(
 			$_defaults,
-			$this->_config ? $this->_config->toArray() : $this->_store->get(),
 			Option::clean( $config )
 		);
 
@@ -179,6 +178,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	/**
 	 * @param array $payload If empty, request query string is used
 	 *
+	 * @return \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 * @return mixed
 	 */
 	public function handleRequest( $payload = null )
@@ -195,7 +195,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			return $this->startAuthorization();
 		}
 
-		$this->completeAuthorization();
+		return $this->completeAuthorization();
 	}
 
 	/**

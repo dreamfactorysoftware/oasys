@@ -52,7 +52,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	//**************************************************************************
 
 	/**
-	 * @var OAuthProviderConfig
+	 * @var OAuthProviderConfig|ProviderConfigLike
 	 */
 	protected $_config;
 	/**
@@ -65,7 +65,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	//**************************************************************************
 
 	/**
-	 * @param OAuthProviderConfig $config
+	 * @param OAuthProviderConfig|ProviderConfigLike $config
 	 *
 	 * @throws \InvalidArgumentException
 	 * @return \DreamFactory\Oasys\Components\OAuth\OAuthClient
@@ -78,7 +78,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 
 		if ( null === $config->getRedirectUri() )
 		{
-			$this->_config->setRedirectUri( Option::get( $options, 'redirect_uri', Curl::currentUrl( false ) ) );
+			$this->_config->setRedirectUri( Curl::currentUrl( false ) );
 		}
 
 		$_cert = $config->getCertificateFile();
@@ -152,6 +152,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 */
 	public function checkAuthenticationProgress()
 	{
+		if ( $this->_config->getAccessToken() )
+		{
+			return true;
+		}
+
 		$_code = FilterInput::get( INPUT_GET, 'code' );
 
 		//	No code is present, request one
@@ -218,19 +223,19 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 		$this->_config->setAccessToken( Option::get( $_info, 'access_token' ) );
 		$this->_config->setAccessTokenExpires( Option::get( $_info, 'expires' ) );
 
-		if ( null !== ( $_type = Option::get( $_info, 'token_type' ) ) )
-		{
-			switch ( strtolower( $_type ) )
-			{
-				case 'bearer':
-					$this->_config->setAccessTokenType( OAuthTokenTypes::BEARER );
-					break;
-
-				case 'oauth':
-					$this->_config->setAccessTokenType( OAuthTokenTypes::OAUTH );
-					break;
-			}
-		}
+//		if ( null !== ( $_type = Option::get( $_info, 'token_type' ) ) )
+//		{
+//			switch ( strtolower( $_type ) )
+//			{
+//				case 'bearer':
+//					$this->_config->setAccessTokenType( OAuthTokenTypes::BEARER );
+//					break;
+//
+//				case 'oauth':
+//					$this->_config->setAccessTokenType( OAuthTokenTypes::OAUTH );
+//					break;
+//			}
+//		}
 
 		return true;
 	}
