@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components;
+namespace DreamFactory\Oasys\Components\OAuth;
 
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthGrantTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTokenTypes;
@@ -26,13 +26,15 @@ use DreamFactory\Oasys\Components\OAuth\GrantTypes\RefreshToken;
 use DreamFactory\Oasys\Components\OAuth\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\OAuthFlows;
+use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
+use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
-use Kisma\Core\SeedBag;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\FilterInput;
@@ -43,56 +45,16 @@ use Kisma\Core\Utility\Option;
  * OAuthClient
  * An base that knows how to talk OAuth2
  */
-class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
+class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, HttpMethod
 {
 	//**************************************************************************
 	//* Members
 	//**************************************************************************
 
 	/**
-	 * @var StorageProviderLike
-	 */
-	protected $_store;
-	/**
 	 * @var OAuthProviderConfig
 	 */
 	protected $_config;
-	/**
-	 * @var int The default OAuth authentication type
-	 */
-	protected $_authType = OAuthTypes::URI;
-	/**
-	 * @var string The default grant type is 'authorization_code'
-	 */
-	protected $_grantType = OAuthGrantTypes::AUTHORIZATION_CODE;
-	/**
-	 * @var string The OAuth access token parameter name for the requests
-	 */
-	protected $_accessTokenParamName = 'access_token';
-	/**
-	 * @var string The value to put in the "Authorization" header (i.e. Authorization: OAuth OAUTH-TOKEN). This can vary from service to service
-	 */
-	protected $_authHeaderName = 'OAuth';
-	/**
-	 * @var string The service authorization URL
-	 */
-	protected $_authorizeUrl = null;
-	/**
-	 * @var string The type of access token desired
-	 */
-	protected $_accessTokenType = OAuthTokenTypes::URI;
-	/**
-	 * @var string The access token secret key
-	 */
-	protected $_accessTokenSecret = null;
-	/**
-	 * @var string The hash algorithm used for signing requests
-	 */
-	protected $_hashAlgorithm = null;
-	/**
-	 * @var string
-	 */
-	protected $_redirectProxyUrl = null;
 
 	//**************************************************************************
 	//* Methods
@@ -100,36 +62,17 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 
 	/**
 	 * @param OAuthProviderConfig $config
-	 * @param StorageProviderLike $store
 	 *
 	 * @throws \InvalidArgumentException
-	 *
-	 * @return \DreamFactory\Oasys\Components\OAuthClient
+	 * @return \DreamFactory\Oasys\Components\OAuth\OAuthClient
 	 */
-	public function __construct( $config, $store )
+	public function __construct( $config )
 	{
 		parent::__construct();
 
 		$this->_config = $config;
-		$this->_store = $store;
 
-		foreach ( $config->toArray() as $_key => $_value )
-		{
-			$_member = Inflector::deneutralize( $_key );
-			$_altMember = '_' . $_member;
-
-			if ( !property_exists( $this, $_member ) && !property_exists( $this, $_altMember ) )
-			{
-				continue;
-			}
-
-			if ( method_exists( $this, 'set' . $_member ) )
-			{
-				$this->{'set' . $_member}( $_value );
-			}
-		}
-
-		if ( null === $this->_config->getRedirectUri() )
+		if ( null === $config->getRedirectUri() )
 		{
 			$this->_config->setRedirectUri( Option::get( $options, 'redirect_uri', Curl::currentUrl( false ) ) );
 		}
@@ -248,9 +191,16 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 
 		$_info = null;
 
-		if ( null !== ( $_result = Option::get( $_token, 'result' ) ) )
+		if ( isset( $_token, $_token['result'] ) )
 		{
-			parse_str( $_token['result'], $_info );
+			if ( !is_string( $_token['result'] ) )
+			{
+				$_info = $_token['result'];
+			}
+			else
+			{
+				parse_str( $_token['result'], $_info );
+			}
 		}
 
 		if ( null !== ( $_error = Option::get( $_info, 'error' ) ) )
@@ -261,7 +211,8 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 			return false;
 		}
 
-		$this->set( 'access_token', Option::get( $_info, 'access_token' ) );
+		$this->_config->setAccessToken( Option::get( $_info, 'access_token' ) );
+		$this->_config->setAccessTokenExpires( Option::get( $_info, 'expires' ) );
 
 		return true;
 	}
@@ -280,7 +231,7 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 
 		$_headers = array();
 
-		switch ( $this->_authType )
+		switch ( $this->_config->getAuthType() )
 		{
 			case OAuthTypes::URI:
 			case OAuthTypes::FORM:
@@ -294,7 +245,7 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 				break;
 
 			default:
-				throw new \InvalidArgumentException( 'The auth type "' . $this->_authType . '" is invalid.' );
+				throw new \InvalidArgumentException( 'The configured authorization type "' . $this->_config->getAuthType() . '" is invalid.' );
 		}
 
 		$_map = $this->_config->getEndpoint( EndpointTypes::ACCESS_TOKEN );
@@ -315,56 +266,44 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 	 * @param string $method
 	 * @param array  $headers
 	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \Kisma\Core\Exceptions\NotImplementedException
-	 * @throws \InvalidArgumentException
-	 *
 	 * @return array
 	 */
 	public function fetch( $resource, $payload = array(), $method = 'GET', array $headers = array() )
 	{
+		$_token = $this->_config->getAccessToken();
+
 		//	Use the resource url if provided...
-		if ( $this->_accessToken )
+		if ( $_token )
 		{
-			switch ( $this->_accessTokenType )
+			$_authHeaderName = $this->_config->getAuthHeaderName();
+
+			switch ( $this->_config->getAccessTokenType() )
 			{
 				case OAuthTokenTypes::URI:
-					if ( !empty( $this->_authHeaderName ) )
-					{
-						$headers[] = 'Authorization: ' . $this->_authHeaderName . ' ' . $this->_accessToken;
-					}
-					else
-					{
-						$payload[$this->_accessTokenParamName] = $this->_accessToken;
-					}
+					$payload[$this->_config->getAccessTokenParamName()] = $_token;
+					$_authHeaderName = null;
 					break;
 
 				case OAuthTokenTypes::BEARER:
-					if ( !empty( $this->_authHeaderName ) )
-					{
-						$headers[] = 'Authorization: ' . $this->_authHeaderName . ' ' . $this->_accessToken;
-					}
-					else
-					{
-						$headers[] = 'Authorization: Bearer ' . $this->_accessToken;
-					}
+					$_authHeaderName = $_authHeaderName ? : 'Bearer';
 					break;
 
 				case OAuthTokenTypes::OAUTH:
-					if ( !empty( $this->_authHeaderName ) )
-					{
-						$headers[] = 'Authorization: ' . $this->_authHeaderName . ' ' . $this->_accessToken;
-					}
-					else
-					{
-						$headers[] = 'Authorization: OAuth ' . $this->_accessToken;
-					}
+					$_authHeaderName = $_authHeaderName ? : 'OAuth';
 					break;
 
 				case OAuthTokenTypes::MAC:
 					throw new NotImplementedException();
 
 				default:
-					throw new \InvalidArgumentException( 'Unknown access token type.' );
+					throw new OasysConfigurationException( 'Unknown access token type "' . $this->_config->getAccessTokenType() . '".' );
+			}
+
+			if ( null !== $_authHeaderName )
+			{
+				$headers[] = 'Authorization: ' . $_authHeaderName . ' ' . $_token;
 			}
 		}
 
@@ -396,22 +335,9 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 
 		$_qs = http_build_query( $_payload );
 
-		return $this->_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs );
-	}
+		$this->_config->setAuthorizeUrl( $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
 
-	/**
-	 * Generate the MAC signature
-	 *
-	 * @param string $url         Called URL
-	 * @param array  $payload     Parameters
-	 * @param string $method      Http Method
-	 *
-	 * @throws \Kisma\Core\Exceptions\NotImplementedException
-	 * @return string
-	 */
-	protected function _signRequest( $url, $payload, $method )
-	{
-		throw new NotImplementedException( 'This type of authorization is not not implemented.' );
+		return $_authorizeUrl;
 	}
 
 	/**
@@ -429,9 +355,9 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 	{
 		$headers = Option::clean( $headers );
 
-		if ( !empty( $this->_userAgent ) )
+		if ( null !== ( $_agent = $this->_config->getUserAgent() ) )
 		{
-			$headers[] = 'User-Agent: ' . $this->_userAgent;
+			$headers[] = 'User-Agent: ' . $_agent;
 		}
 
 		$_curlOptions = array(
@@ -459,228 +385,18 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
 
+		$_contentType = Curl::getInfo( 'content_type' );
+
+		if ( false !== stripos( $_contentType, 'application/json', 0 ) && !empty( $_result ) && is_string( $_result ) )
+		{
+			$_result = json_decode( $_result, true );
+		}
+
 		return array(
 			'result'       => $_result,
 			'code'         => Curl::getLastHttpCode(),
-			'content_type' => Curl::getInfo( 'content_type' ),
+			'content_type' => $_contentType,
 		);
-	}
-
-	/**
-	 * @param string $accessTokenParamName
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAccessTokenParamName( $accessTokenParamName )
-	{
-		$this->_accessTokenParamName = $accessTokenParamName;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAccessTokenParamName()
-	{
-		return $this->_accessTokenParamName;
-	}
-
-	/**
-	 * @param string $accessTokenSecret
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAccessTokenSecret( $accessTokenSecret )
-	{
-		$this->_accessTokenSecret = $accessTokenSecret;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAccessTokenSecret()
-	{
-		return $this->_accessTokenSecret;
-	}
-
-	/**
-	 * Set the access token type
-	 *
-	 * @param int    $accessTokenType Access token type
-	 * @param string $secret          The secret key used to encrypt the MAC header
-	 * @param string $algorithm       Algorithm used to encrypt the signature
-	 *
-	 * @return $this
-	 * @return OAuthClient
-	 */
-	public function setAccessTokenType( $accessTokenType, $secret = null, $algorithm = null )
-	{
-		$this->_accessTokenType = $accessTokenType;
-		$this->_accessTokenSecret = $secret;
-		$this->_hashAlgorithm = $algorithm;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAccessTokenType()
-	{
-		return $this->_accessTokenType;
-	}
-
-	/**
-	 * @param int $authType
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAuthType( $authType )
-	{
-		$this->_authType = $authType;
-
-		return $this;
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getAuthType()
-	{
-		return $this->_authType;
-	}
-
-	/**
-	 * @param string $authorizeUrl
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAuthorizeUrl( $authorizeUrl )
-	{
-		$this->_authorizeUrl = $authorizeUrl;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAuthorizeUrl()
-	{
-		return $this->_authorizeUrl;
-	}
-
-	/**
-	 * @param string $grantType
-	 *
-	 * @return OAuthClient
-	 */
-	public function setGrantType( $grantType )
-	{
-		$this->_grantType = $grantType;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getGrantType()
-	{
-		return $this->_grantType;
-	}
-
-	/**
-	 * @param string $hashAlgorithm
-	 *
-	 * @return OAuthClient
-	 */
-	public function setHashAlgorithm( $hashAlgorithm )
-	{
-		$this->_hashAlgorithm = $hashAlgorithm;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getHashAlgorithm()
-	{
-		return $this->_hashAlgorithm;
-	}
-
-	/**
-	 * @param string $authHeaderName
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAuthHeaderName( $authHeaderName )
-	{
-		$this->_authHeaderName = $authHeaderName;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAuthHeaderName()
-	{
-		return $this->_authHeaderName;
-	}
-
-	/**
-	 * @param string $redirectProxyUrl
-	 *
-	 * @return OAuthClient
-	 */
-	public function setRedirectProxyUrl( $redirectProxyUrl )
-	{
-		$this->_redirectProxyUrl = $redirectProxyUrl;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getRedirectProxyUrl()
-	{
-		return $this->_redirectProxyUrl;
-	}
-
-	/**
-	 * Retrieves a value at the given key location, or the default value if key isn't found.
-	 * Setting $burnAfterReading to true will remove the key-value pair from the bag after it
-	 * is retrieved. Call with no arguments to get back a KVP array of contents
-	 *
-	 * @param string $key
-	 * @param mixed  $defaultValue
-	 * @param bool   $burnAfterReading
-	 *
-	 * @throws \Kisma\Core\Exceptions\BagException
-	 * @return mixed
-	 */
-	public function get( $key = null, $defaultValue = null, $burnAfterReading = false )
-	{
-		return $this->_store->get( $key, $defaultValue, $burnAfterReading );
-	}
-
-	/**
-	 * @param string $key
-	 * @param mixed  $value
-	 * @param bool   $overwrite
-	 *
-	 * @throws \Kisma\Core\Exceptions\BagException
-	 * @return SeedBag
-	 */
-	public function set( $key, $value, $overwrite = true )
-	{
-		return $this->_store->set( $key, $value, $overwrite );
 	}
 
 	/**
@@ -702,26 +418,6 @@ class OAuthClient extends Seed implements OAuthServiceLike, HttpMethod
 	 */
 	public function authenticate( $options = array() )
 	{
-	}
-
-	/**
-	 * @param \DreamFactory\Oasys\Interfaces\StorageProviderLike $store
-	 *
-	 * @return OAuthClient
-	 */
-	public function setStore( $store )
-	{
-		$this->_store = $store;
-
-		return $this;
-	}
-
-	/**
-	 * @return \DreamFactory\Oasys\Interfaces\StorageProviderLike
-	 */
-	public function getStore()
-	{
-		return $this->_store;
 	}
 
 	/**

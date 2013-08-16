@@ -19,6 +19,8 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
+use Kisma\Core\Interfaces\BagLike;
+
 /**
  * ProviderConfigLike
  * The supported types of provider configurations
@@ -55,12 +57,16 @@ interface ProviderConfigLike
 	//*************************************************************************
 
 	/**
-	 * @return string
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
+	 * @return bool JSON-encoded representation of this config
 	 */
-	public function toJson();
+	public function toJson( $returnAll = false );
 
 	/**
-	 * @return array
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
+	 * @return bool
 	 */
-	public function toArray();
+	public function toArray( $returnAll = false );
 }

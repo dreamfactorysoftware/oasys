@@ -20,7 +20,6 @@
 namespace DreamFactory\Oasys\Components;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Enums\OAuthFlows;
 use DreamFactory\Oasys\Interfaces\EndpointLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigTypes;
@@ -177,7 +176,10 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 
 		if ( is_string( $endpoint ) )
 		{
-			$endpoint = array( 'endpoint' => $endpoint, 'parameters' => $parameters ? : array() );
+			$endpoint = array(
+				'endpoint'   => $endpoint,
+				'parameters' => $parameters ? : array()
+			);
 		}
 
 		$this->_endpointMap[$type] = $endpoint;
@@ -246,15 +248,28 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
 	 * @return string JSON-encoded representation of this config
 	 */
-	public function toJson()
+	public function toJson( $returnAll = false )
 	{
+		static $_properties = array(
+			'providerId',
+			'type',
+		);
+
 		$_json = array();
 
 		foreach ( get_object_vars( $this ) as $_key => $_value )
 		{
 			$_key = ltrim( $_key, '_' );
+
+			//	Filter
+			if ( false === $returnAll && !in_array( $_key, $_properties ) )
+			{
+				continue;
+			}
 
 			if ( method_exists( $this, 'get' . $_key ) )
 			{
@@ -266,11 +281,13 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
 	 * @return array The config in an array
 	 */
-	public function toArray()
+	public function toArray( $returnAll = false )
 	{
-		return json_decode( $this->toJson(), true );
+		return json_decode( $this->toJson( $returnAll ), true );
 	}
 
 	/**

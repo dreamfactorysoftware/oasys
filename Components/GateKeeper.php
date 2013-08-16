@@ -19,6 +19,7 @@
  */
 namespace DreamFactory\Oasys\Components;
 
+use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
 use DreamFactory\Oasys\Stores\FileSystem;
@@ -55,7 +56,7 @@ class GateKeeper extends Seed
 	 */
 	protected $_options = array();
 	/**
-	 * @var array
+	 * @var ProviderLike[]
 	 */
 	protected static $_providerCache = array();
 	/**
@@ -84,7 +85,7 @@ class GateKeeper extends Seed
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => dirname( __DIR__ ) . '/Providers' );
+			static::$_providerPaths = array(static::DEFAULT_PROVIDER_NAMESPACE => dirname( __DIR__ ) . '/Providers');
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -129,6 +130,28 @@ class GateKeeper extends Seed
 	}
 
 	/**
+	 * Your destructor has been chosen!
+	 */
+	public function __destruct()
+	{
+		//	Save off the store
+		if ( !empty( $this->_store ) && !empty( static::$_providerCache ) )
+		{
+			foreach ( static::$_providerCache as $_id => $_provider )
+			{
+				foreach ( $_provider->getConfig()->toArray() as $_key => $_value )
+				{
+					$this->_store->set( $_id . '.' . $_key, $_value );
+				}
+			}
+
+			$this->_store->sync();
+		}
+
+		parent::__destruct();
+	}
+
+	/**
 	 * Create a provider and return it
 	 *
 	 * @param string                                                  $providerId
@@ -161,7 +184,13 @@ class GateKeeper extends Seed
 
 			$_className = $_map['namespace'] . '\\' . $_map['class_name'];
 			$_mirror = new \ReflectionClass( $_className );
-			$_provider = $_mirror->newInstanceArgs( array( $this, $providerId, $config ) );
+			$_provider = $_mirror->newInstanceArgs(
+				array(
+					 $this,
+					 $providerId,
+					 $config
+				)
+			);
 
 			Option::set(
 				static::$_providerCache,
@@ -253,7 +282,18 @@ class GateKeeper extends Seed
 	 */
 	protected function _cleanProviderId( $providerId )
 	{
-		return Inflector::neutralize( strtolower( str_ireplace( array( 'Provider.php', '.php' ), null, basename( $providerId ) ) ) );
+		return Inflector::neutralize(
+			strtolower(
+				str_ireplace(
+					array(
+						 'Provider.php',
+						 '.php'
+					),
+					null,
+					basename( $providerId )
+				)
+			)
+		);
 	}
 
 	/**
@@ -271,7 +311,11 @@ class GateKeeper extends Seed
 			{
 				$_className = str_ireplace( '.php', null, basename( $_class ) );
 				$_providerId = Inflector::neutralize( $_className );
-				$_classMap[$_providerId] = array( 'class_name' => $_className, 'path' => $_class, 'namespace' => $_namespace );
+				$_classMap[$_providerId] = array(
+					'class_name' => $_className,
+					'path'       => $_class,
+					'namespace'  => $_namespace
+				);
 
 				unset( $_className, $_providerId, $_class );
 			}

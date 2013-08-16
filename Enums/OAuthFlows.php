@@ -39,5 +39,4 @@ class OAuthFlows extends SeedEnum
 	 * @var int
 	 */
 	const CLIENT_SIDE = 1;
-
 }

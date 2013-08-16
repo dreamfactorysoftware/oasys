@@ -20,8 +20,12 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Components\BaseProviderConfig;
+use DreamFactory\Oasys\Components\OAuth\Enums\OAuthGrantTypes;
+use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTokenTypes;
+use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTypes;
 use DreamFactory\Oasys\Enums\OAuthAccessTypes;
 use DreamFactory\Oasys\Enums\OAuthFlows;
+use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -59,13 +63,53 @@ class OAuthProviderConfig extends BaseProviderConfig
 	 */
 	protected $_accessType = OAuthAccessTypes::OFFLINE;
 	/**
+	 * @var int
+	 */
+	protected $_accessTokenType = OAuthTokenTypes::URI;
+	/**
+	 * @var int The default OAuth authentication type (URI/Form, or Basic)
+	 */
+	protected $_authType = OAuthTypes::URI;
+	/**
+	 * @var string The default grant type is 'authorization_code'
+	 */
+	protected $_grantType = OAuthGrantTypes::AUTHORIZATION_CODE;
+	/**
+	 * @var string The OAuth access token parameter name for the requests
+	 */
+	protected $_accessTokenParamName = 'access_token';
+	/**
+	 * @var string The value to put in the "Authorization" header (i.e. Authorization: OAuth OAUTH-TOKEN). This may not be the same across all providers
+	 */
+	protected $_authHeaderName = 'OAuth';
+	/**
+	 * @var string The service authorization URL
+	 */
+	protected $_authorizeUrl = null;
+	/**
+	 * @var string
+	 */
+	protected $_redirectProxyUrl = null;
+	/**
 	 * @var string
 	 */
 	protected $_accessToken;
 	/**
 	 * @var string
 	 */
+	protected $_accessTokenSecret;
+	/**
+	 * @var int
+	 */
+	protected $_accessTokenExpires;
+	/**
+	 * @var string
+	 */
 	protected $_refreshToken;
+	/**
+	 * @var int
+	 */
+	protected $_refreshTokenExpires;
 	/**
 	 * @var string Full file name of a certificate to use for this connection
 	 */
@@ -94,6 +138,56 @@ class OAuthProviderConfig extends BaseProviderConfig
 		{
 			$this->mapEndpoint( static::ACCESS_TOKEN, $_uri );
 		}
+	}
+
+	/**
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
+	 * @return string JSON-encoded representation of this config
+	 */
+	public function toJson( $returnAll = false )
+	{
+		static $_properties = array(
+			'clientId',
+			'authorizeUrl',
+			'grantType',
+			'authType',
+			'accessType',
+			'flowType',
+			'accessTokenParamName',
+			'authHeaderName',
+			'accessToken',
+			'accessTokenType',
+			'accessTokenSecret',
+			'accessTokenExpires',
+			'refreshToken',
+			'refreshTokenExpires',
+			'redirectUri',
+			'scope',
+			'certificateFile',
+		);
+
+		$_allProperties = array_merge( array_keys( json_decode( parent::toJson( $returnAll ), true ) ), $_properties );
+
+		$_json = array();
+
+		foreach ( get_object_vars( $this ) as $_key => $_value )
+		{
+			$_key = ltrim( $_key, '_' );
+
+			//	Filter
+			if ( false === $returnAll && !in_array( $_key, $_allProperties ) )
+			{
+				continue;
+			}
+
+			if ( method_exists( $this, 'get' . $_key ) )
+			{
+				$_json[Inflector::neutralize( $_key )] = $_value;
+			}
+		}
+
+		return json_encode( $_json );
 	}
 
 	/**
@@ -274,5 +368,205 @@ class OAuthProviderConfig extends BaseProviderConfig
 	public function getCertificateFile()
 	{
 		return $this->_certificateFile;
+	}
+
+	/**
+	 * @param int $accessTokenExpires
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAccessTokenExpires( $accessTokenExpires )
+	{
+		$this->_accessTokenExpires = $accessTokenExpires;
+
+		return $this;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getAccessTokenExpires()
+	{
+		return $this->_accessTokenExpires;
+	}
+
+	/**
+	 * @param int $refreshTokenExpires
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setRefreshTokenExpires( $refreshTokenExpires )
+	{
+		$this->_refreshTokenExpires = $refreshTokenExpires;
+
+		return $this;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getRefreshTokenExpires()
+	{
+		return $this->_refreshTokenExpires;
+	}
+
+	/**
+	 * @param string $accessTokenSecret
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAccessTokenSecret( $accessTokenSecret )
+	{
+		$this->_accessTokenSecret = $accessTokenSecret;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAccessTokenSecret()
+	{
+		return $this->_accessTokenSecret;
+	}
+
+	/**
+	 * @param int $accessTokenType
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAccessTokenType( $accessTokenType )
+	{
+		$this->_accessTokenType = $accessTokenType;
+
+		return $this;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getAccessTokenType()
+	{
+		return $this->_accessTokenType;
+	}
+
+	/**
+	 * @param string $accessTokenParamName
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAccessTokenParamName( $accessTokenParamName )
+	{
+		$this->_accessTokenParamName = $accessTokenParamName;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAccessTokenParamName()
+	{
+		return $this->_accessTokenParamName;
+	}
+
+	/**
+	 * @param string $authHeaderName
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAuthHeaderName( $authHeaderName )
+	{
+		$this->_authHeaderName = $authHeaderName;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAuthHeaderName()
+	{
+		return $this->_authHeaderName;
+	}
+
+	/**
+	 * @param int $authType
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAuthType( $authType )
+	{
+		$this->_authType = $authType;
+
+		return $this;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getAuthType()
+	{
+		return $this->_authType;
+	}
+
+	/**
+	 * @param string $authorizeUrl
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setAuthorizeUrl( $authorizeUrl )
+	{
+		$this->_authorizeUrl = $authorizeUrl;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAuthorizeUrl()
+	{
+		return $this->_authorizeUrl;
+	}
+
+	/**
+	 * @param string $grantType
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setGrantType( $grantType )
+	{
+		$this->_grantType = $grantType;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getGrantType()
+	{
+		return $this->_grantType;
+	}
+
+	/**
+	 * @param string $redirectProxyUrl
+	 *
+	 * @return OAuthProviderConfig
+	 */
+	public function setRedirectProxyUrl( $redirectProxyUrl )
+	{
+		$this->_redirectProxyUrl = $redirectProxyUrl;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getRedirectProxyUrl()
+	{
+		return $this->_redirectProxyUrl;
 	}
 }

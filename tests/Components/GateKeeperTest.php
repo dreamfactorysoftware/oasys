@@ -9,6 +9,7 @@ namespace DreamFactory\Tests\Oasys\Components;
 
 use DreamFactory\Oasys\Components\GateKeeper;
 use DreamFactory\Oasys\Stores\FileSystem;
+use Kisma\Core\Utility\Log;
 
 /**
  * GateKeeperTest
@@ -26,9 +27,11 @@ class GateKeeperTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
+		Log::setDefaultLog( __DIR__ . '/../log/error.log' );
+
 		$_store = new FileSystem( __FILE__ );
 
-		$this->_gk = new GateKeeper( array_merge( array( 'store' => $_store ), require( dirname( __DIR__ ) . '/config/oasys.config.php' ) ) );
+		$this->_gk = new GateKeeper( array_merge( array('store' => $_store), require( dirname( __DIR__ ) . '/config/oasys.config.php' ) ) );
 
 		$this->_provider = $this->_gk->getProvider(
 			'facebook',

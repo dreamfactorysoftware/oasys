@@ -136,7 +136,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _createConfiguration( $config = null )
 	{
-		$_defaults = array( 'store' => $this->_store );;
+		$_defaults = array();
 
 		//	See if there is a default template and load up the defaults
 		$_template = dirname( __DIR__ ) . '/Providers/Templates/' . $this->_providerId . '.template.php';
@@ -147,14 +147,19 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			$_defaults = require( $_template );
 		}
 
-		$_options = array_merge( $_defaults, Option::clean( $config ) );
-
 		if ( null === ( $_map = $this->_keeper->getClassMapping( $this->_providerId ) ) )
 		{
 			throw new \InvalidArgumentException( 'The provider "' . $this->_providerId . '" does not appear to be a valid provider.' );
 		}
 
-		if ( null === ( $this->_type = Option::get( $_options, 'type' ) ) )
+		//	Merge in the template, stored stuff and user supplied stuff
+		$_config = array_merge(
+			$_defaults,
+			$this->_store->get(),
+			Option::clean( $config )
+		);
+
+		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
 		{
 			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
 		}
@@ -163,12 +168,11 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		$_class = str_ireplace(
 			'oauth',
 			'OAuth',
-			static::DEFAULT_CONFIG_NAMESPACE .
-			ucfirst( Inflector::deneutralize( strtolower( ProviderConfigTypes::nameOf( $this->_type ) ) . '_provider_config' ) )
+			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( ProviderConfigTypes::nameOf( $this->_type ) ) . '_provider_config' ) )
 		);
 
 		//	Instantiate!
-		return new $_class( $_options );
+		return new $_class( $_config );
 	}
 
 	/**
@@ -187,7 +191,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 		if ( false === ( $_authorized = Option::getBool( $_payload, 'oasys.authorized' ) ) )
 		{
-			$this->startAuthorization();
+			return $this->startAuthorization();
 		}
 
 		$this->completeAuthorization();
@@ -200,8 +204,10 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function init()
 	{
+		$_config = Option::clean( $this->_config->toArray() );
+
 		//	Store our config in the store...
-		foreach ( Option::clean( $this->_config->toArray() ) as $_key => $_value )
+		foreach ( $_config as $_key => $_value )
 		{
 			$this->set( $_key, $_value );
 		}

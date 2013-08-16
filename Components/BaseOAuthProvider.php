@@ -2,6 +2,7 @@
 namespace DreamFactory\Oasys\Components;
 
 use DreamFactory\Oasys\Components\OAuth\Interfaces\OAuthServiceLike;
+use DreamFactory\Oasys\Components\OAuth\OAuthClient;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
@@ -48,7 +49,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	public function startAuthorization()
 	{
-		return $this->_client->authorized( true, $this->get( 'authorization_payload' ) );
+		return $this->_client->authorized( true );
 	}
 
 	/**

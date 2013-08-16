@@ -19,16 +19,23 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
-use Kisma\Core\Interfaces\BagLike;
+use DreamFactory\Oasys\Components\BaseProviderConfig;
 
 /**
  * ProviderLike
  */
-interface ProviderLike extends BagLike
+interface ProviderLike
 {
 	//*************************************************************************
 	//* Methods
 	//*************************************************************************
+
+	/**
+	 * Returns the provider configuration
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function getConfig();
 
 	/**
 	 * Checks to see if user is authorized with this provider

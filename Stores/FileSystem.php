@@ -47,6 +47,10 @@ class FileSystem extends BaseOasysStore
 	 * @var string The file name used to store/retrieve data
 	 */
 	protected $_fileName;
+	/**
+	 * @var bool If true, store is compressed before storage, otherwise data is stored as JSON
+	 */
+	protected $_compressStore = false;
 
 	//*************************************************************************
 	//	Methods
@@ -85,7 +89,14 @@ class FileSystem extends BaseOasysStore
 	{
 		$_file = $this->_storagePath . DIRECTORY_SEPARATOR . $this->_fileName;
 
-		if ( false === file_put_contents( $_file, Utility\Storage::freeze( $this->contents() ) ) )
+		$_data = json_encode( $this->contents() );
+
+		if ( $this->_compressStore )
+		{
+			$_data = Utility\Storage::freeze( $this->contents() );
+		}
+
+		if ( false === file_put_contents( $_file, $_data ) )
 		{
 			Utility\Log::error( 'Unable to store Oasys data in "' . $_file . '". System error.' );
 
@@ -111,7 +122,7 @@ class FileSystem extends BaseOasysStore
 				//	If it wasn't frozen, a JSON string may be returned
 				if ( is_string( $_data ) && false !== json_decode( $_data ) )
 				{
-					$_data = json_decode( $_data );
+					$_data = json_decode( $_data, true );
 				}
 
 				$this->merge( $_data );
@@ -182,5 +193,4 @@ class FileSystem extends BaseOasysStore
 	{
 		return $this->_storageId;
 	}
-
 }

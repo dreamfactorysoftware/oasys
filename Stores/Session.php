@@ -50,24 +50,25 @@ class Session extends BaseOasysStore
 
 		parent::__construct(
 			array_merge(
-				json_decode( Option::get( $_SESSION, static::KEY_PREFIX . 'data', json_encode( array() ) ) ),
+				json_decode( Option::get( $_SESSION, static::KEY_PREFIX . '.data', json_encode( array() ) ) ),
 				$contents
 			)
 		);
 	}
 
 	/**
-	 * Save off the data to the session
+	 * @return bool
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
 	 */
-	public function __destruct()
+	public function sync()
 	{
 		if ( PHP_SESSION_ACTIVE != session_status() )
 		{
 			throw new OasysException( 'No session active. Session storage not available.' );
 		}
 
-		$_SESSION[static::KEY_PREFIX . 'data'] = json_encode( $this->contents() );
+		$_SESSION[static::KEY_PREFIX . '.data'] = json_encode( $this->contents() );
 
-		parent::__destruct();
+		return true;
 	}
 }

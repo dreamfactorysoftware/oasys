@@ -4,10 +4,13 @@ require_once dirname( dirname( __DIR__ ) ) . '/vendor/autoload.php';
 use DreamFactory\Oasys\Components\GateKeeper;
 use DreamFactory\Oasys\Enums\OAuthFlows;
 use DreamFactory\Oasys\Stores\FileSystem;
+use Kisma\Core\Utility\Log;
+
+Log::setDefaultLog( __DIR__ . '/../log/error.log' );
 
 $_store = new FileSystem( __FILE__ );
 
-$_gk = new GateKeeper( array_merge( array( 'store' => $_store ), require( dirname( __DIR__ ) . '/config/oasys.config.php' ) ) );
+$_gk = new GateKeeper( array_merge( array('store' => $_store), require( dirname( __DIR__ ) . '/config/oasys.config.php' ) ) );
 
 $_provider = $_gk->getProvider(
 	'facebook',
@@ -18,4 +21,4 @@ $_provider = $_gk->getProvider(
 	)
 );
 
-$_provider->handleRequest();
+echo $_provider->handleRequest();
