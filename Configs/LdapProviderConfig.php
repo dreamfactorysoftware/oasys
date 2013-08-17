@@ -17,58 +17,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Stores;
+namespace DreamFactory\Oasys\Configs;
 
-use DreamFactory\Oasys\Exceptions\OasysException;
-use Kisma\Core\Exceptions;
-use Kisma\Core\Interfaces;
-use Kisma\Core\Utility\Inflector;
-use Kisma\Core\Utility\Option;
-use Kisma\Core\Utility;
+use DreamFactory\Oasys\Components\BaseProviderConfig;
 
 /**
- * Session
- * Session store for auth data
+ * LdapProviderConfig
+ * A generic OpenId provider
  */
-class Session extends BaseOasysStore
+class LdapProviderConfig extends BaseProviderConfig
 {
 	//*************************************************************************
-	//	Methods
+	//* Methods
 	//*************************************************************************
 
 	/**
 	 * @param array $contents
-	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
 	 */
 	public function __construct( $contents = array() )
 	{
-		if ( PHP_SESSION_ACTIVE != session_status() )
-		{
-			throw new OasysException( 'No session active. Session storage not available.' );
-		}
+		Option::set( $contents, 'type', static::LDAP );
 
-		parent::__construct(
-			array_merge(
-				json_decode( Option::get( $_SESSION, static::KEY_PREFIX . '.data', json_encode( array() ) ) ),
-				$contents
-			)
-		);
+		parent::__construct( $contents );
 	}
 
-	/**
-	 * @return bool
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
-	 */
-	public function sync()
-	{
-		if ( PHP_SESSION_ACTIVE != session_status() )
-		{
-			throw new OasysException( 'No session active. Session storage not available.' );
-		}
-
-		$_SESSION[static::KEY_PREFIX . '.data'] = json_encode( $this->contents() );
-
-		return true;
-	}
 }
