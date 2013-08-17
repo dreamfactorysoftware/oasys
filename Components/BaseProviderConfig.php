@@ -65,18 +65,22 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	//*************************************************************************
 
 	/**
-	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 * @param bool  $returnAll         If true, all configuration values are returned. Otherwise only a subset are available
+	 *
+	 * @param array $allowedProperties An array of properties to emit. If empty, all properties with getters will be emitted
 	 *
 	 * @return string JSON-encoded representation of this config
 	 * @return string
 	 */
-	public function toJson( $returnAll = false )
+	public function toJson( $returnAll = false, $allowedProperties = array() )
 	{
-		static $_properties = array(
+		static $_baseProperties = array(
 			'type',
 			'endpointMap',
 			'userAgent',
 		);
+
+		$_properties = array_merge( $_baseProperties, $allowedProperties );
 
 		$_json = array();
 
@@ -130,7 +134,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	 * @throws \InvalidArgumentException
 	 * @return array
 	 */
-	public function getEndpoint( $type, $urlOnly = false )
+	public function getEndpoint( $type = self::SERVICE, $urlOnly = false )
 	{
 		if ( !EndpointTypes::contains( $type ) )
 		{
@@ -269,5 +273,25 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	public function getPayload()
 	{
 		return $this->_payload;
+	}
+
+	/**
+	 * @param string $providerId
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function setProviderId( $providerId )
+	{
+		$this->_providerId = $providerId;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getProviderId()
+	{
+		return $this->_providerId;
 	}
 }

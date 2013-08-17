@@ -19,27 +19,18 @@
  */
 namespace DreamFactory\Oasys\Providers\Templates;
 
-use DreamFactory\Oasys\Components\OAuth\Enums\AccessTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\TokenTypes;
-use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * github.config.php.dist
+ * generic_oauth.config.php.dist
  *
- * This is the template for connecting GitHub.
- *
- * GitHub scopes are listed here: http://developer.github.com/v3/oauth/#scopes
+ * This is the template for connecting to a generic OAuth service.  You must supply the scope and endpoint map.
  */
+
 return array(
-	'type'              => ProviderConfigTypes::OAUTH,
-	'access_token_type' => TokenTypes::URI,
-	'client_id'         => '{{client_id}}',
-	'client_secret'     => '{{client_secret}}',
-	'scope'             => 'user:email',
-	'endpoint_map'      => array(
-		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
-		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
-		EndpointTypes::SERVICE      => 'https://api.github.com',
-	),
+	'type'          => ProviderConfigTypes::OAUTH,
+	'client_id'     => '{{client_id}}',
+	'client_secret' => '{{client_secret}}',
+	'scope'         => null,
+	'endpoint_map'  => null,
 );

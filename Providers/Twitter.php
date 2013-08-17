@@ -1,109 +1,91 @@
 <?php
-/*!
-* This file is part of the HybridAuth PHP Library (hybridauth.sourceforge.net | github.com/hybridauth/hybridauth)
-*
-* This branch contains work in progress toward the next HybridAuth 3 release and may be unstable.
-*/
+/**
+ * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
+ *
+ * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
+ * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+namespace DreamFactory\Oasys\Providers;
 
-namespace Hybridauth\Provider;
-
-use Hybridauth\Exception;
-use Hybridauth\Adapter\Template\OAuth1\OAuth1Template;
-use Hybridauth\Entity\Profile;
+use DreamFactory\Oasys\Components\BaseLegacyOAuthProvider;
+use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Components\OAuth\LegacyOAuthClient;
+use DreamFactory\Oasys\Exceptions\OasysException;
+use Kisma\Core\Utility\Option;
 
 /**
-* Twitter adapter extending OAuth1 Template
-*
-* http://hybridauth.sourceforge.net/userguide/IDProvider_info_Twitter.html
-*/
-class Twitter extends OAuth1Template
+ * Twitter
+ * A Twitter provider
+ */
+class Twitter extends BaseLegacyOAuthProvider
 {
+	//*************************************************************************
+	//	Methods
+	//*************************************************************************
+
 	/**
-	* Internal: Initialize adapter. This method isn't intended for public consumption.
-	*
-	* Basically on initializers we feed defaults values to \OAuth2\Template::initialize()
-	*
-	* let*() methods are similar to set, but 'let' will not overwrite the value if its already set
-	*/
-	function initialize()
+	 * @return bool|void
+	 */
+	public function init()
 	{
-		parent::initialize();
-
-		$this->letApplicationKey( $this->getAdapterConfig( 'keys', 'key' ) );
-		$this->letApplicationSecret( $this->getAdapterConfig( 'keys', 'secret' ) );
-
-		$this->letEndpointRedirectUri( $this->getHybridauthEndpointUri() );
-		$this->letEndpointBaseUri( 'https://api.twitter.com/1.1/' );
-		$this->letEndpointAuthorizeUri( 'https://api.twitter.com/oauth/authenticate' );
-		$this->letEndpointRequestTokenUri( 'https://api.twitter.com/oauth/request_token' );
-		$this->letEndpointAccessTokenUri( 'https://api.twitter.com/oauth/access_token' );
+		parent::init();
 	}
 
-	// --------------------------------------------------------------------
-
 	/**
-	* Returns user profile
-	*
-	* Examples:
-	*
-	*	$data = $hybridauth->authenticate( "Twitter" )->getUserProfile();
-	*/
-	function getUserProfile()
+	 * @param bool $force If true, the data will be pull from the source, otherwise the last pulled copy is returned
+	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
+	 * @return bool|GenericUser
+	 */
+	public function fetchUserData( $force = false )
 	{
-		$response = $this->signedRequest( 'account/verify_credentials.json' );
-		$response = json_decode ( $response );
-
-		if ( ! isset( $response->id ) || isset ( $response->error ) ){
-			throw new
-				Exception(
-					'User profile request failed: Provider returned an invalid response. ' .
-					'HTTP client state: (' . $this->httpClient->getState() . ')',
-					Exception::USER_PROFILE_REQUEST_FAILED,
-					$this
-				);
+		if ( false === $force && null !== ( $_user = $this->get( 'user_data' ) ) )
+		{
+			return $_user;
 		}
 
-		$parser = function($property) use($response)
+		if ( false === ( $_response = $this->_client->fetch( '/account/verify_credentials.json' ) ) )
 		{
-			return property_exists( $response, $property ) ? $response->$property : null;
-		};
+			return false;
+		}
 
-		$profile = new Profile();
+		$_profile = json_decode( $_response['result'] );
 
-		$profile->setIdentifier ( $parser( 'id'                ) );
-		$profile->setFirstName  ( $parser( 'name'              ) ); 
-		$profile->setDisplayName( $parser( 'screen_name'       ) );  
-		$profile->setDescription( $parser( 'description'       ) );  
-		$profile->setPhotoURL   ( $parser( 'profile_image_url' ) );
-		$profile->setWebSiteURL ( $parser( 'url'               ) );
-		$profile->setRegion     ( $parser( 'location'          ) );
+		if ( isset( $_response['error'] ) || !isset( $_response['result'] ) || !isset( $_profile, $_profile->id, $_profile->error ) )
+		{
+			throw new OasysException( 'Invalid or error result: ' . print_r( $_response, true ) );
+		}
 
-		$profile->setProfileURL ( 'http://twitter.com/' . $profile->getDisplayName() );
+		$_user = new GenericUser(
+			array(
+				 'provider_id'         => 'twitter',
+				 'user_id'             => Option::get( $_profile, 'id' ),
+				 'first_name'          => Option::get( $_profile, 'name' ),
+				 'display_name'        => Option::get( $_profile, 'screen_name' ),
+				 'preferred_user_name' => Option::get( $_profile, 'screen_name' ),
+				 'description'         => Option::get( $_profile, 'description' ),
+				 'thumbnail_url'       => Option::get( $_profile, 'profile_image_url' ),
+				 'profile_url'         => 'http://twitter.com/' . Option::get( $_profile, 'screen_name' ),
+				 'urls'                => array( Option::get( $_profile, 'url' ) ),
+				 'source'              => $_profile,
+			)
+		);
 
-		return $profile;
+		//	Save it...
+		$this->set( 'user_data', $_user );
+
+		return $_user;
 	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	* Returns user contacts list 
-	*/
-	function getUserContacts()
-	{
-		/// ToDo
-
-		throw new Exception( "Unsupported", Exception::UNSUPPORTED_FEATURE, null, $this );
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	* Updates user status 
-	*/
-	function setUserStatus( $status )
-	{
-		/// ToDo
-
-		throw new Exception( "Unsupported", Exception::UNSUPPORTED_FEATURE, null, $this );
- 	}
 }

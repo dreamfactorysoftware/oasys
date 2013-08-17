@@ -22,9 +22,9 @@ namespace DreamFactory\Oasys\Components\OAuth\Enums;
 use Kisma\Core\Enums\SeedEnum;
 
 /**
- * OAuthTokenTypes
+ * TokenTypes
  */
-class OAuthTokenTypes extends SeedEnum
+class TokenTypes extends SeedEnum
 {
 	//*************************************************************************
 	//* Constants

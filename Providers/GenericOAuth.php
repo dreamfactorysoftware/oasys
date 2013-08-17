@@ -1,9 +1,9 @@
 <?php
 /**
- * This file is part of the DreamFactory Services Platform(tm) (DSP)
+ * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
- * DreamFactory Services Platform(tm) <http://github.com/dreamfactorysoftware/dsp-core>
- * Copyright 2012-2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
+ * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components\OAuth\Enums;
+namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\OAuth\Interfaces\GrantTypeLike;
-use Kisma\Core\Enums\SeedEnum;
+use DreamFactory\Oasys\Components\BaseOAuthProvider;
 
 /**
- * OAuthGrantTypes
+ * GenericOAuth
+ * A GenericOAuth provider for general use
  */
-abstract class OAuthGrantTypes extends SeedEnum implements GrantTypeLike
+class GenericOAuth extends BaseOAuthProvider
 {
 }

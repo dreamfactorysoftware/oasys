@@ -50,4 +50,29 @@ interface EndpointLike
 	 */
 	const SERVICE = 4;
 
+	//*************************************************************************
+	//* Methods
+	//*************************************************************************
+
+	/**
+	 * @param array[] $endpointMap
+	 *
+	 * @return $this
+	 */
+	public function setEndpointMap( $endpointMap );
+
+	/**
+	 * @return array[]
+	 */
+	public function getEndpointMap();
+
+	/**
+	 * @param int  $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
+	 *
+	 * @param bool $urlOnly
+	 *
+	 * @throws \InvalidArgumentException
+	 * @return array
+	 */
+	public function getEndpoint( $type = self::SERVICE, $urlOnly = false );
 }

@@ -21,8 +21,8 @@ namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Components\BaseProviderConfig;
 use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
-use DreamFactory\Oasys\Components\OAuth\Enums\OAuthGrantTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTokenTypes;
+use DreamFactory\Oasys\Components\OAuth\Enums\GrantTypes;
+use DreamFactory\Oasys\Components\OAuth\Enums\TokenTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\AccessTypes;
 use Kisma\Core\Utility\Inflector;
@@ -65,7 +65,7 @@ class OAuthProviderConfig extends BaseProviderConfig
 	/**
 	 * @var int
 	 */
-	protected $_accessTokenType = OAuthTokenTypes::URI;
+	protected $_accessTokenType = TokenTypes::URI;
 	/**
 	 * @var int The default OAuth authentication type (URI/Form, or Basic)
 	 */
@@ -73,7 +73,7 @@ class OAuthProviderConfig extends BaseProviderConfig
 	/**
 	 * @var string The default grant type is 'authorization_code'
 	 */
-	protected $_grantType = OAuthGrantTypes::AUTHORIZATION_CODE;
+	protected $_grantType = GrantTypes::AUTHORIZATION_CODE;
 	/**
 	 * @var string The OAuth access token parameter name for the requests
 	 */
@@ -138,47 +138,28 @@ class OAuthProviderConfig extends BaseProviderConfig
 	 */
 	public function toJson( $returnAll = false )
 	{
-		static $_properties = array(
-			'clientId',
-			'authorizeUrl',
-			'grantType',
-			'authType',
-			'accessType',
-			'flowType',
-			'accessTokenParamName',
-			'authHeaderName',
-			'accessToken',
-			'accessTokenType',
-			'accessTokenSecret',
-			'accessTokenExpires',
-			'refreshToken',
-			'refreshTokenExpires',
-			'redirectUri',
-			'scope',
-			'certificateFile',
+		return parent::toJson(
+			$returnAll,
+			array(
+				 'clientId',
+				 'authorizeUrl',
+				 'grantType',
+				 'authType',
+				 'accessType',
+				 'flowType',
+				 'accessTokenParamName',
+				 'authHeaderName',
+				 'accessToken',
+				 'accessTokenType',
+				 'accessTokenSecret',
+				 'accessTokenExpires',
+				 'refreshToken',
+				 'refreshTokenExpires',
+				 'redirectUri',
+				 'scope',
+				 'certificateFile',
+			)
 		);
-
-		$_allProperties = array_merge( array_keys( json_decode( parent::toJson( $returnAll ), true ) ), $_properties );
-
-		$_json = array();
-
-		foreach ( get_object_vars( $this ) as $_key => $_value )
-		{
-			$_key = ltrim( $_key, '_' );
-
-			//	Filter
-			if ( false === $returnAll && !in_array( $_key, $_allProperties ) )
-			{
-				continue;
-			}
-
-			if ( method_exists( $this, 'get' . $_key ) )
-			{
-				$_json[Inflector::neutralize( $_key )] = $_value;
-			}
-		}
-
-		return json_encode( $_json );
 	}
 
 	/**

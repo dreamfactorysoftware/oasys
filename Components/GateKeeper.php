@@ -19,7 +19,9 @@
  */
 namespace DreamFactory\Oasys\Components;
 
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
+use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
 use DreamFactory\Oasys\Stores\FileSystem;
@@ -48,6 +50,10 @@ class GateKeeper extends Seed
 	 * @var string
 	 */
 	const DEFAULT_CLASS_NAMESPACE = 'DreamFactory\\Oasys\\Providers';
+	/**
+	 * @var string The prefix to provider IDs that want to use the generic
+	 */
+	const GENERIC_PROVIDER_PATTERN = 'generic:';
 
 	//*************************************************************************
 	//* Members
@@ -178,15 +184,36 @@ class GateKeeper extends Seed
 	 */
 	public function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{
-		$providerId = $this->_cleanProviderId( $providerId );
+		$_providerId = $_mapKey = $providerId;
+		$_type = null;
+		$_generic = false;
+
+		if ( false === strpos( $_providerId, static::GENERIC_PROVIDER_PATTERN, 0 ) )
+		{
+			$_providerId = $this->_cleanProviderId( $providerId );
+		}
+		else
+		{
+			$_parts = explode( ':', $_providerId );
+
+			if ( empty( $_parts ) || 3 != sizeof( $_parts ) )
+			{
+				throw new \InvalidArgumentException( 'Invalid provider ID specified. Use predefined or generic "generic:providerId:type" format.' );
+			}
+
+			$_providerId = $this->_cleanProviderId( $_parts[1] );
+			$_type = str_ireplace( 'oauth', 'OAuth', ProviderConfigTypes::nameOf( $_parts[2] ) );
+			$_mapKey = 'generic' . $_type;
+			$_generic = ':' . $_providerId;
+		}
 
 		//	Cached?
-		if ( null === ( $_provider = Option::get( static::$_providerCache, $providerId ) ) )
+		if ( null === ( $_provider = Option::get( static::$_providerCache, $_mapKey . ( $_generic ? : null ) ) ) )
 		{
 			//	Get the class mapping...
-			if ( null === ( $_map = Option::get( static::$_classMap, $providerId ) ) )
+			if ( null === ( $_map = Option::get( static::$_classMap, $_mapKey ) ) )
 			{
-				throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
+				throw new \InvalidArgumentException( 'The provider "' . $_providerId . '" has no associated mapping. Cannot create.' );
 			}
 
 			if ( true !== $createIfNotFound && null === $config )
@@ -208,40 +235,30 @@ class GateKeeper extends Seed
 			}
 
 			//	Fill the config with the store values if any
-			$_check = $providerId . '.';
-			$_checkLength = strlen( $_check );
-			$_storedConfig = $this->_store->get();
-			$_defaults = array();
-
-			foreach ( $_storedConfig as $_key => $_value )
+			if ( null !== $_type && null == Option::get( $config, 'type' ) )
 			{
-				if ( $_check == substr( $_key, 0, $_checkLength ) )
-				{
-					$_key = substr( $_key, $_checkLength );
-					Option::set( $_defaults, $_key, $_value );
-				}
+				Option::set( $config, 'type', $_type );
 			}
-
-			$config = array_merge(
-				$_defaults,
-				$config
-			);
-
-			unset( $_defaults );
 
 			$_className = $_map['namespace'] . '\\' . $_map['class_name'];
 			$_mirror = new \ReflectionClass( $_className );
+
+			//	Load any stored configuration
+			$config = $this->_loadConfigFromStore( $_providerId, $config );
+
+			//	Instantiate!
 			$_provider = $_mirror->newInstanceArgs(
 				array(
 					 $this,
-					 $providerId,
+					 $_providerId,
 					 $config
 				)
 			);
 
+			//	Keep a copy...
 			Option::set(
 				static::$_providerCache,
-				$providerId,
+				$_mapKey . ( $_generic ? : null ),
 				$_provider
 			);
 		}
@@ -320,6 +337,39 @@ class GateKeeper extends Seed
 		{
 			$this->getProvider( $_providerId )->deauthorize();
 		}
+	}
+
+	/**
+	 * @param string                   $providerId
+	 * @param ProviderConfigLike|array $config
+	 *
+	 * @return array
+	 */
+	protected function _loadConfigFromStore( $providerId, $config )
+	{
+		$_check = $providerId . '.';
+		$_checkLength = strlen( $_check );
+		$_defaults = array();
+
+		$_storedConfig = $this->_store->get();
+
+		foreach ( $_storedConfig as $_key => $_value )
+		{
+			if ( $_check == substr( $_key, 0, $_checkLength ) )
+			{
+				$_key = substr( $_key, $_checkLength );
+				Option::set( $_defaults, $_key, $_value );
+			}
+		}
+
+		$config = array_merge(
+			$_defaults,
+			$config
+		);
+
+		unset( $_defaults, $_storedConfig );
+
+		return $config;
 	}
 
 	/**
@@ -497,15 +547,5 @@ class GateKeeper extends Seed
 	public static function getClassMap()
 	{
 		return static::$_classMap;
-	}
-
-	/**
-	 * @param string $providerId
-	 *
-	 * @return array Hash of [ class_name, namespace, path ] of provider handler
-	 */
-	public function getClassMapping( $providerId )
-	{
-		return Option::get( static::$_classMap, $providerId );
 	}
 }

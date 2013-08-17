@@ -16,8 +16,8 @@
  */
 namespace DreamFactory\Oasys\Components\OAuth;
 
-use DreamFactory\Oasys\Components\OAuth\Enums\OAuthGrantTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTokenTypes;
+use DreamFactory\Oasys\Components\OAuth\Enums\GrantTypes;
+use DreamFactory\Oasys\Components\OAuth\Enums\TokenTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTypes;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\AuthorizationCode;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\ClientCredentials;
@@ -55,10 +55,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 * @var OAuthProviderConfig|ProviderConfigLike
 	 */
 	protected $_config;
-	/**
-	 * @var string The base URL of the service endpoint
-	 */
-	protected $_baseEndpoint;
 
 	//**************************************************************************
 	//* Methods
@@ -92,7 +88,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	/**
 	 * Check if we are authorized or not...
 	 *
-	 * @param bool $startFlow        If true, and we are not authorized, checkAuthenticationProgress() is called.
+	 * @param bool $startFlow If true, and we are not authorized, checkAuthenticationProgress() is called.
 	 *
 	 * @return bool|string
 	 */
@@ -126,16 +122,16 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	{
 		switch ( $grantType )
 		{
-			case OAuthGrantTypes::AUTHORIZATION_CODE:
+			case GrantTypes::AUTHORIZATION_CODE:
 				return AuthorizationCode::validatePayload( $payload );
 
-			case OAuthGrantTypes::PASSWORD:
+			case GrantTypes::PASSWORD:
 				return Password::validatePayload( $payload );
 
-			case OAuthGrantTypes::CLIENT_CREDENTIALS:
+			case GrantTypes::CLIENT_CREDENTIALS:
 				return ClientCredentials::validatePayload( $payload );
 
-			case OAuthGrantTypes::REFRESH_TOKEN:
+			case GrantTypes::REFRESH_TOKEN:
 				return RefreshToken::validatePayload( $payload );
 
 			default:
@@ -188,7 +184,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-			OAuthGrantTypes::AUTHORIZATION_CODE,
+			GrantTypes::AUTHORIZATION_CODE,
 			array_merge(
 				Option::clean( $this->_config->getPayload() ),
 				array(
@@ -228,11 +224,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 //			switch ( strtolower( $_type ) )
 //			{
 //				case 'bearer':
-//					$this->_config->setAccessTokenType( OAuthTokenTypes::BEARER );
+//					$this->_config->setAccessTokenType( TokenTypes::BEARER );
 //					break;
 //
 //				case 'oauth':
-//					$this->_config->setAccessTokenType( OAuthTokenTypes::OAUTH );
+//					$this->_config->setAccessTokenType( TokenTypes::OAUTH );
 //					break;
 //			}
 //		}
@@ -247,7 +243,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 * @return mixed
 	 * @throws \InvalidArgumentException
 	 */
-	public function requestAccessToken( $grantType = OAuthGrantTypes::AUTHORIZATION_CODE, array $payload = array() )
+	public function requestAccessToken( $grantType = GrantTypes::AUTHORIZATION_CODE, array $payload = array() )
 	{
 		$_payload = $this->_validateGrantType( $grantType, $payload );
 		$_payload['grant_type'] = $grantType;
@@ -304,20 +300,20 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 
 			switch ( $this->_config->getAccessTokenType() )
 			{
-				case OAuthTokenTypes::URI:
+				case TokenTypes::URI:
 					$payload[$this->_config->getAccessTokenParamName()] = $_token;
 					$_authHeaderName = null;
 					break;
 
-				case OAuthTokenTypes::BEARER:
+				case TokenTypes::BEARER:
 					$_authHeaderName = $_authHeaderName ? : 'Bearer';
 					break;
 
-				case OAuthTokenTypes::OAUTH:
+				case TokenTypes::OAUTH:
 					$_authHeaderName = $_authHeaderName ? : 'OAuth';
 					break;
 
-				case OAuthTokenTypes::MAC:
+				case TokenTypes::MAC:
 					throw new NotImplementedException();
 
 				default:
