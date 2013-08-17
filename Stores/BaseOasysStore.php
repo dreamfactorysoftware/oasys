@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Stores;
 
-use DreamFactory\Oasys\Interfaces\OasysStorageProvider;
+use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\SeedBag;
@@ -30,11 +30,22 @@ use Kisma\Core\Utility;
  * BaseOasysStore
  * A base class for storing Oasys data
  */
-abstract class BaseOasysStore extends SeedBag implements OasysStorageProvider
+abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 {
 	//*************************************************************************
 	//* Methods
 	//*************************************************************************
+
+	/**
+	 * Save off the data to the file system
+	 */
+	public function __destruct()
+	{
+		//	Sync before death
+		$this->sync();
+
+		parent::__destruct();
+	}
 
 	/**
 	 * Adds the prefix and normalizes the key if a string...
@@ -45,12 +56,22 @@ abstract class BaseOasysStore extends SeedBag implements OasysStorageProvider
 	 */
 	protected function _normalizeKey( $key )
 	{
-		if ( !is_string( $key ) )
+		if ( !is_string( $key ) || empty( $key ) )
 		{
 			return $key;
 		}
 
 		return static::KEY_PREFIX . Inflector::neutralize( $key );
+	}
+
+	/**
+	 * @param string $key
+	 *
+	 * @return string
+	 */
+	protected function _denormalizeKey( $key )
+	{
+		return str_ireplace( static::KEY_PREFIX, null, $key );
 	}
 
 	/**
@@ -62,6 +83,19 @@ abstract class BaseOasysStore extends SeedBag implements OasysStorageProvider
 	 */
 	public function get( $key = null, $defaultValue = null, $burnAfterReading = false )
 	{
+		//	Return all if null
+		if ( empty( $key ) )
+		{
+			$_contents = array();
+
+			foreach ( $this->contents() as $_key => $_value )
+			{
+				$_contents[$this->_denormalizeKey( $_key )] = $_value;
+			}
+
+			return $_contents;
+		}
+
 		return parent::get( $this->_normalizeKey( $key ), $defaultValue, $burnAfterReading );
 	}
 
@@ -106,5 +140,15 @@ abstract class BaseOasysStore extends SeedBag implements OasysStorageProvider
 		}
 
 		return $_removed;
+	}
+
+	/**
+	 * Synchronize any in-memory data with the store itself
+	 *
+	 * @return bool True if work was done
+	 */
+	public function sync()
+	{
+		return false;
 	}
 }
