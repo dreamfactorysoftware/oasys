@@ -22,6 +22,7 @@ namespace DreamFactory\Oasys\Configs;
 use DreamFactory\Oasys\Components\BaseProviderConfig;
 use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
 use Kisma\Core\Enums\HttpMethod;
+use Kisma\Core\Utility\Option;
 
 /**
  * LegacyOAuthProviderConfig
@@ -45,17 +46,9 @@ class LegacyOAuthProviderConfig extends BaseProviderConfig
 	 */
 	protected $_signatureMethod = OAUTH_SIG_METHOD_HMACSHA1;
 	/**
-	 * @var string
-	 */
-	protected $_version = '1.0';
-	/**
 	 * @var string The redirect URI registered with provider
 	 */
 	protected $_redirectUri;
-	/**
-	 * @var array The scope of the authorization
-	 */
-	protected $_scope;
 	/**
 	 * @var string
 	 */
@@ -106,6 +99,34 @@ class LegacyOAuthProviderConfig extends BaseProviderConfig
 		Option::set( $contents, 'type', static::LEGACY_OAUTH );
 
 		parent::__construct( $contents );
+	}
+
+	/**
+	 * @param bool $returnAll
+	 * @param bool $returnAll If true, all configuration values are returned. Otherwise only a subset are available
+	 *
+	 * @return bool JSON-encoded representation of this config
+	 */
+	public function toJson( $returnAll = false )
+	{
+		return parent::toJson(
+			$returnAll,
+			array(
+				 'consumerKey',
+				 'consumerSecret',
+				 'signatureMethod',
+				 'authorizeUrl',
+				 'authType',
+				 'flowType',
+				 'token',
+				 'accessToken',
+				 'accessTokenSecret',
+				 'accessTokenExpires',
+				 'refreshToken',
+				 'refreshTokenExpires',
+				 'redirectUri',
+			)
+		);
 	}
 
 	/**
@@ -169,46 +190,6 @@ class LegacyOAuthProviderConfig extends BaseProviderConfig
 	}
 
 	/**
-	 * @param string $version
-	 *
-	 * @return LegacyOAuthProviderConfig
-	 */
-	public function setVersion( $version )
-	{
-		$this->_version = $version;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getVersion()
-	{
-		return $this->_version;
-	}
-
-	/**
-	 * @param array $scope
-	 *
-	 * @return LegacyOAuthProviderConfig
-	 */
-	public function setScope( $scope )
-	{
-		$this->_scope = $scope;
-
-		return $this;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getScope()
-	{
-		return $this->_scope;
-	}
-
-	/**
 	 * @param string $redirectUri
 	 *
 	 * @return LegacyOAuthProviderConfig
@@ -249,26 +230,6 @@ class LegacyOAuthProviderConfig extends BaseProviderConfig
 	}
 
 	/**
-	 * @param string $accessTokenMethod
-	 *
-	 * @return LegacyOAuthProviderConfig
-	 */
-	public function setAccessTokenMethod( $accessTokenMethod )
-	{
-		$this->_accessTokenMethod = $accessTokenMethod;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAccessTokenMethod()
-	{
-		return $this->_accessTokenMethod;
-	}
-
-	/**
 	 * @param string $accessTokenSecret
 	 *
 	 * @return LegacyOAuthProviderConfig
@@ -286,26 +247,6 @@ class LegacyOAuthProviderConfig extends BaseProviderConfig
 	public function getAccessTokenSecret()
 	{
 		return $this->_accessTokenSecret;
-	}
-
-	/**
-	 * @param string $requestTokenMethod
-	 *
-	 * @return LegacyOAuthProviderConfig
-	 */
-	public function setRequestTokenMethod( $requestTokenMethod )
-	{
-		$this->_requestTokenMethod = $requestTokenMethod;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getRequestTokenMethod()
-	{
-		return $this->_requestTokenMethod;
 	}
 
 	/**

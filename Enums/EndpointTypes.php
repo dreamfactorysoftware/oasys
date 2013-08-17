@@ -26,6 +26,6 @@ use Kisma\Core\Enums\SeedEnum;
  * EndpointTypes
  * Convenience enum
  */
-class EndpointTypes extends SeedEnum implements EndpointLike
+abstract class EndpointTypes extends SeedEnum implements EndpointLike
 {
 }

@@ -148,11 +148,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			$_defaults = require( $_template );
 		}
 
-		if ( null === ( $_map = $this->_keeper->getClassMapping( $this->_providerId ) ) )
-		{
-			throw new \InvalidArgumentException( 'The provider "' . $this->_providerId . '" does not appear to be a valid provider.' );
-		}
-
 		//	Merge in the template, stored stuff and user supplied stuff
 		$_config = array_merge(
 			$_defaults,

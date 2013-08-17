@@ -46,23 +46,6 @@ interface ProviderLike
 	public function authorized();
 
 	/**
-	 * Unlink/disconnect/logout user from provider locally.
-	 * Does nothing on the provider end
-	 *
-	 * @return void
-	 */
-	public function deauthorize();
-
-	/**
-	 * Returns true/false if user is authorized to talk to this provider
-	 *
-	 * @param array $options Authentication options
-	 *
-	 * @return $this|ProviderLike|void
-	 */
-	public function authenticate( $options = array() );
-
-	/**
 	 * @param string $resource
 	 * @param array  $payload
 	 * @param string $method

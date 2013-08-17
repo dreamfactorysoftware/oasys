@@ -25,7 +25,7 @@ abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAu
 	{
 		parent::init();
 
-		if ( !$this->get( 'consumer_id' ) || !$this->get( 'consumer_secret' ) )
+		if ( !$this->get( 'consumer_key' ) || !$this->get( 'consumer_secret' ) )
 		{
 			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
@@ -83,59 +83,5 @@ abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAu
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
 	{
 		return $this->_client->fetch( $resource, $payload, $method, $headers );
-	}
-
-	/**
-	 * Execute a request
-	 *
-	 * @param string $url
-	 * @param mixed  $payload
-	 * @param string $method
-	 * @param array  $headers Array of HTTP headers to send in array( 'header: value', 'header: value', ... ) format
-	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
-	 * @return array
-	 */
-	protected function _makeRequest( $url, $payload = array(), $method = self::Get, array $headers = null )
-	{
-		$headers = Option::clean( $headers );
-
-		$_agent = $this->get( 'user_agent' );
-
-		if ( !empty( $_agent ) )
-		{
-			$headers[] = 'User-Agent: ' . $_agent;
-		}
-
-		$_curlOptions = array(
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_SSL_VERIFYPEER => false,
-			CURLOPT_SSL_VERIFYHOST => 0,
-			CURLOPT_HTTPHEADER     => $headers,
-		);
-
-		if ( static::Get == $method && false === strpos( $url, '?' ) && !empty( $payload ) )
-		{
-			$url .= '?' . ( is_array( $payload ) ? http_build_query( $payload, null, '&' ) : $payload );
-			$payload = array();
-		}
-
-		if ( !empty( $this->_certificateFile ) )
-		{
-			$_curlOptions[CURLOPT_SSL_VERIFYPEER] = true;
-			$_curlOptions[CURLOPT_SSL_VERIFYHOST] = 2;
-			$_curlOptions[CURLOPT_CAINFO] = $this->_certificateFile;
-		}
-
-		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
-		{
-			throw new OasysException( Curl::getErrorAsString() );
-		}
-
-		return array(
-			'result'       => $_result,
-			'code'         => Curl::getLastHttpCode(),
-			'content_type' => Curl::getInfo( 'content_type' ),
-		);
 	}
 }

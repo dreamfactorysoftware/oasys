@@ -21,8 +21,10 @@ use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig;
+use DreamFactory\Oasys\Interfaces\ProviderLike;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
@@ -59,7 +61,9 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	 */
 	public function __construct( $config )
 	{
-		parent::__construct( $config );
+		parent::__construct();
+
+		$this->_config = $config;
 
 		$this->_client = new \OAuth(
 			$this->_config->getConsumerKey(),
@@ -111,28 +115,31 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	{
 		if ( $this->_config->getAccessToken() )
 		{
+			$this->_setToken();
+
 			return true;
 		}
 
 		$_state = $this->_config->getState();
 
-		if ( null === ( $_token = Option::request( 'oauth_token' ) ) && 1 == $_state )
-		{
-			$this->_config->setState( $_state = 0 );
-		}
+		$_accessToken = null;
+		$_requestToken = Option::request( 'oauth_token' );
+		$_tokenSecret = Option::request( 'oauth_secret', $this->_config->getAccessTokenSecret() );
+		$_verifier = Option::request( 'oauth_verifier' );
 
 		try
 		{
 			//	No auth yet
-			if ( 0 == $_state && null === $_token )
+			if ( null === $_requestToken )
 			{
-				$_token = $this->_client->getRequestToken( $this->_config->getEndpoint( EndpointTypes::REFRESH_TOKEN ) );
+				$_url = $this->_config->getEndpointUrl( EndpointTypes::REQUEST_TOKEN );
 
+				$_token = $this->_client->getRequestToken( $_url );
+				$this->_config->setAccessTokenSecret( $_tokenSecret = Option::get( $_token, 'oauth_token_secret' ) );
 				$this->_config->setState( 1 );
-				$this->_config->setAccessTokenSecret( Option::get( $_token, 'oauth_token_secret' ) );
 
 				//	Construct the redirect for authorization
-				$_redirectUrl = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE ) . '?oauth_token=' . Option::get( $_token, 'oauth_token' );
+				$_redirectUrl = $this->_config->getEndpointUrl( EndpointTypes::AUTHORIZE ) . '?oauth_token=' . Option::get( $_token, 'oauth_token' );
 
 				if ( !empty( $this->_redirectProxyUrl ) )
 				{
@@ -149,22 +156,25 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 				header( 'Location: ' . $_redirectUrl );
 				exit();
 			}
-			//	Got the request token, upgrade it
-			else if ( 1 == $_state )
+
+			//	Step 2!
+			if ( !empty( $_requestToken ) && !empty( $_verifier ) )
 			{
-				$_requestToken = Option::get( $_GET, 'oauth_token' );
-				$_tokenSecret = Option::get( $this->_config->getAccessTokenSecret() );
-
 				$this->_client->setToken( $_requestToken, $_tokenSecret );
-				$_token = $this->_client->getAccessToken( $this->_config->getEndpoint( EndpointTypes::ACCESS_TOKEN ) );
 
+				$_accessToken = $this->_client->getAccessToken( $this->_config->getEndpointUrl( EndpointTypes::ACCESS_TOKEN ) );
 				$this->_config->setState( $_state = 2 );
-				$this->_config->setAccessToken( Option::get( $_token, 'oauth_token' ) );
-				$this->_config->setAccessTokenSecret( Option::get( $_token, 'oauth_token_secret' ) );
+
+				$this->_config->setToken( $_accessToken );
+				$this->_config->setAccessToken( $_accessToken['oauth_token'] );
+				$this->_config->setAccessTokenSecret( $_accessToken['oauth_token_secret'] );
 			}
 
 			//	Set the token, now ready for action
-			$this->_setToken();
+			if ( 2 == $_state )
+			{
+				$this->_setToken();
+			}
 		}
 		catch ( \OAuthException $_ex )
 		{
@@ -212,10 +222,31 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 			return array(
 				'result'       => $_response,
 				'info'         => $_info,
-				'code'         => $_info[CURLINFO_HTTP_CODE],
-				'content_type' => $_info[CURLINFO_CONTENT_TYPE],
+				'code'         => $_info['http_code'],
+				'content_type' => $_info['content_type'],
 			);
 		}
+	}
+
+	/**
+	 * Unlink/disconnect/logout user from provider locally.
+	 * Does nothing on the provider end
+	 *
+	 * @return void
+	 */
+	public function deauthorize()
+	{
+	}
+
+	/**
+	 * Returns true/false if user is authorized to talk to this provider
+	 *
+	 * @param array $options Authentication options
+	 *
+	 * @return $this|ProviderLike|void
+	 */
+	public function authenticate( $options = array() )
+	{
 	}
 
 	/**

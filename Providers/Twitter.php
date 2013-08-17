@@ -23,6 +23,7 @@ use DreamFactory\Oasys\Components\BaseLegacyOAuthProvider;
 use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Components\OAuth\LegacyOAuthClient;
 use DreamFactory\Oasys\Exceptions\OasysException;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -36,39 +37,32 @@ class Twitter extends BaseLegacyOAuthProvider
 	//*************************************************************************
 
 	/**
-	 * @return bool|void
-	 */
-	public function init()
-	{
-		parent::init();
-	}
-
-	/**
 	 * @param bool $force If true, the data will be pull from the source, otherwise the last pulled copy is returned
 	 *
+	 * @throws \Exception|\OAuthException
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
 	 * @return bool|GenericUser
 	 */
 	public function fetchUserData( $force = false )
 	{
-		if ( false === $force && null !== ( $_user = $this->get( 'user_data' ) ) )
+		try
 		{
-			return $_user;
+			$_response = $this->_client->fetch( '/account/verify_credentials.json' );
 		}
-
-		if ( false === ( $_response = $this->_client->fetch( '/account/verify_credentials.json' ) ) )
+		catch ( \OAuthException $_ex )
 		{
-			return false;
+			Log::error( 'OAuth exception: ' . $_ex->getMessage() );
+			throw $_ex;
 		}
 
 		$_profile = json_decode( $_response['result'] );
 
-		if ( isset( $_response['error'] ) || !isset( $_response['result'] ) || !isset( $_profile, $_profile->id, $_profile->error ) )
+		if ( !isset( $_profile, $_profile->id ) )
 		{
 			throw new OasysException( 'Invalid or error result: ' . print_r( $_response, true ) );
 		}
 
-		$_user = new GenericUser(
+		return new GenericUser(
 			array(
 				 'provider_id'         => 'twitter',
 				 'user_id'             => Option::get( $_profile, 'id' ),
@@ -79,13 +73,8 @@ class Twitter extends BaseLegacyOAuthProvider
 				 'thumbnail_url'       => Option::get( $_profile, 'profile_image_url' ),
 				 'profile_url'         => 'http://twitter.com/' . Option::get( $_profile, 'screen_name' ),
 				 'urls'                => array( Option::get( $_profile, 'url' ) ),
-				 'source'              => $_profile,
+				 'user_data'           => $_response['result'],
 			)
 		);
-
-		//	Save it...
-		$this->set( 'user_data', $_user );
-
-		return $_user;
 	}
 }

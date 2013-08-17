@@ -127,6 +127,28 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
+	 * @param int $type
+	 *
+	 * @return string
+	 */
+	public function getEndpointUrl( $type = self::SERVICE )
+	{
+		return $this->getEndpoint( $type, true );
+	}
+
+	/**
+	 * @param int $type
+	 *
+	 * @return array
+	 */
+	public function getEndpointParameters( $type = self::SERVICE )
+	{
+		$_map = $this->getEndpoint( $type );
+
+		return Option::get( $_map, 'parameters', array() );
+	}
+
+	/**
 	 * @param int  $type endpoint map type (@see EndpointTypes)
 	 *
 	 * @param bool $urlOnly
