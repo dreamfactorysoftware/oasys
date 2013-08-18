@@ -19,6 +19,7 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
+use DreamFactory\Oasys\Components\GenericUser;
 use Kisma\Core\Enums\HttpMethod;
 
 /**
@@ -53,4 +54,11 @@ interface ProviderLike
 	 * @return mixed
 	 */
 	public function fetch( $resource, $payload = array(), $method = HttpMethod::Get, array $headers = array() );
+
+	/**
+	 * Returns the normalized provider's user profile
+	 *
+	 * @return GenericUser
+	 */
+	public function getUserData();
 }

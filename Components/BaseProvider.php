@@ -23,6 +23,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
+use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Enums\HttpMethod;
@@ -69,7 +70,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_store;
 	/**
-	 * @var BaseProviderConfig The configuration options for this provider
+	 * @var ProviderConfigLike The configuration options for this provider
 	 */
 	protected $_config;
 	/**

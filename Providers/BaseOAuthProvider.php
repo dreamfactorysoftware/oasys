@@ -63,17 +63,6 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	}
 
 	/**
-	 * Unlink/disconnect/logout user from provider locally.
-	 * Does nothing on the provider end
-	 *
-	 * @return void
-	 */
-	public function deauthorize()
-	{
-		$this->_client->deauthorize();
-	}
-
-	/**
 	 * Begin the authorization process
 	 *
 	 * @throws RedirectRequiredException

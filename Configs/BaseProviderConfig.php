@@ -33,7 +33,7 @@ use Kisma\Core\Utility\Option;
  * BaseProviderConfig
  * A simple container to hold a provider's configuration elements
  */
-abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, EndpointLike
+abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 {
 	//*************************************************************************
 	//* Members
