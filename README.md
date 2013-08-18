@@ -1,6 +1,6 @@
 # Oasys (Open Authentication SYStem)
 
-'''Multi-provider, extensible authentication framework'''
+Multi-provider, extensible authentication framework
 
 ## Build Status
 
