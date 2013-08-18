@@ -1,8 +1,8 @@
 # Oasys (Open Authentication SYStem)
 
-<pre><a href="http://tc.dreamfactory.com:8111/viewType.html?buildTypeId=oasys_release&guest=1">
-    <img src="http://tc.dreamfactory.com:8111/app/rest/builds/buildType:(id:oasys_release)/statusIcon"/>
-</a></pre>
+## Build Status
+
+<a href="http://tc.dreamfactory.com:8111/viewType.html?buildTypeId=oasys_release&guest=1"><img src="http://tc.dreamfactory.com:8111/app/rest/builds/buildType:(id:oasys_release)/statusIcon"/></a>
 
 Multi-provider, extensible authentication framework
 
