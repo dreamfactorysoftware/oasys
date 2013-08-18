@@ -2,7 +2,7 @@
 
 <pre><a href="http://tc.dreamfactory.com:8111/viewType.html?buildTypeId=oasys_release&guest=1">
     <img src="http://tc.dreamfactory.com:8111/app/rest/builds/buildTypeId=oasys_release/statusIcon"/>
-</a>
+</a></pre>
 
 Multi-provider, extensible authentication framework
 
