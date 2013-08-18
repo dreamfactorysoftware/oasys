@@ -7,3 +7,4 @@ orig
 example
 hybridauth
 tests/log
+tests/config/keys.php
