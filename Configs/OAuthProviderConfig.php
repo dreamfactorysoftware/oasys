@@ -19,12 +19,11 @@
  */
 namespace DreamFactory\Oasys\Configs;
 
-use DreamFactory\Oasys\Components\BaseProviderConfig;
-use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
-use DreamFactory\Oasys\Components\OAuth\Enums\GrantTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\TokenTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\AccessTypes;
+use DreamFactory\Oasys\Enums\Flows;
+use DreamFactory\Oasys\Enums\GrantTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
+use DreamFactory\Oasys\Enums\OAuthTypes;
+use DreamFactory\Oasys\Enums\AccessTypes;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 

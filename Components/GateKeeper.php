@@ -175,9 +175,9 @@ class GateKeeper extends Seed
 	/**
 	 * Create a provider and return it
 	 *
-	 * @param string                                                  $providerId
-	 * @param array|\DreamFactory\Oasys\Components\BaseProviderConfig $config
-	 * @param bool                                                    $createIfNotFound If false and provider not already created, NULL is returned
+	 * @param string                   $providerId
+	 * @param array|ProviderConfigLike $config
+	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
 	 * @throws \InvalidArgumentException
 	 * @return BaseProvider

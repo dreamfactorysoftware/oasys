@@ -19,8 +19,8 @@
  */
 namespace DreamFactory\Oasys\Providers\Templates;
 
-use DreamFactory\Oasys\Components\OAuth\Enums\AccessTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\TokenTypes;
+use DreamFactory\Oasys\Enums\AccessTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 

@@ -19,8 +19,6 @@
  */
 namespace DreamFactory\Oasys\Configs;
 
-use DreamFactory\Oasys\Components\BaseProviderConfig;
-
 /**
  * LdapProviderConfig
  * A generic OpenId provider
@@ -40,5 +38,4 @@ class LdapProviderConfig extends BaseProviderConfig
 
 		parent::__construct( $contents );
 	}
-
 }

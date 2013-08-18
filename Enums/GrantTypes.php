@@ -17,14 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components\OAuth\Interfaces;
+namespace DreamFactory\Oasys\Enums;
 
-use DreamFactory\Oasys\Interfaces\ProviderLike;
+use DreamFactory\Oasys\Interfaces\GrantTypeLike;
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * LegacyOAuthServiceLike
- * An oauth service
+ * GrantTypes
  */
-interface LegacyOAuthServiceLike extends ProviderLike
+abstract class GrantTypes extends SeedEnum implements GrantTypeLike
 {
 }

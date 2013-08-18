@@ -19,10 +19,8 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\BaseOAuthProvider;
 use DreamFactory\Oasys\GenericUser;
 use DreamFactory\Oasys\Interfaces\UserLike;
-use Hybridauth\Exception;
 use Kisma\Core\Utility\Option;
 
 /**

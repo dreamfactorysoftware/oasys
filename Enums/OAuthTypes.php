@@ -17,14 +17,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components\OAuth\Interfaces;
+namespace DreamFactory\Oasys\Enums;
 
-use DreamFactory\Oasys\Interfaces\ProviderLike;
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * OAuthServiceLike
- * An oauth service
+ * OAuthTypes
  */
-interface OAuthServiceLike extends ProviderLike
+class OAuthTypes extends SeedEnum
 {
+	//*************************************************************************
+	//* Constants
+	//*************************************************************************
+
+	/**
+	 * @var int
+	 */
+	const URI = 0;
+	/**
+	 * @var int
+	 */
+	const BASIC = 1;
+	/**
+	 * @var int
+	 */
+	const FORM = 2;
 }

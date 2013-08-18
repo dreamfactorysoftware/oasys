@@ -19,9 +19,7 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\BaseOAuthProvider;
 use DreamFactory\Oasys\Interfaces\UserLike;
-use Hybridauth\Exception;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -73,8 +71,8 @@ class GooglePlus extends BaseOAuthProvider
 		return $_contact->setUserId( $_profileId )->setPublished( Option::get( $_profile, 'updated_time' ) )->setUpdated( Option::get( $_profile, 'updated_time' ) )
 			   ->setDisplayName( $_name['formatted'] )->setName( $_name )->setPreferredUsername( Option::get( $_profile, 'username' ) )->setGender(
 					   Option::get( $_profile, 'gender' )
-				   )->setEmails( array(Option::get( $_profile, 'email' )) )->setUrls( array(Option::get( $_profile, 'link' )) )->setRelationships(
+				   )->setEmails( array( Option::get( $_profile, 'email' ) ) )->setUrls( array( Option::get( $_profile, 'link' ) ) )->setRelationships(
 					   Option::get( $_profile, 'friends' )
-				   )->setPhotos( array(static::BASE_API_URL . '/' . $_profileId . '/picture?width=150&height=150') )->setUserData( $_profile );
+				   )->setPhotos( array( static::BASE_API_URL . '/' . $_profileId . '/picture?width=150&height=150' ) )->setUserData( $_profile );
 	}
 }

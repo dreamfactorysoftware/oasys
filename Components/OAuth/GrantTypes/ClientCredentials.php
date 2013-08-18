@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Components\OAuth\GrantTypes;
 
-use DreamFactory\Oasys\Components\OAuth\Interfaces\GrantTypeLike;
+use DreamFactory\Oasys\Interfaces\GrantTypeLike;
 
 /**
  * ClientCredentials

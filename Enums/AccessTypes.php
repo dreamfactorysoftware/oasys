@@ -17,15 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components\OAuth\Enums;
+namespace DreamFactory\Oasys\Enums;
 
 use Kisma\Core\Enums\SeedEnum;
 
 /**
- * Flows
- * The types of OAuth flows
+ * AccessTypes
+ * The types of OAuth access
  */
-class Flows extends SeedEnum
+class AccessTypes extends SeedEnum
 {
 	//*************************************************************************
 	//	Constants
@@ -34,9 +34,9 @@ class Flows extends SeedEnum
 	/**
 	 * @var int
 	 */
-	const SERVER_SIDE = 0;
+	const OFFLINE = 0;
 	/**
 	 * @var int
 	 */
-	const CLIENT_SIDE = 1;
+	const ONLINE = 1;
 }

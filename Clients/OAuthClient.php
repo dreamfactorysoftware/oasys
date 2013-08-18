@@ -14,23 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components\OAuth;
+namespace DreamFactory\Oasys\Clients;
 
-use DreamFactory\Oasys\Components\OAuth\Enums\GrantTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\TokenTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\OAuthTypes;
+use DreamFactory\Oasys\Enums\GrantTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
+use DreamFactory\Oasys\Enums\OAuthTypes;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\AuthorizationCode;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\ClientCredentials;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\Password;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\RefreshToken;
-use DreamFactory\Oasys\Components\OAuth\Interfaces\OAuthServiceLike;
+use DreamFactory\Oasys\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
+use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
-use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Interfaces\HttpMethod;
@@ -64,7 +63,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 * @param OAuthProviderConfig|ProviderConfigLike $config
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return \DreamFactory\Oasys\Components\OAuth\OAuthClient
+	 * @return \DreamFactory\Oasys\Clients\OAuthClient
 	 */
 	public function __construct( $config )
 	{

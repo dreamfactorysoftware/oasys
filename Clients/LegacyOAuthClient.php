@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components\OAuth;
+namespace DreamFactory\Oasys\Clients;
 
-use DreamFactory\Oasys\Components\OAuth\Interfaces\LegacyOAuthServiceLike;
+use DreamFactory\Oasys\Interfaces\LegacyOAuthServiceLike;
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
+use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
@@ -57,7 +57,7 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	 * @param LegacyOAuthProviderConfig|ProviderConfigLike $config
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return \DreamFactory\Oasys\Components\OAuth\LegacyOAuthClient
+	 * @return \DreamFactory\Oasys\Clients\LegacyOAuthClient
 	 */
 	public function __construct( $config )
 	{

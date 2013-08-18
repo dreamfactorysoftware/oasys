@@ -19,8 +19,7 @@
  */
 namespace DreamFactory\Oasys\Configs;
 
-use DreamFactory\Oasys\Components\BaseProviderConfig;
-use DreamFactory\Oasys\Components\OAuth\Enums\Flows;
+use DreamFactory\Oasys\Enums\Flows;
 use Kisma\Core\Enums\HttpMethod;
 use Kisma\Core\Utility\Option;
 

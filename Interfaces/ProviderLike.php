@@ -19,7 +19,6 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
-use DreamFactory\Oasys\Components\BaseProviderConfig;
 use Kisma\Core\Enums\HttpMethod;
 
 /**
@@ -34,7 +33,7 @@ interface ProviderLike
 	/**
 	 * Returns the provider configuration
 	 *
-	 * @return BaseProviderConfig
+	 * @return ProviderConfigLike
 	 */
 	public function getConfig();
 

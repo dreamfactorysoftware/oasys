@@ -19,8 +19,6 @@
  */
 namespace DreamFactory\Oasys\Configs;
 
-use DreamFactory\Oasys\Components\BaseProviderConfig;
-
 /**
  * OpenIdProviderConfig
  * A generic OpenId provider

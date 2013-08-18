@@ -19,9 +19,8 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\BaseLegacyOAuthProvider;
 use DreamFactory\Oasys\Components\GenericUser;
-use DreamFactory\Oasys\Components\OAuth\LegacyOAuthClient;
+use DreamFactory\Oasys\Clients\LegacyOAuthClient;
 use DreamFactory\Oasys\Exceptions\OasysException;
 use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;

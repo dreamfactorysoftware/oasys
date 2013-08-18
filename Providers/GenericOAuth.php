@@ -19,8 +19,6 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\BaseOAuthProvider;
-
 /**
  * GenericOAuth
  * A GenericOAuth provider for general use
