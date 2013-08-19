@@ -97,7 +97,7 @@ class GateKeeper extends Seed
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => dirname( __DIR__ ) . '/Providers' );
+			static::$_providerPaths = array(static::DEFAULT_PROVIDER_NAMESPACE => dirname( __DIR__ ) . '/Providers');
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -175,7 +175,7 @@ class GateKeeper extends Seed
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return BaseProvider
+	 * @return ProviderLike
 	 */
 	public function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{
