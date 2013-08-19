@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components;
+namespace DreamFactory\Oasys;
 
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
@@ -107,7 +107,7 @@ class Oasys extends SeedUtility
 		//	No store provided, make one...
 		if ( empty( static::$_store ) )
 		{
-			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ) ) : new Session() );
+			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
 		}
 
 		//	No redirect URI, make one...
@@ -164,7 +164,7 @@ class Oasys extends SeedUtility
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return BaseProvider
+	 * @return ProviderLike
 	 */
 	public static function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{
@@ -250,40 +250,11 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @param string $providerId
-	 * @param array  $parameters
-	 *
-	 * @return mixed
-	 */
-	public static function authenticate( $providerId, $parameters = array() )
-	{
-		return static::getProvider( $providerId )->authenticate( $parameters );
-	}
-
-	/**
 	 * Return true if current user is connected with a given provider
 	 */
 	public static function authorized( $providerId )
 	{
 		return static::getProvider( $providerId )->authorized();
-	}
-
-	/**
-	 * Return a list of authenticated providers
-	 */
-	public static function connectedProviders()
-	{
-		$_response = array();
-
-		foreach ( static::$_options['providers'] as $_providerId => $_config )
-		{
-			if ( static::connected( $_providerId ) )
-			{
-				$_response[] = $_providerId;
-			}
-		}
-
-		return $_response;
 	}
 
 	/**
@@ -295,9 +266,7 @@ class Oasys extends SeedUtility
 
 		foreach ( static::$_options['providers'] as $_providerId => $_config )
 		{
-			$_response[$_providerId] = array(
-				'connected' => static::connected( $_providerId )
-			);
+			$_response[] = $_providerId;
 		}
 
 		return $_response;
@@ -306,20 +275,9 @@ class Oasys extends SeedUtility
 	/**
 	 * Deauthorize a single provider
 	 */
-	public static function unlinkProvider( $providerId )
+	public static function resetProvider( $providerId )
 	{
-		static::getProvider( $providerId )->deauthorize();
-	}
-
-	/**
-	 * Deauthorize all linked providers
-	 */
-	public static function unlinkProviders()
-	{
-		foreach ( static::connectedProviders() as $_providerId )
-		{
-			static::getProvider( $_providerId )->deauthorize();
-		}
+		static::getProvider( $providerId )->resetAuthorization();
 	}
 
 	/**
@@ -334,7 +292,7 @@ class Oasys extends SeedUtility
 		$_checkLength = strlen( $_check );
 		$_defaults = array();
 
-		$_storedConfig = static::$_store->get();
+		$_storedConfig = Oasys::getStore()->get();
 
 		foreach ( $_storedConfig as $_key => $_value )
 		{
@@ -441,15 +399,6 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @param array $providerPaths
-	 */
-	public static function setProviderPaths( $providerPaths )
-	{
-		static::$_providerPaths = $providerPaths;
-		static::_mapProviders();
-	}
-
-	/**
 	 * @param string $path
 	 */
 	public static function addProviderPath( $path )
@@ -457,4 +406,90 @@ class Oasys extends SeedUtility
 		static::$_providerPaths[] = $path;
 		static::_mapProviders();
 	}
+
+	/**
+	 * @param array $classMap
+	 */
+	public static function setClassMap( $classMap )
+	{
+		self::$_classMap = $classMap;
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function getClassMap()
+	{
+		return self::$_classMap;
+	}
+
+	/**
+	 * @param array $options
+	 */
+	public static function setOptions( $options )
+	{
+		self::$_options = $options;
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function getOptions()
+	{
+		return self::$_options;
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\Interfaces\ProviderLike[] $providerCache
+	 */
+	public static function setProviderCache( $providerCache )
+	{
+		self::$_providerCache = $providerCache;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\Interfaces\ProviderLike[]
+	 */
+	public static function getProviderCache()
+	{
+		return self::$_providerCache;
+	}
+
+	/**
+	 * @param array $providerPaths
+	 */
+	public static function setProviderPaths( $providerPaths )
+	{
+		self::$_providerPaths = $providerPaths;
+		static::_mapProviders();
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function getProviderPaths()
+	{
+		return self::$_providerPaths;
+	}
+
+	/**
+	 * @param \DreamFactory\Oasys\Interfaces\StorageProviderLike $store
+	 */
+	public static function setStore( $store )
+	{
+		self::$_store = $store;
+	}
+
+	/**
+	 * @return \DreamFactory\Oasys\Interfaces\StorageProviderLike
+	 */
+	public static function getStore()
+	{
+		return self::$_store;
+	}
 }
+
+/**
+ * Initialize Oasys
+ */
+Oasys::initialize();
