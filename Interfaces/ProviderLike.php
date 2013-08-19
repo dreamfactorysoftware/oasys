@@ -19,6 +19,8 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
+use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use Kisma\Core\Enums\HttpMethod;
 
 /**
@@ -38,11 +40,31 @@ interface ProviderLike
 	public function getConfig();
 
 	/**
+	 * @param array $payload If empty, request query string is used
+	 *
+	 * @return \DreamFactory\Oasys\Exceptions\RedirectRequiredException
+	 * @return mixed
+	 */
+	public function handleRequest( $payload = null );
+
+	/**
 	 * Checks to see if user is authorized with this provider
 	 *
 	 * @return bool
 	 */
 	public function authorized();
+
+	/**
+	 * Begin the authorization process
+	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
+	 */
+	public function startAuthorization();
+
+	/**
+	 * Complete the authorization process
+	 */
+	public function completeAuthorization();
 
 	/**
 	 * @param string $resource
@@ -53,4 +75,16 @@ interface ProviderLike
 	 * @return mixed
 	 */
 	public function fetch( $resource, $payload = array(), $method = HttpMethod::Get, array $headers = array() );
+
+	/**
+	 * Reset the authorization locally
+	 */
+	public function resetAuthorization();
+
+	/**
+	 * Returns the normalized provider's user profile
+	 *
+	 * @return GenericUser
+	 */
+	public function getUserData();
 }

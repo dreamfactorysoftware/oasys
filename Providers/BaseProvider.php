@@ -162,11 +162,13 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
 		}
 
+		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
+
 		//	Build the class name for the type of authentication of this provider
 		$_class = str_ireplace(
 			'oauth',
 			'OAuth',
-			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( ProviderConfigTypes::nameOf( $this->_type ) ) . '_provider_config' ) )
+			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
 
 		//	Instantiate!
@@ -216,18 +218,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 		return true;
 	}
-
-	/**
-	 * Begin the authorization process
-	 *
-	 * @throws RedirectRequiredException
-	 */
-	abstract public function startAuthorization();
-
-	/**
-	 * Complete the authorization process
-	 */
-	abstract public function completeAuthorization();
 
 	/**
 	 * Clear out any settings for this provider

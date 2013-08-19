@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\GenericUser;
+use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Utility\Option;
 
@@ -50,11 +50,9 @@ class Github extends BaseOAuthProvider
 	 * @throws \InvalidArgumentException
 	 * @return UserLike
 	 */
-	public function toGenericUser( $profile = null )
+	public function getUserData( $profile = null )
 	{
-		$_contact = new GenericUser();
-
-		$_profile = $profile ? : $this->get( 'user_data' );
+		$_profile = $this->_client->fetch( '/user' );
 
 		if ( empty( $_profile ) )
 		{
@@ -63,17 +61,18 @@ class Github extends BaseOAuthProvider
 
 		$_profileId = Option::get( $_profile, 'id' );
 
-		$_name = array(
-			'formatted'  => Option::get( $_profile, 'name' ),
-			'familyName' => Option::get( $_profile, 'last_name' ),
-			'givenName'  => Option::get( $_profile, 'first_name' ),
+		return new GenericUser(
+			array(
+				 'user_id'            => $_profileId,
+				 'published'          => Option::get( $_profile, 'created_at' ),
+				 'display_name'       => Option::get( $_profile, 'name' ),
+				 'name'               => Option::get( $_profile, 'name' ),
+				 'email'              => Option::get( $_profile, 'email' ),
+				 'preferred_username' => Option::get( $_profile, 'login' ),
+				 'urls'               => array( Option::get( $_profile, 'html_url' ) ),
+				 'thumbnail_url'      => array( Option::get( $_profile, 'avatar_url' ) ),
+				 'user_data'          => $_profile,
+			)
 		);
-
-		return $_contact->setUserId( $_profileId )->setPublished( Option::get( $_profile, 'updated_time' ) )->setUpdated( Option::get( $_profile, 'updated_time' ) )
-			   ->setDisplayName( $_name['formatted'] )->setName( $_name )->setPreferredUsername( Option::get( $_profile, 'username' ) )->setGender(
-					   Option::get( $_profile, 'gender' )
-				   )->setEmails( array(Option::get( $_profile, 'email' )) )->setUrls( array(Option::get( $_profile, 'link' )) )->setRelationships(
-					   Option::get( $_profile, 'friends' )
-				   )->setPhotos( array(static::BASE_API_URL . '/' . $_profileId . '/picture?width=150&height=150') )->setUserData( $_profile );
 	}
 }

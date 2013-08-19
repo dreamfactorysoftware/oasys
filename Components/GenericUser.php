@@ -22,7 +22,7 @@ namespace DreamFactory\Oasys\Components;
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
-use Kisma\Core\Utility\Convert;
+use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -976,5 +976,27 @@ class GenericUser extends Seed implements UserLike
 		$this->_source = $userData;
 
 		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function toArray()
+	{
+		$_properties = array();
+
+		$_mirror = new \ReflectionClass( get_class( $this ) );
+		foreach ( $_mirror->getMethods() as $_method )
+		{
+			$_methodName = $_method->getShortName();
+
+			if ( $_method->isPublic() && 'get' == strtolower( substr( $_methodName, 0, 3 ) ) )
+			{
+				$_key = Inflector::neutralize( substr( $_methodName, 3 ) );
+				$_properties[$_key] = $this->{$_methodName}();
+			}
+		}
+
+		return $_properties;
 	}
 }
