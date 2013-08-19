@@ -105,11 +105,6 @@ class GateKeeper extends Seed
 			$settings = file_get_contents( $settings );
 		}
 
-		if ( empty( $settings ) || !is_array( $settings ) )
-		{
-			throw new \InvalidArgumentException( '"settings" must be either an array of settings or a path to an include-able file.' );
-		}
-
 		parent::__construct( $settings );
 
 		//	No store provided, make one...

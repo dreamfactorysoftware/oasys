@@ -33,7 +33,7 @@ use Kisma\Core\Utility\Option;
  * BaseProviderConfig
  * A simple container to hold a provider's configuration elements
  */
-abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, EndpointLike
+abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 {
 	//*************************************************************************
 	//* Members
@@ -127,7 +127,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
-	 * @param int $type
+	 * @param int|string $type
 	 *
 	 * @return string
 	 */
@@ -137,7 +137,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
-	 * @param int $type
+	 * @param int|string $type
 	 *
 	 * @return array
 	 */
@@ -149,9 +149,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike, En
 	}
 
 	/**
-	 * @param int  $type endpoint map type (@see EndpointTypes)
-	 *
-	 * @param bool $urlOnly
+	 * @param int|string $type endpoint map type (@see EndpointTypes)
+	 * @param bool       $urlOnly
 	 *
 	 * @throws \InvalidArgumentException
 	 * @return array

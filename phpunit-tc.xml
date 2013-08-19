@@ -24,7 +24,7 @@
 	</testsuite>
 	<filter>
 		<whitelist>
-			<directory suffix=".php">./tests</directory>
+			<directory suffix="Test.php">./tests</directory>
 		</whitelist>
 		<exclude>
 			<directory>./tests/metrics</directory>

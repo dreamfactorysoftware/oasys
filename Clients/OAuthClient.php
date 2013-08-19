@@ -29,10 +29,8 @@ use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
-use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use Kisma\Core\Exceptions\NotImplementedException;
-use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Log;
@@ -44,7 +42,7 @@ use Kisma\Core\Utility\Option;
  * OAuthClient
  * An base that knows how to talk OAuth2
  */
-class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, HttpMethod
+class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 {
 	//**************************************************************************
 	//* Members
@@ -286,6 +284,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \Kisma\Core\Exceptions\NotImplementedException
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 * @return array
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
@@ -335,7 +334,20 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 		//	Make the url spiffy
 		$_url = rtrim( $_endpoint['endpoint'], '/' ) . '/' . ltrim( $resource, '/' );
 
-		return $this->_makeRequest( $_url, $payload, $method, $headers );
+		$_response = $this->_makeRequest( $_url, $payload, $method, $headers );
+
+		//	Authorization failure?
+		if ( isset( $_response, $_response['result'], $_response['result']['error'] ) && $_response['code'] >= 400 )
+		{
+			//	Clear out our tokens and junk
+			$this->_config->setAccessToken( null );
+			$this->_config->setAccessTokenExpires( null );
+
+			//	Jump back to the redirect URL
+			throw new RedirectRequiredException();
+		}
+
+		return $_response;
 	}
 
 	/**
@@ -425,27 +437,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike, 
 			'code'         => Curl::getLastHttpCode(),
 			'content_type' => $_contentType,
 		);
-	}
-
-	/**
-	 * Unlink/disconnect/logout user from provider locally.
-	 * Does nothing on the provider end
-	 *
-	 * @return void
-	 */
-	public function deauthorize()
-	{
-	}
-
-	/**
-	 * Returns true/false if user is authorized to talk to this provider
-	 *
-	 * @param array $options Authentication options
-	 *
-	 * @return $this|ProviderLike|void
-	 */
-	public function authenticate( $options = array() )
-	{
 	}
 
 	/**

@@ -19,7 +19,8 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\GenericUser;
+use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Exceptions\OasysException;
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Utility\Option;
 
@@ -45,16 +46,21 @@ class Facebook extends BaseOAuthProvider
 	/**
 	 * Returns this user as a GenericUser
 	 *
-	 * @param \stdClass|array $profile
 	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
 	 * @throws \InvalidArgumentException
 	 * @return UserLike
 	 */
-	public function toGenericUser( $profile = null )
+	public function getUserData()
 	{
-		$_contact = new GenericUser();
+		$_response = $this->_client->fetch( '/me' );
 
-		$_profile = $profile ? : $this->get( 'user_data' );
+		if ( 200 != ( $_code = Option::get( $_response, 'code' ) ) )
+		{
+			throw new OasysException( 'Unexpected response code: ' . print_r( $_response, true ) );
+		}
+
+		$_profile = Option::get( $_response, 'result' );
 
 		if ( empty( $_profile ) )
 		{
@@ -69,11 +75,21 @@ class Facebook extends BaseOAuthProvider
 			'givenName'  => Option::get( $_profile, 'first_name' ),
 		);
 
-		return $_contact->setUserId( $_profileId )->setPublished( Option::get( $_profile, 'updated_time' ) )->setUpdated( Option::get( $_profile, 'updated_time' ) )
-			   ->setDisplayName( $_name['formatted'] )->setName( $_name )->setPreferredUsername( Option::get( $_profile, 'username' ) )->setGender(
-					   Option::get( $_profile, 'gender' )
-				   )->setEmails( array( Option::get( $_profile, 'email' ) ) )->setUrls( array( Option::get( $_profile, 'link' ) ) )->setRelationships(
-					   Option::get( $_profile, 'friends' )
-				   )->setPhotos( array( static::BASE_API_URL . '/' . $_profileId . '/picture?width=150&height=150' ) )->setUserData( $_profile );
+		return new GenericUser(
+			array(
+				 'user_id'            => $_profileId,
+				 'published'          => Option::get( $_profile, 'updated_time' ),
+				 'updated'            => Option::get( $_profile, 'updated_time' ),
+				 'display_name'       => $_name['formatted'],
+				 'name'               => $_name,
+				 'preferred_username' => Option::get( $_profile, 'username' ),
+				 'gender'             => Option::get( $_profile, 'gender' ),
+				 'email_address'      => Option::get( $_profile, 'email' ),
+				 'urls'               => array( Option::get( $_profile, 'link' ) ),
+				 'relationships'      => Option::get( $_profile, 'friends' ),
+				 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
+				 'user_data'          => $_profile,
+			)
+		);
 	}
 }

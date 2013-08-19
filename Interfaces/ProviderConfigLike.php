@@ -25,7 +25,7 @@ use Kisma\Core\Interfaces\BagLike;
  * ProviderConfigLike
  * The supported types of provider configurations
  */
-interface ProviderConfigLike
+interface ProviderConfigLike extends EndpointLike
 {
 	//*************************************************************************
 	//	Constants
