@@ -20,5 +20,5 @@ const GITHUB_CLIENT_SECRET = 'client_secret';
 /**
  * Twitter keys
  */
-const TWITTER_CONSUMER_KEY = 'consummr_id';
+const TWITTER_CONSUMER_KEY = 'consumer_id';
 const TWITTER_CONSUMER_SECRET = 'consumer_secret';

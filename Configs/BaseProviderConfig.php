@@ -74,7 +74,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 */
 	public function toJson( $returnAll = false, $allowedProperties = array() )
 	{
-		static $_baseProperties = array(
+		static $_baseProperties
+		= array(
 			'type',
 			'endpointMap',
 			'userAgent',
@@ -157,6 +158,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 */
 	public function getEndpoint( $type = self::SERVICE, $urlOnly = false )
 	{
+		$type = $this->_getEndpointType( $type );
+
 		if ( !EndpointTypes::contains( $type ) )
 		{
 			throw new \InvalidArgumentException( 'The endpoint type "' . $type . '" is not valid.' );
@@ -201,6 +204,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 			return $this;
 		}
 
+		$type = $this->_getEndpointType( $type );
+
 		if ( !EndpointTypes::contains( $type ) )
 		{
 			throw new \InvalidArgumentException( 'The endpoint type "' . $type . '" is not valid.' );
@@ -224,6 +229,47 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 		$this->_endpointMap[$type] = $endpoint;
 
 		return $this;
+	}
+
+	/**
+	 * Cleans up prior stored numerically indexed endpoints.
+	 *
+	 * @param string|int $type
+	 *
+	 * @return int|string
+	 */
+	protected function _getEndpointType( $type )
+	{
+		$_type = $type;
+
+		//	Clean up old types if stored...
+		if ( is_numeric( $_type ) )
+		{
+			switch ( $_type )
+			{
+				case 0:
+					$_type = EndpointTypes::AUTHORIZE;
+					break;
+
+				case 1:
+					$_type = EndpointTypes::REQUEST_TOKEN;
+					break;
+
+				case 2:
+					$_type = EndpointTypes::ACCESS_TOKEN;
+					break;
+
+				case 3:
+					$_type = EndpointTypes::REFRESH_TOKEN;
+					break;
+
+				case 4:
+					$_type = EndpointTypes::SERVICE;
+					break;
+			}
+		}
+
+		return $_type;
 	}
 
 	/**

@@ -29,5 +29,6 @@ require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 //	Testing keys
 if ( file_exists( __DIR__ . '/config/keys.php' ) )
 {
+	/** @noinspection PhpIncludeInspection */
 	require_once __DIR__ . '/config/keys.php';
 }

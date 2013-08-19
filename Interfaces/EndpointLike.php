@@ -30,23 +30,23 @@ interface EndpointLike
 	//*************************************************************************
 
 	/**
-	 * @var int
+	 * @var string
 	 */
 	const AUTHORIZE = 'authorize';
 	/**
-	 * @var int
+	 * @var string
 	 */
 	const REQUEST_TOKEN = 'request_token';
 	/**
-	 * @var int
+	 * @var string
 	 */
 	const ACCESS_TOKEN = 'access_token';
 	/**
-	 * @var int
+	 * @var string
 	 */
 	const REFRESH_TOKEN = 'refresh_token';
 	/**
-	 * @var int
+	 * @var string
 	 */
 	const SERVICE = 'service';
 

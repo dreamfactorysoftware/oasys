@@ -17,29 +17,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Providers;
+namespace DreamFactory\Oasys\Providers\Templates;
 
-use DreamFactory\Oasys\Components\GenericUser;
-use DreamFactory\Oasys\Clients\LegacyOAuthClient;
-use DreamFactory\Oasys\Exceptions\OasysException;
-use Kisma\Core\Utility\Log;
+use DreamFactory\Oasys\Enums\TokenTypes;
+use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * Twitter
- * A Twitter provider
+ * disqus.config.php.dist
  */
-class Twitter extends BaseLegacyOAuthProvider
-{
-	//*************************************************************************
-	//	Methods
-	//*************************************************************************
-
-	/**
-	 * @throws \Exception|\OAuthException
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
-	 * @return bool|GenericUser
-	 */
-	public function getUserData()
-	{
-	}
-}
+return array(
+	'type'              => ProviderConfigTypes::OAUTH,
+	'access_token_type' => TokenTypes::URI,
+	'client_id'         => '{{client_id}}',
+	'client_secret'     => '{{client_secret}}',
+	'scope'             => 'read,write',
+	'endpoint_map'      => array(
+		EndpointTypes::AUTHORIZE    => 'https://disqus.com/api/3.0/oauth/2.0/authorize',
+		EndpointTypes::ACCESS_TOKEN => 'https://disqus.com/api/3.0/oauth/2.0/access_token',
+		EndpointTypes::SERVICE      => 'https://disqus.com/api/3.0',
+	),
+);

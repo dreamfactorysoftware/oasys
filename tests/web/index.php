@@ -66,15 +66,15 @@ switch ( $_providerId )
 }
 
 //	Start it up
-$_oasys = new GateKeeper( array( 'store' => new FileSystem( __FILE__ ) ) );
+$_oasys = new GateKeeper( array('store' => new FileSystem( __FILE__ )) );
 $_provider = $_oasys->getProvider( $_providerId, $_config );
 
 if ( $_provider->handleRequest() )
 {
 	/** @var GenericUser $_profile */
-	$_profile = $_provider->fetchUserData();
+	$_profile = $_provider->getUserData();
 
 	header( 'Content-Type: application/json' );
-	echo $_profile->getUserData();
+	echo print_r( $_profile, true );
 	die();
 }

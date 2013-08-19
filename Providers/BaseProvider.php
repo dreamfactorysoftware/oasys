@@ -17,8 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components;
+namespace DreamFactory\Oasys\Providers;
 
+use DreamFactory\Oasys\Components\GateKeeper;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
@@ -31,6 +32,7 @@ use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\FilterInput;
 use Kisma\Core\Utility\Inflector;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -97,7 +99,8 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \InvalidArgumentException
-	 * @return \DreamFactory\Oasys\Components\BaseProvider
+	 *
+	 * @return \DreamFactory\Oasys\Providers\BaseProvider
 	 */
 	public function __construct( GateKeeper $keeper, $providerId, $config = null )
 	{
@@ -155,6 +158,8 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			Option::clean( $config )
 		);
 
+		Log::debug( 'Config: ' . print_r( $_config, true ) );
+
 		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
 		{
 			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
@@ -162,12 +167,16 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
 
+		Log::debug( 'Determined type of service to be: ' . $_typeName );
+
 		//	Build the class name for the type of authentication of this provider
 		$_class = str_ireplace(
 			'oauth',
 			'OAuth',
 			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
+
+		Log::debug( 'Determined class of service to be: ' . $_class );
 
 		//	Instantiate!
 		return new $_class( $_config );
@@ -512,7 +521,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Components\BaseProviderConfig|ProviderConfigLike $config
+	 * @param ProviderConfigLike $config
 	 *
 	 * @return BaseProvider
 	 */
@@ -524,7 +533,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\Components\BaseProviderConfig|ProviderConfigLike
+	 * @return ProviderConfigLike
 	 */
 	public function getConfig()
 	{

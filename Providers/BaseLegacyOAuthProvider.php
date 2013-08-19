@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\BaseProvider;
+use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Interfaces\LegacyOAuthServiceLike;
 use DreamFactory\Oasys\Clients\LegacyOAuthClient;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
