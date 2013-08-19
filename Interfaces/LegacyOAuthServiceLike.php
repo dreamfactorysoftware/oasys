@@ -19,12 +19,10 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
-use DreamFactory\Oasys\Interfaces\ProviderLike;
-
 /**
  * LegacyOAuthServiceLike
  * An oauth service
  */
-interface LegacyOAuthServiceLike extends ProviderLike
+interface LegacyOAuthServiceLike
 {
 }
