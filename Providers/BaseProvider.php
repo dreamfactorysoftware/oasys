@@ -17,12 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Components;
+namespace DreamFactory\Oasys\Providers;
 
+use DreamFactory\Oasys\Components\GateKeeper;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
+use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Enums\HttpMethod;
@@ -69,7 +71,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_store;
 	/**
-	 * @var BaseProviderConfig The configuration options for this provider
+	 * @var ProviderConfigLike The configuration options for this provider
 	 */
 	protected $_config;
 	/**
@@ -96,7 +98,8 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \InvalidArgumentException
-	 * @return \DreamFactory\Oasys\Components\BaseProvider
+	 *
+	 * @return \DreamFactory\Oasys\Providers\BaseProvider
 	 */
 	public function __construct( GateKeeper $keeper, $providerId, $config = null )
 	{
@@ -236,58 +239,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		$this->_store->clear();
 
 		return $this;
-	}
-
-	/**
-	 * @param array $payload Additional values to send to authenticator
-	 *
-	 * @return string The redirect URI
-	 */
-	public function authenticate( $payload = array() )
-	{
-		if ( $this->authorized() )
-		{
-			return $this;
-		}
-
-		$this->resetAuthorization();
-
-		$_baseUrl = $this->get( 'redirect_uri' );
-		$_ticket = sha1( $this->getId() . '.' . time() );
-
-		$_startpoint = $_baseUrl . ( false !== strpos( $_baseUrl, '?' ) ? '&' : '?' ) . 'oasys.pid=' . $this->_providerId . '&oasys.ticket=' . $_ticket;
-
-		$this->set( 'oasys.ticket', $_ticket );
-		$this->set( 'oasys.pid', $this->_providerId );
-
-		$_options = array_merge(
-			array(
-				 'redirect_uri' => Curl::currentUrl(),
-				 'authorized'   => false,
-				 'startpoint'   => $_startpoint,
-				 'endpoint'     => $_baseUrl . 'oasys.endpoint=' . $this->_providerId,
-			),
-			Option::clean( $payload )
-		);
-
-		//	Save options
-		foreach ( $_options as $_key => $_value )
-		{
-			$this->set( $_key, $_value );
-		}
-
-		//	Do it
-		return $_startpoint;
-	}
-
-	/**
-	 * Reset the authorization adn redirect back to our redirect
-	 */
-	protected function _resetRedirect()
-	{
-		$_uri = $this->get( 'redirect_uri' );
-		$this->resetAuthorization();
-		$this->_redirect( $_uri );
 	}
 
 	/**
@@ -573,7 +524,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Components\BaseProviderConfig $config
+	 * @param ProviderConfigLike $config
 	 *
 	 * @return BaseProvider
 	 */
@@ -585,7 +536,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\Components\BaseProviderConfig
+	 * @return ProviderConfigLike
 	 */
 	public function getConfig()
 	{

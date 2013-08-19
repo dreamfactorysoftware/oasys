@@ -17,18 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+namespace DreamFactory\Oasys\Providers\Templates;
+
+use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * bootstrap.php
- * Bootstrap script for Oasys PHPUnit tests
+ * instagram.config.php.dist
  */
-
-//	Composer
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
-
-//	Testing keys
-if ( file_exists( __DIR__ . '/config/keys.php' ) )
-{
-	/** @noinspection PhpIncludeInspection */
-	require_once __DIR__ . '/config/keys.php';
-}
+return array(
+	'type'          => ProviderConfigTypes::OAUTH,
+	'client_id'     => '{{client_id}}',
+	'client_secret' => '{{client_secret}}',
+	'endpoint_map'  => array(
+		EndpointTypes::SERVICE => 'https://api.instagram.com/v1',
+		EndpointTypes::AUTHORIZE    => 'https://api.instagram.com/oauth/authorize',
+		EndpointTypes::ACCESS_TOKEN => 'https://api.instagram.com/oauth/access_token',
+	),
+);

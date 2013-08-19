@@ -19,7 +19,7 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\BaseProvider;
+use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Clients\OAuthClient;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;

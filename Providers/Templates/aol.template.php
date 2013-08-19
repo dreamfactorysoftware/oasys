@@ -17,18 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+namespace DreamFactory\Oasys\Providers\Templates;
+
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * bootstrap.php
- * Bootstrap script for Oasys PHPUnit tests
+ * aol.config.php.dist
+ *
+ * This is the template for connecting AOL.
  */
-
-//	Composer
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
-
-//	Testing keys
-if ( file_exists( __DIR__ . '/config/keys.php' ) )
-{
-	/** @noinspection PhpIncludeInspection */
-	require_once __DIR__ . '/config/keys.php';
-}
+return array(
+	'type'          => ProviderConfigTypes::OPENID,
+	'openid_id'     => '{{openid_id}}',
+);

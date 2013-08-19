@@ -17,18 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+namespace DreamFactory\Oasys\Providers\Templates;
+
+use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 
 /**
- * bootstrap.php
- * Bootstrap script for Oasys PHPUnit tests
+ * foursquare.config.php.dist
  */
-
-//	Composer
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
-
-//	Testing keys
-if ( file_exists( __DIR__ . '/config/keys.php' ) )
-{
-	/** @noinspection PhpIncludeInspection */
-	require_once __DIR__ . '/config/keys.php';
-}
+return array(
+	'type'          => ProviderConfigTypes::OAUTH,
+	'client_id'     => '{{client_id}}',
+	'client_secret' => '{{client_secret}}',
+	'endpoint_map'  => array(
+		EndpointTypes::AUTHORIZE    => 'https://foursquare.com/oauth2/authenticate',
+		EndpointTypes::ACCESS_TOKEN => 'https://foursquare.com/oauth2/access_token',
+		EndpointTypes::SERVICE      => 'https://api.foursquare.com/v2',
+	),
+);
