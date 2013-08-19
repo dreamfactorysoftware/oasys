@@ -32,6 +32,7 @@ use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\FilterInput;
 use Kisma\Core\Utility\Inflector;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -157,6 +158,8 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			Option::clean( $config )
 		);
 
+		Log::debug( 'Config: ' . print_r( $_config, true ) );
+
 		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
 		{
 			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
@@ -164,12 +167,16 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
 
+		Log::debug( 'Determined type of service to be: ' . $_typeName );
+
 		//	Build the class name for the type of authentication of this provider
 		$_class = str_ireplace(
 			'oauth',
 			'OAuth',
 			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
+
+		Log::debug( 'Determined class of service to be: ' . $_class );
 
 		//	Instantiate!
 		return new $_class( $_config );
