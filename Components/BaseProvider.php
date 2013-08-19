@@ -160,11 +160,13 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
 		}
 
+		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
+
 		//	Build the class name for the type of authentication of this provider
 		$_class = str_ireplace(
 			'oauth',
 			'OAuth',
-			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( ProviderConfigTypes::nameOf( $this->_type ) ) . '_provider_config' ) )
+			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
 
 		//	Instantiate!
@@ -216,18 +218,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Begin the authorization process
-	 *
-	 * @throws RedirectRequiredException
-	 */
-	abstract public function startAuthorization();
-
-	/**
-	 * Complete the authorization process
-	 */
-	abstract public function completeAuthorization();
-
-	/**
 	 * Clear out any settings for this provider
 	 *
 	 * @return $this
@@ -237,58 +227,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		$this->_store->clear();
 
 		return $this;
-	}
-
-	/**
-	 * @param array $payload Additional values to send to authenticator
-	 *
-	 * @return string The redirect URI
-	 */
-	public function authenticate( $payload = array() )
-	{
-		if ( $this->authorized() )
-		{
-			return $this;
-		}
-
-		$this->resetAuthorization();
-
-		$_baseUrl = $this->get( 'redirect_uri' );
-		$_ticket = sha1( $this->getId() . '.' . time() );
-
-		$_startpoint = $_baseUrl . ( false !== strpos( $_baseUrl, '?' ) ? '&' : '?' ) . 'oasys.pid=' . $this->_providerId . '&oasys.ticket=' . $_ticket;
-
-		$this->set( 'oasys.ticket', $_ticket );
-		$this->set( 'oasys.pid', $this->_providerId );
-
-		$_options = array_merge(
-			array(
-				 'redirect_uri' => Curl::currentUrl(),
-				 'authorized'   => false,
-				 'startpoint'   => $_startpoint,
-				 'endpoint'     => $_baseUrl . 'oasys.endpoint=' . $this->_providerId,
-			),
-			Option::clean( $payload )
-		);
-
-		//	Save options
-		foreach ( $_options as $_key => $_value )
-		{
-			$this->set( $_key, $_value );
-		}
-
-		//	Do it
-		return $_startpoint;
-	}
-
-	/**
-	 * Reset the authorization adn redirect back to our redirect
-	 */
-	protected function _resetRedirect()
-	{
-		$_uri = $this->get( 'redirect_uri' );
-		$this->resetAuthorization();
-		$this->_redirect( $_uri );
 	}
 
 	/**
@@ -574,7 +512,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Components\BaseProviderConfig $config
+	 * @param \DreamFactory\Oasys\Components\BaseProviderConfig|ProviderConfigLike $config
 	 *
 	 * @return BaseProvider
 	 */
@@ -586,7 +524,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\Components\BaseProviderConfig
+	 * @return \DreamFactory\Oasys\Components\BaseProviderConfig|ProviderConfigLike
 	 */
 	public function getConfig()
 	{

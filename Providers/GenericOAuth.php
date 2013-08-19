@@ -19,10 +19,26 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
+use DreamFactory\Oasys\Components\GenericUser;
+
 /**
  * GenericOAuth
  * A GenericOAuth provider for general use
  */
 class GenericOAuth extends BaseOAuthProvider
 {
+	/**
+	 * Returns the normalized provider's user profile
+	 *
+	 * @param string $resource
+	 * @param array  $payload
+	 * @param string $method
+	 * @param array  $headers
+	 *
+	 * @return GenericUser
+	 */
+	public function getUserData( $resource = null, $payload = array(), $method = self::Get, $headers = array() )
+	{
+		return $this->_client->fetch( $resource, $payload, $method, $headers );
+	}
 }

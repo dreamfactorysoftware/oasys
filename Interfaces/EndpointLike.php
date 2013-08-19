@@ -32,23 +32,23 @@ interface EndpointLike
 	/**
 	 * @var int
 	 */
-	const AUTHORIZE = 0;
+	const AUTHORIZE = 'authorize';
 	/**
 	 * @var int
 	 */
-	const REQUEST_TOKEN = 1;
+	const REQUEST_TOKEN = 'request_token';
 	/**
 	 * @var int
 	 */
-	const ACCESS_TOKEN = 2;
+	const ACCESS_TOKEN = 'access_token';
 	/**
 	 * @var int
 	 */
-	const REFRESH_TOKEN = 3;
+	const REFRESH_TOKEN = 'refresh_token';
 	/**
 	 * @var int
 	 */
-	const SERVICE = 4;
+	const SERVICE = 'service';
 
 	//*************************************************************************
 	//* Methods
@@ -67,12 +67,24 @@ interface EndpointLike
 	public function getEndpointMap();
 
 	/**
-	 * @param int  $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
+	 * @param int|string $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
+	 * @param bool       $urlOnly
 	 *
-	 * @param bool $urlOnly
-	 *
-	 * @throws \InvalidArgumentException
 	 * @return array
 	 */
 	public function getEndpoint( $type = self::SERVICE, $urlOnly = false );
+
+	/**
+	 * @param int|string $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
+	 *
+	 * @return string
+	 */
+	public function getEndpointUrl( $type = self::SERVICE );
+
+	/**
+	 * @param int|string $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
+	 *
+	 * @return array
+	 */
+	public function getEndpointParameters( $type = self::SERVICE );
 }

@@ -19,7 +19,8 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\GenericUser;
+use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Exceptions\OasysException;
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Utility\Option;
 
@@ -45,12 +46,21 @@ class Facebook extends BaseOAuthProvider
 	/**
 	 * Returns this user as a GenericUser
 	 *
+	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
 	 * @throws \InvalidArgumentException
 	 * @return UserLike
 	 */
 	public function getUserData()
 	{
-		$_profile = $this->_client->fetch( '/me' );
+		$_response = $this->_client->fetch( '/me' );
+
+		if ( 200 != ( $_code = Option::get( $_response, 'code' ) ) )
+		{
+			throw new OasysException( 'Unexpected response code: ' . print_r( $_response, true ) );
+		}
+
+		$_profile = Option::get( $_response, 'result' );
 
 		if ( empty( $_profile ) )
 		{
@@ -74,10 +84,10 @@ class Facebook extends BaseOAuthProvider
 				 'name'               => $_name,
 				 'preferred_username' => Option::get( $_profile, 'username' ),
 				 'gender'             => Option::get( $_profile, 'gender' ),
-				 'emails'             => array( Option::get( $_profile, 'email' ) ),
+				 'email_address'      => Option::get( $_profile, 'email' ),
 				 'urls'               => array( Option::get( $_profile, 'link' ) ),
 				 'relationships'      => Option::get( $_profile, 'friends' ),
-				 'thumbnail_url'      => $this->_config->getEndpoint() . '/' . $_profileId . '/picture?width=150&height=150',
+				 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
 				 'user_data'          => $_profile,
 			)
 		);

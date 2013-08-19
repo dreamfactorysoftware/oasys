@@ -55,11 +55,13 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	/**
 	 * Checks to see if user is authorized with this provider
 	 *
+	 * @param bool $startIfNot If true, and not authorized, the login flow will commence presently
+	 *
 	 * @return bool
 	 */
-	public function authorized()
+	public function authorized( $startIfNot = false )
 	{
-		return $this->_client->authorized();
+		return $this->_client->authorized( $startIfNot );
 	}
 
 	/**
@@ -69,7 +71,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	public function startAuthorization()
 	{
-		return $this->_client->authorized( true );
+		return $this->authorized( true );
 	}
 
 	/**

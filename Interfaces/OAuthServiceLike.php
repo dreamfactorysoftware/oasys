@@ -25,6 +25,6 @@ use DreamFactory\Oasys\Interfaces\ProviderLike;
  * OAuthServiceLike
  * An oauth service
  */
-interface OAuthServiceLike extends ProviderLike
+interface OAuthServiceLike
 {
 }

@@ -19,11 +19,22 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
+use Kisma\Core\Interfaces\HttpMethod;
+
 /**
  * ProviderClientLike
  */
-interface ProviderClientLike extends ProviderLike
+interface ProviderClientLike extends HttpMethod
 {
+	/**
+	 * Check if we are authorized or not...
+	 *
+	 * @param bool $startFlow If true, and we are not authorized, checkAuthenticationProgress() is called.
+	 *
+	 * @return bool|string
+	 */
+	public function authorized( $startFlow = false );
+
 	/**
 	 * Checks the progress of any in-flight OAuth requests
 	 *
@@ -32,4 +43,14 @@ interface ProviderClientLike extends ProviderLike
 	 * @return string
 	 */
 	public function checkAuthenticationProgress();
+
+	/**
+	 * @param string $resource
+	 * @param array  $payload
+	 * @param string $method
+	 * @param array  $headers
+	 *
+	 * @return mixed
+	 */
+	public function fetch( $resource, $payload = array(), $method = HttpMethod::Get, array $headers = array() );
 }
