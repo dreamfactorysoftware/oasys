@@ -30,6 +30,7 @@ use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
+use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
