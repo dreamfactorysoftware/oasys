@@ -80,6 +80,10 @@ class Oasys extends SeedUtility
 	 * @var array
 	 */
 	protected static $_classMap = array();
+	/**
+	 * @var bool
+	 */
+	protected static $_initialized = false;
 
 	//*************************************************************************
 	//* Methods
@@ -93,10 +97,15 @@ class Oasys extends SeedUtility
 	 */
 	public static function initialize( $settings = array() )
 	{
+		if ( static::$_initialized )
+		{
+			return;
+		}
+
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => dirname( __DIR__ ) . '/Providers' );
+			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers' );
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -154,6 +163,8 @@ class Oasys extends SeedUtility
 				}
 			}
 		);
+
+		static::$_initialized = true;
 	}
 
 	/**
@@ -168,6 +179,11 @@ class Oasys extends SeedUtility
 	 */
 	public static function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{
+		if ( !static::$_initialized )
+		{
+			static::initialize();
+		}
+
 		$_providerId = $_mapKey = $providerId;
 		$_type = null;
 		$_generic = false;
@@ -337,7 +353,7 @@ class Oasys extends SeedUtility
 	/**
 	 * Makes a hash of providers and their associated classes
 	 *
-	 * @return array
+	 * @return void
 	 */
 	protected static function _mapProviders()
 	{
@@ -351,6 +367,13 @@ class Oasys extends SeedUtility
 			{
 				$_className = str_ireplace( '.php', null, basename( $_class ) );
 				$_providerId = Inflector::neutralize( $_className );
+
+				//	Skip base classes in these directories...
+				if ( 'base_' == substr( $_providerId, 0, 4 ) )
+				{
+					continue;
+				}
+
 				$_classMap[$_providerId] = array(
 					'class_name' => $_className,
 					'path'       => $_class,
@@ -362,14 +385,11 @@ class Oasys extends SeedUtility
 		}
 
 		//	Merge in the found classes
-		return static::$_classMap = array_merge(
-			static::$_classMap,
-			$_classMap
-		);
+		static::$_classMap = array_merge( static::$_classMap, $_classMap );
 	}
 
 	/**
-	 * Convenience shortcut to the GateKeeper's goody bag
+	 * Convenience shortcut to the goodie bag
 	 *
 	 * @param string $key
 	 * @param mixed  $defaultValue
@@ -384,7 +404,7 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
+	 * Convenience shortcut to the goodie bag
 	 *
 	 * @param string $key
 	 * @param mixed  $value
@@ -399,11 +419,12 @@ class Oasys extends SeedUtility
 	}
 
 	/**
+	 * @param string $namespace
 	 * @param string $path
 	 */
-	public static function addProviderPath( $path )
+	public static function addProviderPath( $namespace, $path )
 	{
-		static::$_providerPaths[] = $path;
+		static::$_providerPaths[$namespace] = $path;
 		static::_mapProviders();
 	}
 

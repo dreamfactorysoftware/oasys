@@ -141,6 +141,10 @@ class OAuthProviderConfig extends BaseProviderConfig
 			$returnAll,
 			array(
 				 'clientId',
+				 'clientSecret',
+				 'redirectUri',
+				 'scope',
+				 'certificateFile',
 				 'authorizeUrl',
 				 'grantType',
 				 'authType',
@@ -154,9 +158,6 @@ class OAuthProviderConfig extends BaseProviderConfig
 				 'accessTokenExpires',
 				 'refreshToken',
 				 'refreshTokenExpires',
-				 'redirectUri',
-				 'scope',
-				 'certificateFile',
 			)
 		);
 	}

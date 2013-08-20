@@ -387,7 +387,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
+	 * Convenience shortcut to the goodie bag
 	 *
 	 * @param string $key
 	 * @param mixed  $defaultValue
@@ -404,7 +404,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
+	 * Convenience shortcut to the goodie  bag
 	 *
 	 * @param string $key
 	 * @param mixed  $value
