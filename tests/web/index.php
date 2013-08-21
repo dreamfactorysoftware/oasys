@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use DreamFactory\Oasys\Components\GateKeeper;
+use DreamFactory\Oasys\Oasys;
 use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysException;
@@ -66,8 +66,8 @@ switch ( $_providerId )
 }
 
 //	Start it up
-$_oasys = new GateKeeper( array('store' => new FileSystem( __FILE__ )) );
-$_provider = $_oasys->getProvider( $_providerId, $_config );
+Oasys::setStore( new FileSystem( __FILE__ ) );
+$_provider = Oasys::getProvider( $_providerId, $_config );
 
 if ( $_provider->handleRequest() )
 {

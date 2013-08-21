@@ -24,9 +24,7 @@ use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig;
-use DreamFactory\Oasys\Interfaces\ProviderLike;
 use Kisma\Core\Exceptions\NotImplementedException;
-use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Log;
@@ -36,9 +34,9 @@ use Kisma\Core\Utility\Option;
 
 /**
  * LegacyOAuthClient
- * An base that knows how to talk OAuth2
+ * An base that knows how to talk dirty. Er, uhm, I mean, OAuth v1.x
  */
-class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthServiceLike, HttpMethod
+class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthServiceLike
 {
 	//**************************************************************************
 	//* Members
@@ -226,27 +224,6 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 				'content_type' => $_info['content_type'],
 			);
 		}
-	}
-
-	/**
-	 * Unlink/disconnect/logout user from provider locally.
-	 * Does nothing on the provider end
-	 *
-	 * @return void
-	 */
-	public function deauthorize()
-	{
-	}
-
-	/**
-	 * Returns true/false if user is authorized to talk to this provider
-	 *
-	 * @param array $options Authentication options
-	 *
-	 * @return $this|ProviderLike|void
-	 */
-	public function authenticate( $options = array() )
-	{
 	}
 
 	/**

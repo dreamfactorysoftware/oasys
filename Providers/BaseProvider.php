@@ -19,7 +19,6 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Components\GateKeeper;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
@@ -27,6 +26,7 @@ use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
+use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Enums\HttpMethod;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
@@ -64,10 +64,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_type;
 	/**
-	 * @var GateKeeper Our Gate Keeper
-	 */
-	protected $_keeper;
-	/**
 	 * @var StorageProviderLike Our storage mechanism
 	 */
 	protected $_store;
@@ -76,7 +72,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_config;
 	/**
-	 * @var ProviderClientLike Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK)
+	 * @var ProviderClientLike Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK), or maybe an alternative transport layer? whatever
 	 */
 	protected $_client;
 	/**
@@ -93,29 +89,21 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	//*************************************************************************
 
 	/**
-	 * @param GateKeeper               $keeper
 	 * @param string                   $providerId The name/ID of this provider
-	 * @param BaseProviderConfig|array $config
+	 * @param ProviderConfigLike|array $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \InvalidArgumentException
 	 *
 	 * @return \DreamFactory\Oasys\Providers\BaseProvider
 	 */
-	public function __construct( GateKeeper $keeper, $providerId, $config = null )
+	public function __construct( $providerId, $config = null )
 	{
 		$this->_providerId = $providerId;
-		$this->_keeper = $keeper;
-		$this->_store = $keeper->getStore();
 
 		if ( empty( $this->_config ) && ( null === $config || !( $config instanceof BaseProviderConfig ) ) )
 		{
 			$this->_config = $this->_createConfiguration( $config );
-		}
-
-		if ( empty( $this->_store ) )
-		{
-			throw new \InvalidArgumentException( 'No storage mechanism configured.' );
 		}
 
 		if ( empty( $this->_providerId ) )
@@ -233,7 +221,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function resetAuthorization()
 	{
-		$this->_store->clear();
+		Oasys::getStore()->removeMany( '/^' . $this->_providerId . '\\./i' );
 
 		return $this;
 	}
@@ -248,7 +236,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	protected function _redirect( $uri )
 	{
 		//	Throw redirect exception for non-interactive
-		if ( false === $this->_interactive )
+		if ( false !== $this->_interactive )
 		{
 			throw new RedirectRequiredException( $uri );
 		}
@@ -321,26 +309,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param GateKeeper $keeper
-	 *
-	 * @return BaseProvider
-	 */
-	protected function _setKeeper( $keeper )
-	{
-		$this->_keeper = $keeper;
-
-		return $this;
-	}
-
-	/**
-	 * @return GateKeeper
-	 */
-	public function getKeeper()
-	{
-		return $this->_keeper;
-	}
-
-	/**
 	 * @param string $providerId
 	 *
 	 * @return BaseProvider
@@ -381,23 +349,11 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Interfaces\StorageProviderLike $store
-	 *
-	 * @return BaseProvider
-	 */
-	protected function _setStore( $store )
-	{
-		$this->_store = $store;
-
-		return $this;
-	}
-
-	/**
 	 * @return \DreamFactory\Oasys\Interfaces\StorageProviderLike
 	 */
 	public function getStore()
 	{
-		return $this->_store;
+		return Oasys::getStore();
 	}
 
 	/**
@@ -431,7 +387,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
+	 * Convenience shortcut to the goodie bag
 	 *
 	 * @param string $key
 	 * @param mixed  $defaultValue
@@ -448,7 +404,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Convenience shortcut to the GateKeeper's goodie bag
+	 * Convenience shortcut to the goodie  bag
 	 *
 	 * @param string $key
 	 * @param mixed  $value
@@ -473,7 +429,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function setGlobal( $key, $value = null, $overwrite = true )
 	{
-		$this->_keeper->setGlobal( $key, $value, $overwrite );
+		Oasys::setGlobal( $key, $value, $overwrite );
 
 		return $this;
 	}
@@ -487,7 +443,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function getGlobal( $key, $defaultValue = null, $burnAfterReading = false )
 	{
-		return $this->_keeper->getGlobal( $key, $defaultValue, $burnAfterReading );
+		return Oasys::getGlobal( $key, $defaultValue, $burnAfterReading );
 	}
 
 	/**
@@ -497,7 +453,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function getGlobals()
 	{
-		return $this->_keeper->getOptions();
+		return Oasys::getOptions();
 	}
 
 	/**
