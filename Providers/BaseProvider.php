@@ -146,16 +146,12 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			Option::clean( $config )
 		);
 
-		Log::debug( 'Config: ' . print_r( $_config, true ) );
-
 		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
 		{
 			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
 		}
 
 		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
-
-		Log::debug( 'Determined type of service to be: ' . $_typeName );
 
 		//	Build the class name for the type of authentication of this provider
 		$_class = str_ireplace(
@@ -164,7 +160,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
 
-		Log::debug( 'Determined class of service to be: ' . $_class );
+		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
 
 		//	Instantiate!
 		return new $_class( $_config );
