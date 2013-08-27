@@ -139,6 +139,10 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			/** @noinspection PhpIncludeInspection */
 			$_defaults = require( $_template );
 		}
+		else
+		{
+			Log::notice( 'Auto-template "' . $_template . '" not found.' );
+		}
 
 		//	Merge in the template, stored stuff and user supplied stuff
 		$_config = array_merge(
