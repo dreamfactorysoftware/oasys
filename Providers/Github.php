@@ -20,6 +20,7 @@
 namespace DreamFactory\Oasys\Providers;
 
 use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Exceptions\ProviderException;
 use DreamFactory\Oasys\Interfaces\UserLike;
 use Kisma\Core\Utility\Option;
 
@@ -52,25 +53,53 @@ class Github extends BaseOAuthProvider
 	 */
 	public function getUserData( $profile = null )
 	{
-		$_profile = $this->_client->fetch( '/user' );
+		$_result = $this->_client->fetch( '/user' );
 
-		if ( empty( $_profile ) )
+		if ( empty( $_result ) )
 		{
 			throw new \InvalidArgumentException( 'No profile available to convert.' );
 		}
 
+		if ( null === ( $_profile = Option::get( $_result, 'result' ) ) )
+		{
+			throw new ProviderException( 'No profile available to convert.' );
+		}
+
 		$_profileId = Option::get( $_profile, 'id' );
+
+		$_formatted = Option::get( $_profile, 'name' );
+		$_parts = explode( ' ', $_formatted );
+
+		$_name = array(
+			'formatted' => $_formatted,
+		);
+
+		if ( !empty( $_parts ) )
+		{
+			if ( sizeof( $_parts ) >= 1 )
+			{
+				$_name['givenName'] = $_parts[0];
+			}
+
+			if ( sizeof( $_parts ) > 1 )
+			{
+				$_name['familyName'] = $_parts[1];
+			}
+		}
 
 		return new GenericUser(
 			array(
+				 'provider_id'        => $this->getProviderId(),
 				 'user_id'            => $_profileId,
 				 'published'          => Option::get( $_profile, 'created_at' ),
-				 'display_name'       => Option::get( $_profile, 'name' ),
-				 'name'               => Option::get( $_profile, 'name' ),
-				 'email'              => Option::get( $_profile, 'email' ),
+				 'display_name'       => $_formatted,
+				 'name'               => $_name,
+				 'email_address'      => Option::get( $_profile, 'email' ),
 				 'preferred_username' => Option::get( $_profile, 'login' ),
 				 'urls'               => array( Option::get( $_profile, 'html_url' ) ),
-				 'thumbnail_url'      => array( Option::get( $_profile, 'avatar_url' ) ),
+				 'thumbnail_url'      => Option::get( $_profile, 'avatar_url' ),
+				 'updated'            => Option::get( $_profile, 'updated_at' ),
+				 'relationships'      => Option::get( $_profile, 'followers' ),
 				 'user_data'          => $_profile,
 			)
 		);
