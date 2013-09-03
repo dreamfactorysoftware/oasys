@@ -140,31 +140,29 @@ class Oasys extends SeedUtility
 		}
 
 		static::_mapProviders();
+		static::$_initialized = true;
+	}
 
-		register_shutdown_function(
-			function ()
+	/**
+	 * Save myself!
+	 */
+	public function __destruct()
+	{
+		$_store = static::getStore();
+		$_cache = static::getProviderCache();
+
+		//	Save off the store
+		if ( !empty( $_store ) && !empty( $_cache ) )
+		{
+			foreach ( $_cache as $_id => $_provider )
 			{
-				$_store = Oasys::getStore();
-				$_cache = Oasys::getProviderCache();
-
-				//	Save off the store
-				if ( !empty( $_store ) && !empty( $_cache ) )
+				foreach ( $_provider->getConfig()->toArray() as $_key => $_value )
 				{
-					foreach ( $_cache as $_id => $_provider )
-					{
-						foreach ( $_provider->getConfig()->toArray() as $_key => $_value )
-						{
-							Oasys::setGlobal( $_id . '.' . $_key, $_value );
-						}
-					}
-
-					//	Save!
-					$_store->sync();
+					$_store->set( $_id . '.' . $_key, $_value );
 				}
 			}
-		);
-
-		static::$_initialized = true;
+			//	Store will sync when it's destroyed...
+		}
 	}
 
 	/**

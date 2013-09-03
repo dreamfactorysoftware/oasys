@@ -118,6 +118,19 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
+	 * Make sure to sync up before you go
+	 */
+	public function __destruct()
+	{
+		if ( !empty( $this->_store ) )
+		{
+			$this->_store->sync();
+		}
+
+		parent::__destruct();
+	}
+
+	/**
 	 * @param array $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException

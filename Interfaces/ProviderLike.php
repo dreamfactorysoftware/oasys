@@ -20,7 +20,6 @@
 namespace DreamFactory\Oasys\Interfaces;
 
 use DreamFactory\Oasys\Components\GenericUser;
-use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use Kisma\Core\Enums\HttpMethod;
 
 /**

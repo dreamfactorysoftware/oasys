@@ -20,18 +20,19 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Interfaces\EndpointLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigTypes;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Inflector;
+use Kisma\Core\Utility\SchemaFormBuilder;
 use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility;
 
 /**
  * BaseProviderConfig
- * A simple container to hold a provider's configuration elements
+ * A simple container to hold a provider's configuration elements. Can also provide hints to admin presentation
  */
 abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 {
@@ -59,10 +60,34 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 * @var array
 	 */
 	protected $_payload;
+	/**
+	 * @var array This configuration's schema for use with \Kisma\Utility\SchemaFormBuilder
+	 */
+	protected $_schema;
 
 	//*************************************************************************
 	//* Methods
 	//*************************************************************************
+
+	/**
+	 * @param array $settings
+	 */
+	public function __construct( $settings = array() )
+	{
+		parent::__construct( $settings );
+
+		//	Load default if one exists and none passed in...
+		if ( empty( $this->_schema ) )
+		{
+			$_fileName = __DIR__ . '/Schemas/' . Inflector::neutralize( ProviderConfigTypes::nameOf( $this->_type ) ) . '.schema.php';
+
+			if ( file_exists( $_fileName ) && is_readable( $_fileName ) )
+			{
+				/** @noinspection PhpIncludeInspection */
+				$this->_schema = @include( $_fileName );
+			}
+		}
+	}
 
 	/**
 	 * @param bool  $returnAll         If true, all configuration values are returned. Otherwise only a subset are available
@@ -361,4 +386,33 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	{
 		return $this->_providerId;
 	}
+
+	/**
+	 * @return array
+	 */
+	public function getSchema()
+	{
+		return $this->_schema;
+	}
+
+	/**
+	 * @param array $schema
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function setSchema( $schema )
+	{
+		$this->_schema = $schema;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getSchemaHtml()
+	{
+		return SchemaFormBuilder::create( $this->_schema, true );
+	}
+
 }

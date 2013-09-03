@@ -17,11 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Providers\Schemas;
+namespace DreamFactory\Oasys\Configs\Schemas;
 
 /**
  * oauth.schema.php
- * The schema for an OAuth service
+ * The config schema for an OAuth service
  */
 use DreamFactory\Oasys\Enums\AccessTypes;
 use DreamFactory\Oasys\Enums\Flows;

@@ -69,4 +69,18 @@ interface ProviderConfigLike extends EndpointLike
 	 * @return array
 	 */
 	public function toArray( $returnAll = false );
+
+	/**
+	 * Returns the default configuration schema for this type of provider
+	 *
+	 * @return array
+	 */
+	public function getSchema();
+
+	/**
+	 * Returns the default configuration schema rendered as HTML for this type of provider
+	 *
+	 * @return string
+	 */
+	public function getSchemaHtml();
 }

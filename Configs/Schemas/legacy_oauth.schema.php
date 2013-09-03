@@ -17,14 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Providers\Schemas;
+namespace DreamFactory\Oasys\Configs\Schemas;
 
 use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Enums\OAuthTypes;
 
 /**
  * legacy_oauth.schema.php
- * The schema for an OAuth v1.x service
+ * The config schema for an OAuth v1.x service
  */
 return array(
 	'consumer_key'        => array( 'type' => 'string', 'length' => 64, 'required' => true ),

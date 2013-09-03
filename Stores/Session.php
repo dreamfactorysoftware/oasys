@@ -43,7 +43,7 @@ class Session extends BaseOasysStore
 	 */
 	public function __construct( $contents = array() )
 	{
-		if ( PHP_SESSION_ACTIVE != session_status() )
+		if ( !isset( $_SESSION ) || PHP_SESSION_DISABLED == session_status() )
 		{
 			throw new OasysException( 'No session active. Session storage not available.' );
 		}
@@ -62,7 +62,7 @@ class Session extends BaseOasysStore
 	 */
 	public function sync()
 	{
-		if ( PHP_SESSION_ACTIVE != session_status() )
+		if ( !isset( $_SESSION ) || PHP_SESSION_DISABLED == session_status() )
 		{
 			throw new OasysException( 'No session active. Session storage not available.' );
 		}
