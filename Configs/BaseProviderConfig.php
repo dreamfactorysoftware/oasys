@@ -21,7 +21,7 @@ namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use DreamFactory\Oasys\Interfaces\ProviderConfigTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\Seed;
@@ -414,5 +414,4 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	{
 		return SchemaFormBuilder::create( $this->_schema, true );
 	}
-
 }
