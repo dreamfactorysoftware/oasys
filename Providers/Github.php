@@ -22,6 +22,7 @@ namespace DreamFactory\Oasys\Providers;
 use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Exceptions\ProviderException;
 use DreamFactory\Oasys\Interfaces\UserLike;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -65,9 +66,12 @@ class Github extends BaseOAuthProvider
 			throw new ProviderException( 'No profile available to convert.' );
 		}
 
+		Log::debug( 'Profile retrieved: ' . print_r( $_profile, true ) );
+
 		$_profileId = Option::get( $_profile, 'id' );
 
-		$_formatted = Option::get( $_profile, 'name' );
+		$_login = Option::get( $_profile, 'login' );
+		$_formatted = Option::get( $_profile, 'name', $_login );
 		$_parts = explode( ' ', $_formatted );
 
 		$_name = array(
@@ -95,8 +99,8 @@ class Github extends BaseOAuthProvider
 				 'display_name'       => $_formatted,
 				 'name'               => $_name,
 				 'email_address'      => Option::get( $_profile, 'email' ),
-				 'preferred_username' => Option::get( $_profile, 'login' ),
-				 'urls'               => array( Option::get( $_profile, 'html_url' ) ),
+				 'preferred_username' => $_login,
+				 'urls'               => array( Option::get( $_profile, 'url' ) ),
 				 'thumbnail_url'      => Option::get( $_profile, 'avatar_url' ),
 				 'updated'            => Option::get( $_profile, 'updated_at' ),
 				 'relationships'      => Option::get( $_profile, 'followers' ),
