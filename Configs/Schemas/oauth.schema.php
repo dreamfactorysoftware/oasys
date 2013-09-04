@@ -27,24 +27,36 @@ use DreamFactory\Oasys\Enums\AccessTypes;
 use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Enums\GrantTypes;
 use DreamFactory\Oasys\Enums\OAuthTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
+use Kisma\Core\Utility\Curl;
 
 return array(
 	'client_id'               => array( 'type' => 'text', 'maxlength' => 64, 'class' => 'required' ),
 	'client_secret'           => array( 'type' => 'text', 'maxlength' => 128, 'class' => 'required' ),
-	'redirect_uri'            => array( 'type' => 'text', 'maxlength' => 1024, 'class' => 'required' ),
-	'scope'                   => array( 'type' => 'textarea' ),
-	'certificate_file'        => array( 'type' => 'textarea', 'maxlength' => 1024 ),
-	'authorize_url'           => array( 'type' => 'text', 'maxlength' => 1024 ),
-	'grant_type'              => array( 'type' => 'select', 'default' => GrantTypes::AUTHORIZATION_CODE, 'data' => GrantTypes::getDefinedConstants( true ) ),
-	'auth_type'               => array( 'type' => 'select', 'default' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true ) ),
-	'access_type'             => array( 'type' => 'select', 'default' => AccessTypes::OFFLINE, 'data' => AccessTypes::getDefinedConstants( true ) ),
-	'flow_type'               => array( 'type' => 'select', 'default' => Flows::CLIENT_SIDE, 'data' => Flows::getDefinedConstants( true ) ),
-	'access_token_param_name' => array( 'type' => 'text', 'maxlength' => 64 ),
-	'auth_header_name'        => array( 'type' => 'text', 'maxlength' => 64 ),
-	'access_token'            => array( 'type' => 'text', 'maxlength' => 128 ),
-	'access_token_type'       => array( 'type' => 'select' ),
-	'access_token_secret'     => array( 'type' => 'text', 'maxlength' => 128 ),
-	'access_token_expires'    => array( 'type' => 'int' ),
-	'refresh_token'           => array( 'type' => 'text', 'maxlength' => 64 ),
-	'refresh_token_expires'   => array( 'type' => 'int' ),
+	'redirect_uri'            => array(
+		'type'        => 'text',
+		'maxlength'   => 1024,
+		'class'       => 'required',
+		'placeholder' => Curl::currentUrl( false, false ),
+	),
+	'scope'                   => array( 'type' => 'textarea', 'hint' => 'Comma-separated list of desired scopes.' ),
+	'certificate_file'        => array( 'type' => 'textarea', 'maxlength' => 1024, 'placeholder' => 'Provider Default' ),
+	'authorize_url'           => array( 'type' => 'text', 'maxlength' => 1024, 'placeholder' => 'Provider Default' ),
+	'grant_type'              => array( 'type' => 'select', 'value' => GrantTypes::AUTHORIZATION_CODE, 'data' => GrantTypes::getDefinedConstants( true, null, true ) ),
+	'auth_type'               => array( 'type' => 'select', 'value' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true, null, true ) ),
+	'access_type'             => array( 'type' => 'select', 'value' => AccessTypes::OFFLINE, 'data' => AccessTypes::getDefinedConstants( true, null, true ) ),
+	'flow_type'               => array( 'type' => 'select', 'value' => Flows::SERVER_SIDE, 'data' => Flows::getDefinedConstants( true, null, true ) ),
+	'access_token_param_name' => array( 'type' => 'text', 'maxlength' => 64, 'hint' => 'The name of the parameter to use when sending the access token via URL.' ),
+	'auth_header_name'        => array( 'type' => 'text', 'maxlength' => 64, 'hint' => 'The name of the parameter to use when sending the access token via HTTP header.' ),
+	'access_token_type'       => array(
+		'type'    => 'select',
+		'default' => TokenTypes::URI,
+		'data'    => TokenTypes::getDefinedConstants( true, null, true ),
+		'hint'    => 'The type of, and way the provider expects to receive, the token.'
+	),
+	'access_token'            => array( 'type' => 'text', 'maxlength' => 128, 'placeholder' => 'Not Stored', 'private' => true ),
+	'access_token_secret'     => array( 'type' => 'text', 'maxlength' => 128, 'placeholder' => 'Not Stored', 'private' => true ),
+	'access_token_expires'    => array( 'type' => 'text', 'class' => 'number', 'private' => true ),
+	'refresh_token'           => array( 'type' => 'text', 'maxlength' => 128, 'private' => true ),
+	'refresh_token_expires'   => array( 'type' => 'text', 'class' => 'number', 'private' => true ),
 );

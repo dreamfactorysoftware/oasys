@@ -32,8 +32,8 @@ return array(
 	'redirect_uri'        => array( 'type' => 'text', 'maxlength' => 1024, 'class' => 'required' ),
 	'signature_method'    => array( 'type' => 'text', 'maxlength' => 16, 'class' => 'required', 'placeholder' => OAUTH_SIG_METHOD_HMACSHA1 ),
 	'authorize_url'       => array( 'type' => 'text', 'maxlength' => 1024 ),
-	'auth_type'           => array( 'type' => 'select', 'required' => false, 'value' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true ) ),
-	'flow_type'           => array( 'type' => 'select', 'required' => false, 'value' => Flows::CLIENT_SIDE, 'data' => Flows::getDefinedConstants( true ) ),
-	'access_token'        => array( 'type' => 'text', 'maxlength' => 128 ),
-	'access_token_secret' => array( 'type' => 'text', 'maxlength' => 128 ),
+	'auth_type'           => array( 'type' => 'select', 'required' => false, 'value' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true, null, true ) ),
+	'flow_type'           => array( 'type' => 'select', 'required' => false, 'value' => Flows::CLIENT_SIDE, 'data' => Flows::getDefinedConstants( true, null, true ) ),
+	'access_token'        => array( 'type' => 'text', 'maxlength' => 128, 'private' => true ),
+	'access_token_secret' => array( 'type' => 'text', 'maxlength' => 128, 'private' => true ),
 );
