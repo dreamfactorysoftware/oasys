@@ -174,7 +174,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
 
-		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
+//		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
 
 		//	Instantiate!
 		return new $_class( $_config );

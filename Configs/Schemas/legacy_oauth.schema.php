@@ -27,13 +27,13 @@ use DreamFactory\Oasys\Enums\OAuthTypes;
  * The config schema for an OAuth v1.x service
  */
 return array(
-	'consumer_key'        => array( 'type' => 'string', 'length' => 64, 'required' => true ),
-	'consumer_secret'     => array( 'type' => 'string', 'length' => 128, 'required' => true ),
-	'redirect_uri'        => array( 'type' => 'string', 'length' => 1024, 'required' => true ),
-	'signature_method'    => array( 'type' => 'string', 'length' => 16, 'required' => false, 'default' => OAUTH_SIG_METHOD_HMACSHA1 ),
-	'authorize_url'       => array( 'type' => 'string', 'length' => 1024, 'required' => false ),
-	'auth_type'           => array( 'type' => 'select', 'required' => false, 'default' => OAuthTypes::URI, 'options' => OAuthTypes::getDefinedConstants( true ) ),
-	'flow_type'           => array( 'type' => 'select', 'required' => false, 'default' => Flows::CLIENT_SIDE, 'options' => Flows::getDefinedConstants( true ) ),
-	'access_token'        => array( 'type' => 'string', 'length' => 128, 'required' => false ),
-	'access_token_secret' => array( 'type' => 'string', 'length' => 128, 'required' => false ),
+	'consumer_key'        => array( 'type' => 'text', 'maxlength' => 64, 'class' => 'required' ),
+	'consumer_secret'     => array( 'type' => 'text', 'maxlength' => 128, 'class' => 'required' ),
+	'redirect_uri'        => array( 'type' => 'text', 'maxlength' => 1024, 'class' => 'required' ),
+	'signature_method'    => array( 'type' => 'text', 'maxlength' => 16, 'class' => 'required', 'placeholder' => OAUTH_SIG_METHOD_HMACSHA1 ),
+	'authorize_url'       => array( 'type' => 'text', 'maxlength' => 1024 ),
+	'auth_type'           => array( 'type' => 'select', 'required' => false, 'value' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true ) ),
+	'flow_type'           => array( 'type' => 'select', 'required' => false, 'value' => Flows::CLIENT_SIDE, 'data' => Flows::getDefinedConstants( true ) ),
+	'access_token'        => array( 'type' => 'text', 'maxlength' => 128 ),
+	'access_token_secret' => array( 'type' => 'text', 'maxlength' => 128 ),
 );
