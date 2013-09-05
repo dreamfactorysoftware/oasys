@@ -85,6 +85,25 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 			{
 				/** @noinspection PhpIncludeInspection */
 				$this->_schema = @include( $_fileName );
+
+				if ( !empty( $this->_schema ) )
+				{
+					$this->_schema = array_merge(
+						array(
+							 'Provider Type' => array(
+								 'type'  => 'text',
+								 'class' => 'uneditable-input',
+								 'value' =>
+								 str_ireplace(
+									 'oauth',
+									 'OAuth',
+									 ucfirst( Inflector::deneutralize( strtolower( ProviderConfigTypes::nameOf( $this->_type ) ) ) )
+								 ),
+							 ),
+						),
+						$this->_schema
+					);
+				}
 			}
 		}
 	}
