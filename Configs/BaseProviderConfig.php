@@ -77,35 +77,49 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 		parent::__construct( $settings );
 
 		//	Load default if one exists and none passed in...
-		if ( empty( $this->_schema ) )
+		$this->_schema = $this->_schema ? : static::loadDefaultSchema( $this->_type );
+	}
+
+	/**
+	 * Loads the default schema for the provider of type.
+	 *
+	 * @param int $type
+	 *
+	 * @return array|null
+	 */
+	public static function loadDefaultSchema( $type = ProviderConfigTypes::OAUTH )
+	{
+		$_schema = null;
+		$_typeName = ProviderConfigTypes::nameOf( $type );
+		$_fileName = __DIR__ . '/Schemas/' . Inflector::neutralize( $_typeName ) . '.schema.php';
+
+		if ( file_exists( $_fileName ) && is_readable( $_fileName ) )
 		{
-			$_fileName = __DIR__ . '/Schemas/' . Inflector::neutralize( ProviderConfigTypes::nameOf( $this->_type ) ) . '.schema.php';
+			/** @noinspection PhpIncludeInspection */
+			$_schema = @include( $_fileName );
 
-			if ( file_exists( $_fileName ) && is_readable( $_fileName ) )
+			if ( !empty( $_schema ) )
 			{
-				/** @noinspection PhpIncludeInspection */
-				$this->_schema = @include( $_fileName );
-
-				if ( !empty( $this->_schema ) )
-				{
-					$this->_schema = array_merge(
-						array(
-							 'Provider Type' => array(
-								 'type'  => 'text',
-								 'class' => 'uneditable-input',
-								 'value' =>
-								 str_ireplace(
-									 'oauth',
-									 'OAuth',
-									 ucfirst( Inflector::deneutralize( strtolower( ProviderConfigTypes::nameOf( $this->_type ) ) ) )
-								 ),
+				$_schema = array_merge(
+					array(
+						 'provider_type' => array(
+							 'type'  => 'text',
+							 'class' => 'uneditable-input',
+							 'label' => 'Provider Type',
+							 'value' =>
+							 str_ireplace(
+								 'oauth',
+								 'OAuth',
+								 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
 							 ),
-						),
-						$this->_schema
-					);
-				}
+						 ),
+					),
+					$_schema
+				);
 			}
 		}
+
+		return $_schema;
 	}
 
 	/**

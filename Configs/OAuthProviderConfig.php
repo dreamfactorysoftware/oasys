@@ -541,4 +541,5 @@ class OAuthProviderConfig extends BaseProviderConfig
 	{
 		return $this->_redirectProxyUrl;
 	}
+
 }
