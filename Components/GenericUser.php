@@ -999,4 +999,28 @@ class GenericUser extends Seed implements UserLike
 
 		return $_properties;
 	}
+
+	/**
+	 * @return string
+	 */
+	public function getFirstName()
+	{
+		return Option::get( $this->_name, 'given_name' );
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getLastName()
+	{
+		return Option::get( $this->_name, 'family_name' );
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getPhoneNumber()
+	{
+		return @current( Option::clean( $this->_phoneNumbers ) );
+	}
 }
