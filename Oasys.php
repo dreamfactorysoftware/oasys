@@ -328,7 +328,7 @@ class Oasys extends SeedUtility
 		//	Clean up blanks in the config as to not overwrite defaults
 		foreach ( $config as $_key => $_value )
 		{
-			$_value = trim( $_value );
+			$_value = is_string( $_value ) ? trim( $_value ) : $_value;
 
 			if ( null === $_value || '' === $_value )
 			{
