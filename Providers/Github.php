@@ -49,6 +49,7 @@ class Github extends BaseOAuthProvider
 	 *
 	 * @param \stdClass|array $profile
 	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\ProviderException
 	 * @throws \InvalidArgumentException
 	 * @return UserLike
 	 */

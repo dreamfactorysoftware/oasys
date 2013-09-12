@@ -116,7 +116,8 @@ class Oasys extends SeedUtility
 		//	No store provided, make one...
 		if ( empty( static::$_store ) )
 		{
-			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
+			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings )
+				: new Session( $settings ) );
 		}
 
 		//	No redirect URI, make one...
@@ -310,7 +311,7 @@ class Oasys extends SeedUtility
 
 		foreach ( $_storedConfig as $_key => $_value )
 		{
-			if ( $_check == substr( $_key, 0, $_checkLength ) )
+			if ( $_check == substr( $_key, 0, $_checkLength ) && ( '' !== $_value && null !== $_value ) )
 			{
 				$_key = substr( $_key, $_checkLength );
 				Option::set( $_defaults, $_key, $_value );
@@ -323,6 +324,17 @@ class Oasys extends SeedUtility
 		);
 
 		unset( $_defaults, $_storedConfig );
+
+		//	Clean up blanks in the config as to not overwrite defaults
+		foreach ( $config as $_key => $_value )
+		{
+			$_value = trim( $_value );
+
+			if ( null === $_value || '' === $_value )
+			{
+				unset( $config[$_key] );
+			}
+		}
 
 		return $config;
 	}

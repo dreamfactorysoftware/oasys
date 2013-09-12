@@ -33,7 +33,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  */
 return array(
 	'type'              => ProviderConfigTypes::OAUTH,
-	'access_token_type' => TokenTypes::URI,
+	'access_token_type' => TokenTypes::BEARER,
 	'client_id'         => '{{client_id}}',
 	'client_secret'     => '{{client_secret}}',
 	'scope'             => 'user:email',

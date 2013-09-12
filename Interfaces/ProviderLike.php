@@ -20,6 +20,7 @@
 namespace DreamFactory\Oasys\Interfaces;
 
 use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use Kisma\Core\Enums\HttpMethod;
 
 /**
@@ -41,29 +42,20 @@ interface ProviderLike
 	/**
 	 * @param array $payload If empty, request query string is used
 	 *
-	 * @return \DreamFactory\Oasys\Exceptions\RedirectRequiredException
-	 * @return mixed
+	 * @return bool
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 */
 	public function handleRequest( $payload = null );
 
 	/**
 	 * Checks to see if user is authorized with this provider
 	 *
-	 * @return bool
-	 */
-	public function authorized();
-
-	/**
-	 * Begin the authorization process
+	 * @param bool $startIfNot If true, and not authorized, the login flow will commence presently
 	 *
+	 * @return bool
 	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 */
-	public function startAuthorization();
-
-	/**
-	 * Complete the authorization process
-	 */
-	public function completeAuthorization();
+	public function authorized( $startIfNot = false );
 
 	/**
 	 * @param string $resource

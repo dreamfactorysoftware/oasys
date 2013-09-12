@@ -155,10 +155,10 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		}
 
 		//	Merge in the template, stored stuff and user supplied stuff
-		$_config = array_merge(
+		$_config = null !== $config ? array_merge(
 			$_defaults,
 			Option::clean( $config )
-		);
+		) : $_defaults;
 
 		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
 		{
@@ -183,24 +183,17 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	/**
 	 * @param array $payload If empty, request query string is used
 	 *
-	 * @return \DreamFactory\Oasys\Exceptions\RedirectRequiredException
-	 * @return mixed
+	 * @return bool
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 */
 	public function handleRequest( $payload = null )
 	{
-		$_payload = $this->_parseResult( $payload );
-
-		if ( empty( $_payload ) )
+		if ( !empty( $payload ) )
 		{
-			$_payload = $this->_payload;
+			$this->_payload = array_merge( $this->_payload, $this->_parseResult( $payload ) );
 		}
 
-		if ( !$this->authorized() )
-		{
-			return $this->startAuthorization();
-		}
-
-		return $this->completeAuthorization();
+		return $this->authorized( true );
 	}
 
 	/**
