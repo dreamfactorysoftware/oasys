@@ -50,7 +50,7 @@ class FileSystem extends BaseOasysStore
 	/**
 	 * @var bool If true, store is compressed before storage, otherwise data is stored as JSON
 	 */
-	protected $_compressStore = false;
+	protected $_compressStore = true;
 
 	//*************************************************************************
 	//	Methods
