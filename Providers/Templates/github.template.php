@@ -32,12 +32,13 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * GitHub scopes are listed here: http://developer.github.com/v3/oauth/#scopes
  */
 return array(
-	'type'              => ProviderConfigTypes::OAUTH,
-	'access_token_type' => TokenTypes::BEARER,
-	'client_id'         => '{{client_id}}',
-	'client_secret'     => '{{client_secret}}',
-	'scope'             => 'user:email',
-	'endpoint_map'      => array(
+	'type'               => ProviderConfigTypes::OAUTH,
+	'access_token_type'  => TokenTypes::URI,
+	'client_id'          => '{{client_id}}',
+	'client_secret'      => '{{client_secret}}',
+	'redirect_proxy_url' => 'https://oasys.cloud.dreamfactory.com/oauth/authorize',
+	'scope'              => 'user:email',
+	'endpoint_map'       => array(
 		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
 		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
 		EndpointTypes::SERVICE      => 'https://api.github.com',

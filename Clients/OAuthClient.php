@@ -31,13 +31,16 @@ use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use DreamFactory\Yii\Utility\Pii;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
+use Kisma\Core\Utility\Hasher;
 use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\FilterInput;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility\Storage;
 
 /**
  * OAuthClient
@@ -156,20 +159,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	No code is present, request one
 		if ( empty( $_code ) )
 		{
-			$_payload = array_merge(
-				Option::clean( $this->_config->getPayload() ),
-				array(
-					 'redirect_uri' => $this->_config->getRedirectUri(),
-					 'client_id'    => $this->_config->getClientId(),
-				)
-			);
+			$_payload = Option::clean( $this->_config->getPayload() );
 
 			$_redirectUrl = $this->getAuthorizationUrl( $_payload );
 
-			if ( !empty( $this->_redirectProxyUrl ) )
-			{
-				$_redirectUrl = $this->_redirectProxyUrl . '?redirect=' . urlencode( $_redirectUrl );
-			}
+			Log::debug( 'Redirect required: ' . $_redirectUrl );
 
 			if ( Flows::SERVER_SIDE == $this->_config->getFlowType() )
 			{
@@ -180,6 +174,15 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			exit();
 		}
 
+		//	Figure out where the redirect goes...
+		$_redirectUri = $this->_config->getRedirectUri();
+		$_proxyUrl = $this->_config->getRedirectProxyUrl();
+
+		if ( !empty( $_proxyUrl ) )
+		{
+			$_redirectUri = $_proxyUrl;
+		}
+
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
 			GrantTypes::AUTHORIZATION_CODE,
@@ -187,7 +190,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				Option::clean( $this->_config->getPayload() ),
 				array(
 					 'code'         => $_code,
-					 'redirect_uri' => $this->_config->getRedirectUri(),
+					 'redirect_uri' => $_redirectUri,
+					 'state'        => Option::request( 'state' ),
 				)
 			)
 		);
@@ -216,20 +220,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_config->setAccessToken( Option::get( $_info, 'access_token' ) );
 		$this->_config->setAccessTokenExpires( Option::get( $_info, 'expires' ) );
-
-//		if ( null !== ( $_type = Option::get( $_info, 'token_type' ) ) )
-//		{
-//			switch ( strtolower( $_type ) )
-//			{
-//				case 'bearer':
-//					$this->_config->setAccessTokenType( TokenTypes::BEARER );
-//					break;
-//
-//				case 'oauth':
-//					$this->_config->setAccessTokenType( TokenTypes::OAUTH );
-//					break;
-//			}
-//		}
 
 		return true;
 	}
@@ -360,21 +350,38 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	public function getAuthorizationUrl( $payload = array() )
 	{
+		$_salt = Pii::getParam( 'oauth.salt' );
 		$_map = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->_config->getScope();
+		$_redirectUri = $this->_config->getRedirectUri();
+		$_proxyUrl = $this->_config->getRedirectProxyUrl();
+
+		$_state = array(
+			'origin'  => $_redirectUri,
+			'api_key' => sha1( $_redirectUri ),
+		);
 
 		$_payload = array_merge(
 			array(
 				 'response_type' => 'code',
 				 'client_id'     => $this->_config->getClientId(),
-				 'redirect_uri'  => $this->_config->getRedirectUri(),
+				 'redirect_uri'  => $_redirectUri,
+				 'state'         => Storage::freeze( $_state ),
 				 'scope'         => is_array( $_scope ) ? implode( ',', $_scope ) : $_scope,
 			),
 			Option::clean( $payload ),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
 
+		if ( !empty( $_proxyUrl ) )
+		{
+			Log::info( 'Proxied provider (' . $_proxyUrl . '). Removing redirect URI: ' . $_redirectUri );
+			unset( $_payload['redirect_uri'] );
+		}
+
 		$_qs = http_build_query( $_payload );
+
+		Log::debug( 'Redirect payload: ' . print_r( $_payload, true ) );
 
 		$this->_config->setAuthorizeUrl( $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
 
@@ -420,6 +427,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_curlOptions[CURLOPT_SSL_VERIFYHOST] = 2;
 			$_curlOptions[CURLOPT_CAINFO] = $this->_config->getCertificateFile();
 		}
+
+		Log::debug( 'Url: ' . $method . ' ' . $url );
+		Log::debug( 'Headers: ' . print_r( $headers, true ) );
+		Log::debug( 'Payload: ' . print_r( $payload, true ) );
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{

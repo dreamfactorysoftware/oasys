@@ -42,12 +42,28 @@ return array(
 	'scope'                   => array( 'type' => 'textarea', 'hint' => 'Comma-separated list of desired scopes.' ),
 	'certificate_file'        => array( 'type' => 'textarea', 'maxlength' => 1024, 'placeholder' => 'Provider Default' ),
 	'authorize_url'           => array( 'type' => 'text', 'maxlength' => 1024, 'placeholder' => 'Provider Default' ),
-	'grant_type'              => array( 'type' => 'select', 'value' => GrantTypes::AUTHORIZATION_CODE, 'data' => GrantTypes::getDefinedConstants( true, null, true ) ),
+	'grant_type'              => array(
+		'type'  => 'select',
+		'value' => GrantTypes::AUTHORIZATION_CODE,
+		'data'  => GrantTypes::getDefinedConstants(
+			true,
+			null,
+			true
+		)
+	),
 	'auth_type'               => array( 'type' => 'select', 'value' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true, null, true ) ),
 	'access_type'             => array( 'type' => 'select', 'value' => AccessTypes::OFFLINE, 'data' => AccessTypes::getDefinedConstants( true, null, true ) ),
 	'flow_type'               => array( 'type' => 'select', 'value' => Flows::SERVER_SIDE, 'data' => Flows::getDefinedConstants( true, null, true ) ),
-	'access_token_param_name' => array( 'type' => 'text', 'maxlength' => 64, 'hint' => 'The name of the parameter to use when sending the access token via URL.' ),
-	'auth_header_name'        => array( 'type' => 'text', 'maxlength' => 64, 'hint' => 'The name of the parameter to use when sending the access token via HTTP header.' ),
+	'access_token_param_name' => array(
+		'type'      => 'text',
+		'maxlength' => 64,
+		'hint'      => 'The name of the parameter to use when sending the access token via URL.'
+	),
+	'auth_header_name'        => array(
+		'type'      => 'text',
+		'maxlength' => 64,
+		'hint'      => 'The name of the parameter to use when sending the access token via HTTP header.'
+	),
 	'access_token_type'       => array(
 		'type'    => 'select',
 		'default' => TokenTypes::URI,
@@ -59,4 +75,5 @@ return array(
 	'access_token_expires'    => array( 'type' => 'text', 'class' => 'number', 'private' => true ),
 	'refresh_token'           => array( 'type' => 'text', 'maxlength' => 128, 'private' => true ),
 	'refresh_token_expires'   => array( 'type' => 'text', 'class' => 'number', 'private' => true ),
+	'redirect_proxy_url'      => array( 'type' => 'text', 'maxlength' => 1024 ),
 );
