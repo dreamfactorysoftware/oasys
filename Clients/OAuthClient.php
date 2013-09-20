@@ -185,15 +185,15 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-			GrantTypes::AUTHORIZATION_CODE,
-			array_merge(
-				Option::clean( $this->_config->getPayload() ),
-				array(
-					 'code'         => $_code,
-					 'redirect_uri' => $_redirectUri,
-					 'state'        => Option::request( 'state' ),
-				)
-			)
+					   GrantTypes::AUTHORIZATION_CODE,
+					   array_merge(
+						   Option::clean( $this->_config->getPayload() ),
+						   array(
+								'code'         => $_code,
+								'redirect_uri' => $_redirectUri,
+								'state'        => Option::request( 'state' ),
+						   )
+					   )
 		);
 
 		$_info = null;
@@ -328,7 +328,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$_response = $this->_makeRequest( $_url, $payload, $method, $headers );
 
 		//	Authorization failure?
-		if ( isset( $_response, $_response['result'], $_response['result']['error'] ) && $_response['code'] >= 400 )
+		$_error = Option::getDeep( $_response, 'result', 'error' );
+		$_code = Option::get( $_response, 'code', Curl::getLastHttpCode() );
+
+		if ( $_error || $_code >= 400 )
 		{
 			//	Clear out our tokens and junk
 			$this->_config->setAccessToken( null );
@@ -428,9 +431,9 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_curlOptions[CURLOPT_CAINFO] = $this->_config->getCertificateFile();
 		}
 
-		Log::debug( 'Url: ' . $method . ' ' . $url );
-		Log::debug( 'Headers: ' . print_r( $headers, true ) );
-		Log::debug( 'Payload: ' . print_r( $payload, true ) );
+//		Log::debug( 'Url: ' . $method . ' ' . $url );
+//		Log::debug( 'Headers: ' . print_r( $headers, true ) );
+//		Log::debug( 'Payload: ' . print_r( $payload, true ) );
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
@@ -443,6 +446,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		{
 			$_result = json_decode( $_result, true );
 		}
+
+		Log::debug( 'Fetch result: ' . print_r( $_result, true ) );
 
 		return array(
 			'result'       => $_result,

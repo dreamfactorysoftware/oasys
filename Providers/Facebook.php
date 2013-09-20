@@ -22,6 +22,7 @@ namespace DreamFactory\Oasys\Providers;
 use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Exceptions\OasysException;
 use DreamFactory\Oasys\Interfaces\UserLike;
+use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -55,7 +56,7 @@ class Facebook extends BaseOAuthProvider
 	{
 		$_response = $this->_client->fetch( '/me' );
 
-		if ( 200 != ( $_code = Option::get( $_response, 'code' ) ) )
+		if ( 200 != ( $_code = Option::get( $_response, 'code', Curl::getLastHttpCode() ) ) )
 		{
 			throw new OasysException( 'Unexpected response code: ' . print_r( $_response, true ) );
 		}
