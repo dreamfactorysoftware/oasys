@@ -186,14 +186,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
 					   GrantTypes::AUTHORIZATION_CODE,
-					   array_merge(
-						   Option::clean( $this->_config->getPayload() ),
-						   array(
-								'code'         => $_code,
-								'redirect_uri' => $_redirectUri,
-								'state'        => Option::request( 'state' ),
+						   array_merge(
+							   Option::clean( $this->_config->getPayload() ),
+							   array(
+									'code'         => $_code,
+									'redirect_uri' => $_redirectUri,
+									'state'        => Option::request( 'state' ),
+							   )
 						   )
-					   )
 		);
 
 		$_info = null;
@@ -328,7 +328,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$_response = $this->_makeRequest( $_url, $payload, $method, $headers );
 
 		//	Authorization failure?
-		$_error = Option::getDeep( $_response, 'result', 'error' );
+		$_result = Option::get( $_response, 'result', array() );
+
+		if ( is_object( $_result ) )
+		{
+			$_result = (array)$_result;
+		}
+
+		$_error = Option::get( $_result, 'error' );
 		$_code = Option::get( $_response, 'code', Curl::getLastHttpCode() );
 
 		if ( $_error || $_code >= 400 )
