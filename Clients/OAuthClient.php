@@ -31,7 +31,7 @@ use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use DreamFactory\Yii\Utility\Pii;
+//use DreamFactory\Yii\Utility\Pii;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
@@ -360,7 +360,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	public function getAuthorizationUrl( $payload = array() )
 	{
-		$_salt = Pii::getParam( 'oauth.salt' );
+//		$_salt = Pii::getParam( 'oauth.salt' );
 		$_map = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->_config->getScope();
 		$_redirectUri = $this->_config->getRedirectUri();
