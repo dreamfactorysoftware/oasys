@@ -49,7 +49,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
 
-		$this->_client = new OAuthClient( $this->_config );
+		if ( empty( $this->_client ) )
+		{
+			$this->_client = new OAuthClient( $this->_config );
+		}
 	}
 
 	/**

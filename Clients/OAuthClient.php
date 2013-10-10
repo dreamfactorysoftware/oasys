@@ -23,6 +23,7 @@ use DreamFactory\Oasys\Components\OAuth\GrantTypes\AuthorizationCode;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\ClientCredentials;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\Password;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\RefreshToken;
+use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\Flows;
@@ -31,15 +32,14 @@ use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-//use DreamFactory\Yii\Utility\Pii;
+use Kisma\Core\Enums\HttpResponse;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
-use Kisma\Core\Utility\Hasher;
 use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\FilterInput;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility\Scalar;
 use Kisma\Core\Utility\Storage;
 
 /**
@@ -56,6 +56,22 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 * @var OAuthProviderConfig|ProviderConfigLike
 	 */
 	protected $_config;
+	/**
+	 * @var bool If true, inbound JSON content is decoded before it's returned
+	 */
+	protected $_autoDecodeJson = true;
+	/**
+	 * @var mixed The last response from the API
+	 */
+	protected $_lastResponse = null;
+	/**
+	 * @var string The last error returned
+	 */
+	protected $_lastError = null;
+	/**
+	 * @var int The last error code returned
+	 */
+	protected $_lastErrorCode = null;
 
 	//**************************************************************************
 	//* Methods
@@ -111,40 +127,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	}
 
 	/**
-	 * Validate that the required parameters are supplied for the type of grant selected
-	 *
-	 * @param string          $grantType
-	 * @param array|\stdClass $payload
-	 *
-	 * @return array|\stdClass|void
-	 * @throws \InvalidArgumentException
-	 */
-	protected function _validateGrantType( $grantType, $payload )
-	{
-		switch ( $grantType )
-		{
-			case GrantTypes::AUTHORIZATION_CODE:
-				return AuthorizationCode::validatePayload( $payload );
-
-			case GrantTypes::PASSWORD:
-				return Password::validatePayload( $payload );
-
-			case GrantTypes::CLIENT_CREDENTIALS:
-				return ClientCredentials::validatePayload( $payload );
-
-			case GrantTypes::REFRESH_TOKEN:
-				return RefreshToken::validatePayload( $payload );
-
-			default:
-				throw new \InvalidArgumentException( 'Invalid grant type "' . $grantType . '" specified.' );
-		}
-	}
-
-	/**
 	 * Checks the progress of any in-flight OAuth requests
 	 *
-	 * @throws RedirectRequiredException
-	 *
+	 * @throws \Kisma\Core\Exceptions\NotImplementedException
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 * @return string
 	 */
 	public function checkAuthenticationProgress()
@@ -152,6 +138,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		if ( $this->_config->getAccessToken() )
 		{
 			return true;
+		}
+
+		if ( GrantTypes::AUTHORIZATION_CODE != $this->_config->getGrantType() )
+		{
+			throw new NotImplementedException();
 		}
 
 		$_code = FilterInput::get( INPUT_GET, 'code' );
@@ -185,15 +176,15 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-					   GrantTypes::AUTHORIZATION_CODE,
-						   array_merge(
-							   Option::clean( $this->_config->getPayload() ),
-							   array(
-									'code'         => $_code,
-									'redirect_uri' => $_redirectUri,
-									'state'        => Option::request( 'state' ),
-							   )
-						   )
+			GrantTypes::AUTHORIZATION_CODE,
+			array_merge(
+				Option::clean( $this->_config->getPayload() ),
+				array(
+					 'code'         => $_code,
+					 'redirect_uri' => $_redirectUri,
+					 'state'        => Option::request( 'state' ),
+				)
+			)
 		);
 
 		$_info = null;
@@ -218,17 +209,27 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			return false;
 		}
 
-		$this->_config->setAccessToken( Option::get( $_info, 'access_token' ) );
-		$this->_config->setAccessTokenExpires( Option::get( $_info, 'expires' ) );
+		$this->_processReceivedToken( $_info );
 
 		return true;
+	}
+
+	/**
+	 * @param array|\stdClass $data
+	 */
+	protected function _processReceivedToken( $data )
+	{
+		$this->_config->setAccessToken( Option::get( $data, 'access_token' ) );
+		$this->_config->setAccessTokenExpires( Option::get( $data, 'expires' ) );
+
+		return;
 	}
 
 	/**
 	 * @param string $grantType
 	 * @param array  $payload
 	 *
-	 * @return mixed
+	 * @return array|false
 	 * @throws \InvalidArgumentException
 	 */
 	public function requestAccessToken( $grantType = GrantTypes::AUTHORIZATION_CODE, array $payload = array() )
@@ -266,6 +267,87 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	}
 
 	/**
+	 * @param array $payload
+	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\AuthenticationException
+	 * @return mixed
+	 */
+	public function requestRefreshToken( array $payload = array() )
+	{
+		$this->_buildAuthHeader( true );
+
+		if ( null === ( $_refreshToken = $this->_config->getRefreshToken() ) )
+		{
+			return false;
+		}
+
+		Log::debug( 'Access token expired or bogus. Requesting refresh: ' . $_refreshToken );
+
+		$_payload = array_merge(
+			$payload,
+			array(
+				 'refresh_token' => $_refreshToken,
+			)
+		);
+
+		if ( false === ( $_response = $this->requestAccessToken( GrantTypes::REFRESH_TOKEN, $_payload ) ) )
+		{
+			throw new AuthenticationException( 'Error requesting refresh token: ' . Curl::getErrorAsString() );
+		}
+
+		$_result = Option::get( $_response, 'result' );
+
+		//	Did it work?
+		if ( !empty( $_result ) )
+		{
+			$_payload = (array)$_result;
+			$_token = null;
+
+			foreach ( $_payload as $_key => $_value )
+			{
+				switch ( $_key )
+				{
+					case 'access_token':
+						$_token = $_value;
+						$this->_config->setAccessToken( $_value );
+						break;
+
+					case 'expires':
+						$this->_config->setAccessTokenExpires( $_value );
+						break;
+
+					case 'refresh_token':
+						$this->_config->setRefreshToken( $_value );
+						break;
+
+					case 'scope':
+						if ( !empty( $_value ) )
+						{
+							$this->_config->setScope( $_value );
+						}
+						break;
+				}
+			}
+
+			//	It worked! Or not...
+			if ( null === $_token )
+			{
+				Log::error( 'No access token received: ' . print_r( $_payload, true ) );
+
+				return false;
+			}
+
+			Log::debug( 'Refresh of access token successful for client_id: ' . $this->_config->getClientId() );
+
+			return true;
+		}
+
+		Log::error( 'Error refreshing token. Empty or error response: ' . print_r( $_result, true ) );
+
+		return false;
+	}
+
+	/**
 	 * Fetch a protected resource
 	 *
 	 * @param string $resource
@@ -280,52 +362,21 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
 	{
-		$_token = $this->_config->getAccessToken();
-
-		//	Use the resource url if provided...
-		if ( $_token )
+		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
 		{
-			$_authHeaderName = $this->_config->getAuthHeaderName();
-
-			switch ( $this->_config->getAccessTokenType() )
-			{
-				case TokenTypes::URI:
-					$payload[$this->_config->getAccessTokenParamName()] = $_token;
-					$_authHeaderName = null;
-					break;
-
-				case TokenTypes::BEARER:
-					$_authHeaderName = $_authHeaderName ? : 'Bearer';
-					break;
-
-				case TokenTypes::OAUTH:
-					$_authHeaderName = $_authHeaderName ? : 'OAuth';
-					break;
-
-				case TokenTypes::MAC:
-					throw new NotImplementedException();
-
-				default:
-					throw new OasysConfigurationException( 'Unknown access token type "' . $this->_config->getAccessTokenType() . '".' );
-			}
-
-			if ( null !== $_authHeaderName )
-			{
-				$headers[] = 'Authorization: ' . $_authHeaderName . ' ' . $_token;
-			}
+			$headers[] = $_authHeader;
 		}
 
+		//	Get the service endpoint and make the url spiffy
 		$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
+		$_url = rtrim( $_endpoint['endpoint'], '/' ) . '/' . ltrim( $resource, '/' );
 
-		$payload = array_merge(
+		$_payload = array_merge(
 			Option::get( $_endpoint, 'parameters', array() ),
 			$payload
 		);
 
-		//	Make the url spiffy
-		$_url = rtrim( $_endpoint['endpoint'], '/' ) . '/' . ltrim( $resource, '/' );
-
-		$_response = $this->_makeRequest( $_url, $payload, $method, $headers );
+		$_response = $this->_makeRequest( $_url, $_payload, $method, $headers );
 
 		//	Authorization failure?
 		$_result = Option::get( $_response, 'result', array() );
@@ -341,8 +392,20 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		if ( $_error || $_code >= 400 )
 		{
 			//	Clear out our tokens and junk
+			$this->_buildAuthHeader( true );
 			$this->_config->setAccessToken( null );
 			$this->_config->setAccessTokenExpires( null );
+
+			//	Oops, token no good
+			if ( Scalar::in( $_code, HttpResponse::Forbidden, HttpResponse::Unauthorized ) && null !== ( $_refreshToken = $this->_config->getRefreshToken() ) )
+			{
+				//	Can I get a refresh?
+				if ( $this->requestRefreshToken( $payload ) )
+				{
+					//	Try it now!
+					return $this->fetch( $resource, $payload, $method, $headers );
+				}
+			}
 
 			//	Jump back to the redirect URL
 			throw new RedirectRequiredException();
@@ -360,7 +423,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	public function getAuthorizationUrl( $payload = array() )
 	{
-//		$_salt = Pii::getParam( 'oauth.salt' );
 		$_map = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->_config->getScope();
 		$_redirectUri = $this->_config->getRedirectUri();
@@ -396,6 +458,88 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$this->_config->setAuthorizeUrl( $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
 
 		return $_authorizeUrl;
+	}
+
+	/**
+	 * @param bool $reset
+	 *
+	 * @return string
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
+	 * @throws \Kisma\Core\Exceptions\NotImplementedException
+	 */
+	protected function _buildAuthHeader( $reset = false )
+	{
+		static $_tokenHeader;
+
+		if ( false !== $reset || null == $_tokenHeader )
+		{
+			$_token = $this->_config->getAccessToken();
+
+			//	Use the resource url if provided...
+			if ( $_token )
+			{
+				$_authHeaderName = $this->_config->getAuthHeaderName();
+
+				switch ( $this->_config->getAccessTokenType() )
+				{
+					case TokenTypes::URI:
+						$payload[$this->_config->getAccessTokenParamName()] = $_token;
+						$_authHeaderName = null;
+						break;
+
+					case TokenTypes::BEARER:
+						$_authHeaderName = $_authHeaderName ? : 'Bearer';
+						break;
+
+					case TokenTypes::OAUTH:
+						$_authHeaderName = $_authHeaderName ? : 'OAuth';
+						break;
+
+					case TokenTypes::MAC:
+						throw new NotImplementedException();
+
+					default:
+						throw new OasysConfigurationException( 'Unknown access token type "' . $this->_config->getAccessTokenType() . '".' );
+				}
+
+				if ( null !== $_authHeaderName )
+				{
+					$_tokenHeader = 'Authorization: ' . $_authHeaderName . ' ' . $_token;
+				}
+			}
+		}
+
+		return $_tokenHeader;
+	}
+
+	/**
+	 * Validate that the required parameters are supplied for the type of grant selected
+	 *
+	 * @param string          $grantType
+	 * @param array|\stdClass $payload
+	 *
+	 * @return array|\stdClass|void
+	 * @throws \InvalidArgumentException
+	 */
+	protected function _validateGrantType( $grantType, $payload )
+	{
+		switch ( $grantType )
+		{
+			case GrantTypes::AUTHORIZATION_CODE:
+				return AuthorizationCode::validatePayload( $payload );
+
+			case GrantTypes::PASSWORD:
+				return Password::validatePayload( $payload );
+
+			case GrantTypes::CLIENT_CREDENTIALS:
+				return ClientCredentials::validatePayload( $payload );
+
+			case GrantTypes::REFRESH_TOKEN:
+				return RefreshToken::validatePayload( $payload );
+
+			default:
+				throw new \InvalidArgumentException( 'Invalid grant type "' . $grantType . '" specified.' );
+		}
 	}
 
 	/**
@@ -438,9 +582,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_curlOptions[CURLOPT_CAINFO] = $this->_config->getCertificateFile();
 		}
 
-//		Log::debug( 'Url: ' . $method . ' ' . $url );
-//		Log::debug( 'Headers: ' . print_r( $headers, true ) );
-//		Log::debug( 'Payload: ' . print_r( $payload, true ) );
+		$this->_resetRequest();
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
@@ -449,18 +591,27 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
-		if ( false !== stripos( $_contentType, 'application/json', 0 ) && !empty( $_result ) && is_string( $_result ) )
+		if ( $this->_autoDecodeJson && false !== stripos( $_contentType, 'application/json', 0 ) && !empty( $_result ) && is_string( $_result ) )
 		{
 			$_result = json_decode( $_result, true );
 		}
 
-		Log::debug( 'Fetch result: ' . print_r( $_result, true ) );
+		$this->_config->setPayload( $_result );
 
-		return array(
-			'result'       => $_result,
-			'code'         => Curl::getLastHttpCode(),
-			'content_type' => $_contentType,
-		);
+		return
+			$this->_lastResponse = array(
+				'result'       => $_result,
+				'code'         => Curl::getLastHttpCode(),
+				'content_type' => $_contentType,
+			);
+	}
+
+	/**
+	 * Clean up members for a new request
+	 */
+	protected function _resetRequest()
+	{
+		$this->_lastResponse = $this->_lastError = $this->_lastErrorCode = null;
 	}
 
 	/**
@@ -482,4 +633,85 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	{
 		return $this->_config;
 	}
+
+	/**
+	 * @param boolean $autoDecodeJson
+	 *
+	 * @return OAuthClient
+	 */
+	public function setAutoDecodeJson( $autoDecodeJson )
+	{
+		$this->_autoDecodeJson = $autoDecodeJson;
+
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getAutoDecodeJson()
+	{
+		return $this->_autoDecodeJson;
+	}
+
+	/**
+	 * @param string $lastError
+	 *
+	 * @return OAuthClient
+	 */
+	public function setLastError( $lastError )
+	{
+		$this->_lastError = $lastError;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getLastError()
+	{
+		return $this->_lastError;
+	}
+
+	/**
+	 * @param int $lastErrorCode
+	 *
+	 * @return OAuthClient
+	 */
+	public function setLastErrorCode( $lastErrorCode )
+	{
+		$this->_lastErrorCode = $lastErrorCode;
+
+		return $this;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getLastErrorCode()
+	{
+		return $this->_lastErrorCode;
+	}
+
+	/**
+	 * @param mixed $lastResponse
+	 *
+	 * @return OAuthClient
+	 */
+	public function setLastResponse( $lastResponse )
+	{
+		$this->_lastResponse = $lastResponse;
+
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getLastResponse()
+	{
+		return $this->_lastResponse;
+	}
+
 }

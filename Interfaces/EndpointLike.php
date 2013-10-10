@@ -49,6 +49,10 @@ interface EndpointLike
 	 * @var string
 	 */
 	const SERVICE = 'service';
+	/**
+	 * @var string The "revoke access" endpoint
+	 */
+	const REVOKE = 'revoke';
 
 	//*************************************************************************
 	//* Methods

@@ -53,4 +53,20 @@ interface ProviderClientLike extends HttpMethod
 	 * @return mixed
 	 */
 	public function fetch( $resource, $payload = array(), $method = HttpMethod::Get, array $headers = array() );
+
+	/**
+	 * @return string The last request response
+	 */
+	public function getLastResponse();
+
+	/**
+	 * @return string The last error message
+	 */
+	public function getLastError();
+
+	/**
+	 * @return int The last error code
+	 */
+	public function getLastErrorCode();
+
 }
