@@ -31,7 +31,7 @@ use Kisma\Core\SeedUtility;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
-use Kisma\Core\Utility;
+use Kisma\Core\Utility\Log;
 
 /**
  * Oasys
@@ -116,8 +116,7 @@ class Oasys extends SeedUtility
 		//	No store provided, make one...
 		if ( empty( static::$_store ) )
 		{
-			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings )
-				: new Session( $settings ) );
+			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
 		}
 
 		//	No redirect URI, make one...
@@ -266,10 +265,15 @@ class Oasys extends SeedUtility
 
 	/**
 	 * Return true if current user is connected with a given provider
+	 *
+	 * @param string                   $providerId
+	 * @param ProviderConfigLike|array $config
+	 *
+	 * @return bool
 	 */
-	public static function authorized( $providerId )
+	public static function authorized( $providerId, $config = null )
 	{
-		return static::getProvider( $providerId )->authorized();
+		return static::getProvider( $providerId, $config )->authorized();
 	}
 
 	/**
@@ -396,6 +400,8 @@ class Oasys extends SeedUtility
 
 		//	Merge in the found classes
 		static::$_classMap = array_merge( static::$_classMap, $_classMap );
+
+		Log::debug( 'Classes mapped: ' . print_r( static::$_classMap, true ) );
 	}
 
 	/**
