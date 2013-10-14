@@ -22,6 +22,7 @@ namespace DreamFactory\Oasys\Configs;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
+use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\Seed;
@@ -81,6 +82,30 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	}
 
 	/**
+	 * Destructor
+	 */
+	public function __destruct()
+	{
+		$this->sync();
+		parent::__destruct();
+	}
+
+	/**
+	 * Sync with store...
+	 *
+	 * @return $this
+	 */
+	public function sync()
+	{
+		if ( null !== ( $_store = Oasys::getStore() ) )
+		{
+			$_store->merge( $this->toArray() );
+		}
+
+		return $this;
+	}
+
+	/**
 	 * Loads the default schema for the provider of type.
 	 *
 	 * @param int $type
@@ -107,11 +132,11 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 							 'class' => 'uneditable-input',
 							 'label' => 'Provider Type',
 							 'value' =>
-							 str_ireplace(
-								 'oauth',
-								 'OAuth',
-								 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
-							 ),
+								 str_ireplace(
+									 'oauth',
+									 'OAuth',
+									 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
+								 ),
 						 ),
 					),
 					$_schema
@@ -191,7 +216,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 
 			if ( method_exists( $this, $_setter ) )
 			{
-				call_user_func( array( $this, $_setter ), $_value );
+				call_user_func( array($this, $_setter), $_value );
 				unset( $settings, $_key, $_setter );
 			}
 		}

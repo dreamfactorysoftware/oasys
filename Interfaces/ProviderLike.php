@@ -20,7 +20,6 @@
 namespace DreamFactory\Oasys\Interfaces;
 
 use DreamFactory\Oasys\Components\GenericUser;
-use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use Kisma\Core\Enums\HttpMethod;
 
 /**
@@ -35,9 +34,17 @@ interface ProviderLike
 	/**
 	 * Returns the provider configuration
 	 *
+	 *
 	 * @return ProviderConfigLike
 	 */
 	public function getConfig();
+
+	/**
+	 * Returns the provider configuration with keys prefixed with provider name
+	 *
+	 * @return array
+	 */
+	public function getConfigForStorage();
 
 	/**
 	 * @param array $payload If empty, request query string is used

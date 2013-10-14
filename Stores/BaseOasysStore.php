@@ -23,7 +23,6 @@ use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\SeedBag;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility;
 
 /**
@@ -48,33 +47,6 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	}
 
 	/**
-	 * Adds the prefix and normalizes the key if a string...
-	 *
-	 * @param string $key
-	 *
-	 * @return string
-	 */
-	protected function _normalizeKey( $key )
-	{
-		if ( !is_string( $key ) || empty( $key ) )
-		{
-			return $key;
-		}
-
-		return static::KEY_PREFIX . Inflector::neutralize( $key );
-	}
-
-	/**
-	 * @param string $key
-	 *
-	 * @return string
-	 */
-	protected function _denormalizeKey( $key )
-	{
-		return str_ireplace( static::KEY_PREFIX, null, $key );
-	}
-
-	/**
 	 * @param string $key
 	 * @param mixed  $defaultValue
 	 * @param bool   $burnAfterReading
@@ -86,17 +58,10 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 		//	Return all if null
 		if ( empty( $key ) )
 		{
-			$_contents = array();
-
-			foreach ( $this->contents() as $_key => $_value )
-			{
-				$_contents[$this->_denormalizeKey( $_key )] = $_value;
-			}
-
-			return $_contents;
+			return $this->contents();
 		}
 
-		return parent::get( $this->_normalizeKey( $key ), $defaultValue, $burnAfterReading );
+		return parent::get( $key, $defaultValue, $burnAfterReading );
 	}
 
 	/**
@@ -109,9 +74,19 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 */
 	public function merge( $data = array(), $overwrite = true )
 	{
+		if ( empty( $data ) )
+		{
+			$data = array();
+		}
+
 		foreach ( $data as $_key => $_value )
 		{
-			static::set( $_key, $_value, $overwrite );
+			$_local = static::get( $_key );
+
+			if ( ( null === $_local && null !== $_value ) || ( null !== $_local && null !== $_value && $_value != $_local ) )
+			{
+				static::set( $_key, $_value, $overwrite );
+			}
 		}
 
 		return $this->contents();
@@ -126,7 +101,7 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 */
 	public function set( $key, $value = null, $overwrite = true )
 	{
-		return parent::set( $this->_normalizeKey( $key ), $value, $overwrite );
+		return parent::set( $key, $value, $overwrite );
 	}
 
 	/**
@@ -136,7 +111,7 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 */
 	public function remove( $key )
 	{
-		return parent::remove( $this->_normalizeKey( $key ) );
+		return parent::remove( $key );
 	}
 
 	/**

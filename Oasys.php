@@ -155,11 +155,12 @@ class Oasys extends SeedUtility
 		//	Save off the store
 		if ( !empty( $_store ) && !empty( $_cache ) )
 		{
+			/** @var ProviderLike[] $_cache */
 			foreach ( $_cache as $_id => $_provider )
 			{
-				foreach ( $_provider->getConfig()->toArray() as $_key => $_value )
+				foreach ( $_provider->getConfigForStorage() as $_key => $_value )
 				{
-					$_store->set( $_id . '.' . $_key, $_value );
+					$_store->set( $_key, $_value );
 				}
 			}
 		}
@@ -268,7 +269,7 @@ class Oasys extends SeedUtility
 				$_provider
 			);
 
-			//	Jam the store
+			//
 			static::sync();
 		}
 
@@ -468,7 +469,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function setClassMap( $classMap )
 	{
-		self::$_classMap = $classMap;
+		static::$_classMap = $classMap;
 	}
 
 	/**
@@ -476,7 +477,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function getClassMap()
 	{
-		return self::$_classMap;
+		return static::$_classMap;
 	}
 
 	/**
@@ -484,7 +485,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function setOptions( $options )
 	{
-		self::$_options = $options;
+		static::$_options = $options;
 	}
 
 	/**
@@ -492,7 +493,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function getOptions()
 	{
-		return self::$_options;
+		return static::$_options;
 	}
 
 	/**
@@ -500,7 +501,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function setProviderCache( $providerCache )
 	{
-		self::$_providerCache = $providerCache;
+		static::$_providerCache = $providerCache;
 	}
 
 	/**
@@ -508,7 +509,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function getProviderCache()
 	{
-		return self::$_providerCache;
+		return static::$_providerCache;
 	}
 
 	/**
@@ -516,7 +517,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function setProviderPaths( $providerPaths )
 	{
-		self::$_providerPaths = $providerPaths;
+		static::$_providerPaths = $providerPaths;
 		static::_mapProviders();
 	}
 
@@ -525,7 +526,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function getProviderPaths()
 	{
-		return self::$_providerPaths;
+		return static::$_providerPaths;
 	}
 
 	/**
@@ -533,7 +534,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function setStore( $store )
 	{
-		self::$_store = $store;
+		static::$_store = $store;
 	}
 
 	/**
@@ -541,7 +542,7 @@ class Oasys extends SeedUtility
 	 */
 	public static function getStore()
 	{
-		return self::$_store;
+		return static::$_store;
 	}
 }
 

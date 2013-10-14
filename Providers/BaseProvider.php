@@ -25,7 +25,6 @@ use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
-use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Inflector;
@@ -35,7 +34,6 @@ use Kisma\Core\Utility\Option;
 /**
  * BaseProvider
  * A base class for all providers
- * Automatically prefixes all key values with provider ID
  */
 abstract class BaseProvider extends Seed implements ProviderLike
 {
@@ -114,16 +112,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Destructor
-	 */
-	public function __destruct()
-	{
-		Oasys::getStore()->merge( $this->_config->toArray() );
-
-		parent::__destruct();
-	}
-
-	/**
 	 * @param array $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
@@ -133,7 +121,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	protected function _createConfiguration( $config = null )
 	{
 		$_defaults = null;
-		$_found = false;
 
 		foreach ( Oasys::getProviderPaths() as $_path )
 		{
@@ -202,14 +189,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function init()
 	{
-		$_config = Option::clean( $this->_config->toArray() );
-
-		//	Store our config in the store...
-		foreach ( $_config as $_key => $_value )
-		{
-			$this->set( $_key, $_value );
-		}
-
 		//	Parse the inbound payload
 		$this->_parseRequest();
 
@@ -238,7 +217,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	protected function _redirect( $uri )
 	{
 		//	Store our junk before death
-		Oasys::getStore()->merge( $this->_config->toArray() );
+		$this->_config->sync();
 
 		//	Throw redirect exception for non-interactive
 		if ( false !== $this->_interactive )
@@ -383,50 +362,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 
 	/**
 	 * @param string $key
-	 *
-	 * @return string
-	 */
-	protected function _cleanStoreKey( $key )
-	{
-		return !empty( $key ) ? $this->_providerId . '.' . $key : $key;
-	}
-
-	/**
-	 * Convenience shortcut to the goodie bag
-	 *
-	 * @param string $key
-	 * @param mixed  $defaultValue
-	 * @param bool   $burnAfterReading
-	 *
-	 * @throws OasysException
-	 * @return mixed
-	 */
-	public function get( $key = null, $defaultValue = null, $burnAfterReading = false )
-	{
-		$_configKey = str_ireplace( $this->_providerId . '.', null, $this->_cleanStoreKey( $key ) );
-
-		return Option::get( $this->_config, $_configKey, $defaultValue, $burnAfterReading );
-	}
-
-	/**
-	 * Convenience shortcut to the goodie  bag
-	 *
-	 * @param string $key
-	 * @param mixed  $value
-	 * @param bool   $overwrite
-	 *
-	 * @throws OasysException
-	 * @return mixed|void
-	 */
-	public function set( $key, $value = null, $overwrite = true )
-	{
-		$_configKey = str_ireplace( $this->_providerId . '.', null, $this->_cleanStoreKey( $key ) );
-
-		return Option::set( $this->_config, $_configKey, $value, $overwrite );
-	}
-
-	/**
-	 * @param string $key
 	 * @param mixed  $value
 	 * @param bool   $overwrite
 	 *
@@ -482,22 +417,48 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param ProviderConfigLike $config
+	 * @param string $property
+	 * @param mixed  $value
+	 * @param bool   $overwrite
 	 *
-	 * @return BaseProvider
+	 * @return $this
 	 */
-	public function setConfig( $config )
+	public function setConfig( $property, $value = null, $overwrite = true )
 	{
-		$this->_config = $config;
+		if ( is_string( $property ) )
+		{
+			Option::set( $this->_config, $property, $value, $overwrite );
+
+			return $this;
+		}
+
+		$this->_config = $property;
 
 		return $this;
 	}
 
 	/**
-	 * @return ProviderConfigLike
+	 * @param string $property
+	 * @param mixed  $defaultValue
+	 * @param bool   $burnAfterReading
+	 *
+	 * @return ProviderConfigLike|array
 	 */
-	public function getConfig()
+	public function getConfig( $property = null, $defaultValue = null, $burnAfterReading = false )
 	{
+		if ( null !== $property )
+		{
+			return Option::get( $this->_config, $property, $defaultValue, $burnAfterReading );
+		}
+
 		return $this->_config;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getConfigForStorage()
+	{
+		return $this->_config->toArray();
 	}
 }

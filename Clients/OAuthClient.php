@@ -222,6 +222,9 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$this->_config->setAccessToken( Option::get( $data, 'access_token' ) );
 		$this->_config->setAccessTokenExpires( Option::get( $data, 'expires' ) );
 
+		//	Sync!
+		$this->_config->sync();
+
 		return;
 	}
 
@@ -368,8 +371,16 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		}
 
 		//	Get the service endpoint and make the url spiffy
-		$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
-		$_url = rtrim( $_endpoint['endpoint'], '/' ) . '/' . ltrim( $resource, '/' );
+		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
+		{
+			$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
+			$_url = rtrim( $_endpoint['endpoint'], '/' ) . '/' . ltrim( $resource, '/' );
+		}
+		else
+		{
+			//	Use given url
+			$_url = $resource;
+		}
 
 		$_payload = array_merge(
 			Option::get( $_endpoint, 'parameters', array() ),

@@ -44,7 +44,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		parent::init();
 
-		if ( !$this->get( 'client_id' ) || !$this->get( 'client_secret' ) )
+		if ( !$this->getConfig( 'client_id' ) || !$this->getConfig( 'client_secret' ) )
 		{
 			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
@@ -113,7 +113,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$headers = Option::clean( $headers );
 
-		$_agent = $this->get( 'user_agent' );
+		$_agent = $this->getConfig( 'user_agent' );
 
 		if ( !empty( $_agent ) )
 		{

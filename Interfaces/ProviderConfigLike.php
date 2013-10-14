@@ -90,4 +90,11 @@ interface ProviderConfigLike extends EndpointLike
 	 * @return $this
 	 */
 	public function mergeSettings( $settings = array() );
+
+	/**
+	 * Sync with store
+	 *
+	 * @return $this
+	 */
+	public function sync();
 }
