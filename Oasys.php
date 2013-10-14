@@ -24,6 +24,7 @@ use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
+use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
 use Kisma\Core\Interfaces;
@@ -31,7 +32,6 @@ use Kisma\Core\SeedUtility;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
-use Kisma\Core\Utility\Log;
 
 /**
  * Oasys
@@ -105,7 +105,7 @@ class Oasys extends SeedUtility
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers' );
+			static::$_providerPaths = array(static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers');
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -116,7 +116,8 @@ class Oasys extends SeedUtility
 		//	No store provided, make one...
 		if ( empty( static::$_store ) )
 		{
-			static::$_store = ( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
+			static::$_store =
+				( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
 		}
 
 		//	No redirect URI, make one...
@@ -144,9 +145,9 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * Save myself!
+	 * Synchronize with store
 	 */
-	public function __destruct()
+	public static function sync()
 	{
 		$_store = static::getStore();
 		$_cache = static::getProviderCache();
@@ -161,8 +162,15 @@ class Oasys extends SeedUtility
 					$_store->set( $_id . '.' . $_key, $_value );
 				}
 			}
-			//	Store will sync when it's destroyed...
 		}
+	}
+
+	/**
+	 * Save myself!
+	 */
+	public function __destruct()
+	{
+		static::sync();
 	}
 
 	/**
@@ -245,6 +253,7 @@ class Oasys extends SeedUtility
 			$config = static::_loadConfigFromStore( $_providerId, $config );
 
 			//	Instantiate!
+			/** @var BaseProvider $_provider */
 			$_provider = $_mirror->newInstanceArgs(
 				array(
 					 $_providerId,
@@ -258,6 +267,9 @@ class Oasys extends SeedUtility
 				$_mapKey . ( $_generic ? : null ),
 				$_provider
 			);
+
+			//	Jam the store
+			static::sync();
 		}
 
 		return $_provider;
@@ -268,6 +280,7 @@ class Oasys extends SeedUtility
 	 *
 	 * @param string                   $providerId
 	 * @param ProviderConfigLike|array $config
+	 * @param bool                     $startFlow
 	 *
 	 * @return bool
 	 */

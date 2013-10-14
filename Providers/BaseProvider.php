@@ -61,10 +61,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_type;
 	/**
-	 * @var StorageProviderLike Our storage mechanism
-	 */
-	protected $_store;
-	/**
 	 * @var ProviderConfigLike The configuration options for this provider
 	 */
 	protected $_config;
@@ -118,14 +114,11 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Make sure to sync up before you go
+	 * Destructor
 	 */
 	public function __destruct()
 	{
-		if ( !empty( $this->_store ) )
-		{
-			$this->_store->sync();
-		}
+		Oasys::getStore()->merge( $this->_config->toArray() );
 
 		parent::__destruct();
 	}
@@ -244,6 +237,9 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _redirect( $uri )
 	{
+		//	Store our junk before death
+		Oasys::getStore()->merge( $this->_config->toArray() );
+
 		//	Throw redirect exception for non-interactive
 		if ( false !== $this->_interactive )
 		{

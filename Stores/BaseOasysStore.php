@@ -100,6 +100,24 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	}
 
 	/**
+	 * Merge data into this bag....
+	 *
+	 * @param array|\Traversable $data
+	 * @param bool               $overwrite
+	 *
+	 * @return array
+	 */
+	public function merge( $data = array(), $overwrite = true )
+	{
+		foreach ( $data as $_key => $_value )
+		{
+			static::set( $_key, $_value, $overwrite );
+		}
+
+		return $this->contents();
+	}
+
+	/**
 	 * @param string $key
 	 * @param mixed  $value
 	 * @param bool   $overwrite

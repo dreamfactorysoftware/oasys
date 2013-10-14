@@ -66,4 +66,14 @@ interface StorageProviderLike extends BagLike
 	 * @return bool True if work was done
 	 */
 	public function sync();
+
+	/**
+	 * Merge $data into bag, optionally overwriting. The combined contents are returned.
+	 *
+	 * @param array|\Traversable $data
+	 * @param bool               $overwrite
+	 *
+	 * @return array
+	 */
+	public function merge( $data = array(), $overwrite = true );
 }
