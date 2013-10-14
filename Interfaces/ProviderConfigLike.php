@@ -19,8 +19,6 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
-use Kisma\Core\Interfaces\BagLike;
-
 /**
  * ProviderConfigLike
  * The supported types of provider configurations
@@ -83,4 +81,13 @@ interface ProviderConfigLike extends EndpointLike
 	 * @return string
 	 */
 	public function getSchemaHtml();
+
+	/**
+	 * Merges settings to pre-constructed provider config
+	 *
+	 * @param array|ProviderConfigLike|\Traversable $settings
+	 *
+	 * @return $this
+	 */
+	public function mergeSettings( $settings = array() );
 }

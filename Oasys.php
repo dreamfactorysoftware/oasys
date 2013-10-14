@@ -271,9 +271,9 @@ class Oasys extends SeedUtility
 	 *
 	 * @return bool
 	 */
-	public static function authorized( $providerId, $config = null )
+	public static function authorized( $providerId, $config = null, $startFlow = false )
 	{
-		return static::getProvider( $providerId, $config )->authorized();
+		return static::getProvider( $providerId, $config )->authorized( $startFlow );
 	}
 
 	/**
@@ -322,10 +322,17 @@ class Oasys extends SeedUtility
 			}
 		}
 
-		$config = array_merge(
-			$_defaults,
-			$config
-		);
+		if ( $config instanceof ProviderConfigLike )
+		{
+			$config->mergeSettings( $_defaults );
+		}
+		else
+		{
+			$config = array_merge(
+				$_defaults,
+				$config
+			);
+		}
 
 		unset( $_defaults, $_storedConfig );
 
@@ -400,8 +407,7 @@ class Oasys extends SeedUtility
 
 		//	Merge in the found classes
 		static::$_classMap = array_merge( static::$_classMap, $_classMap );
-
-		Log::debug( 'Classes mapped: ' . print_r( static::$_classMap, true ) );
+//		Log::debug( 'Classes mapped: ' . print_r( static::$_classMap, true ) );
 	}
 
 	/**

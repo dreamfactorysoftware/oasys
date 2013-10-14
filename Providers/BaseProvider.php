@@ -139,19 +139,25 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _createConfiguration( $config = null )
 	{
-		$_defaults = array();
+		$_defaults = null;
+		$_found = false;
 
-		//	See if there is a default template and load up the defaults
-		$_template = dirname( __DIR__ ) . '/Providers/Templates/' . $this->_providerId . '.template.php';
-
-		if ( is_file( $_template ) && is_readable( $_template ) )
+		foreach ( Oasys::getProviderPaths() as $_path )
 		{
-			/** @noinspection PhpIncludeInspection */
-			$_defaults = require( $_template );
+			//	See if there is a default template and load up the defaults
+			$_template = $_path . '/Templates/' . $this->_providerId . '.template.php';
+
+			if ( is_file( $_template ) && is_readable( $_template ) )
+			{
+				/** @noinspection PhpIncludeInspection */
+				$_defaults = require( $_template );
+				break;
+			}
 		}
-		else
+
+		if ( null === $_defaults )
 		{
-			Log::notice( 'Auto-template "' . $_template . '" not found.' );
+			Log::notice( 'Auto-template for "' . $this->_providerId . '" not found.' );
 		}
 
 		//	Merge in the template, stored stuff and user supplied stuff

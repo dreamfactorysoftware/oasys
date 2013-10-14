@@ -391,24 +391,26 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		if ( $_error || $_code >= 400 )
 		{
-			//	Clear out our tokens and junk
-			$this->_buildAuthHeader( true );
-			$this->_config->setAccessToken( null );
-			$this->_config->setAccessTokenExpires( null );
-
-			//	Oops, token no good
+			//	token no good?
 			if ( Scalar::in( $_code, HttpResponse::Forbidden, HttpResponse::Unauthorized ) && null !== ( $_refreshToken = $this->_config->getRefreshToken() ) )
 			{
+				//	Clear out our tokens and junk
+				$this->_buildAuthHeader( true );
+				$this->_config->setAccessToken( null );
+				$this->_config->setAccessTokenExpires( null );
+
 				//	Can I get a refresh?
 				if ( $this->requestRefreshToken( $payload ) )
 				{
 					//	Try it now!
 					return $this->fetch( $resource, $payload, $method, $headers );
 				}
+
+				//	Jump back to the redirect URL
+				throw new RedirectRequiredException();
 			}
 
-			//	Jump back to the redirect URL
-			throw new RedirectRequiredException();
+			//	Otherwise pass through...
 		}
 
 		return $_response;
@@ -429,7 +431,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$_proxyUrl = $this->_config->getRedirectProxyUrl();
 
 		$_state = array(
-			'origin'  => $_redirectUri,
+			'origin'  => $_redirectUri, //	Original redirect URI, where we go back to...
 			'api_key' => sha1( $_redirectUri ),
 		);
 
@@ -447,8 +449,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		if ( !empty( $_proxyUrl ) )
 		{
-			Log::info( 'Proxied provider (' . $_proxyUrl . '). Removing redirect URI: ' . $_redirectUri );
-			unset( $_payload['redirect_uri'] );
+			Log::info( 'Proxied provider: ' . $_redirectUri . ' => ' . $_redirectUri );
+			$_payload['redirect_uri'] = $_proxyUrl;
 		}
 
 		$_qs = http_build_query( $_payload );
@@ -713,5 +715,4 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	{
 		return $this->_lastResponse;
 	}
-
 }

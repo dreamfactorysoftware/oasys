@@ -163,6 +163,43 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	}
 
 	/**
+	 * Merges settings to pre-constructed provider config
+	 *
+	 * @param array|ProviderConfigLike $settings
+	 *
+	 * @return $this
+	 */
+	public function mergeSettings( $settings = array() )
+	{
+		foreach ( $settings as $_key => $_value )
+		{
+			if ( property_exists( $this, $_key ) )
+			{
+				try
+				{
+					Option::set( $this, $_key, $_value );
+					unset( $settings, $_key );
+					continue;
+				}
+				catch ( \Exception $_ex )
+				{
+					//	Ignore...
+				}
+			}
+
+			$_setter = Inflector::tag( 'set_' . $_key );
+
+			if ( method_exists( $this, $_setter ) )
+			{
+				call_user_func( array( $this, $_setter ), $_value );
+				unset( $settings, $_key, $_setter );
+			}
+		}
+
+		return $this;
+	}
+
+	/**
 	 * @param array[] $endpointMap
 	 *
 	 * @return BaseProviderConfig
