@@ -53,6 +53,10 @@ interface EndpointLike
 	 * @var string The "revoke access" endpoint
 	 */
 	const REVOKE = 'revoke';
+	/**
+	 * @var string The endpoint to retrieve a user identity/profile
+	 */
+	const IDENTITY = 'identity';
 
 	//*************************************************************************
 	//* Methods
