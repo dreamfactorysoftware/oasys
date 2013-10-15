@@ -67,7 +67,12 @@ class Session extends BaseOasysStore
 			throw new OasysException( 'No session active. Session storage not available.' );
 		}
 
-		$_SESSION[static::KEY_PREFIX . '.data'] = json_encode( $this->contents() );
+		$_settings = $this->contents();
+
+		if ( !empty( $_settings ) )
+		{
+			$_SESSION[static::KEY_PREFIX . '.data'] = json_encode( $_settings );
+		}
 
 		return true;
 	}

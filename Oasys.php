@@ -105,7 +105,7 @@ class Oasys extends SeedUtility
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array(static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers');
+			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers' );
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -269,7 +269,7 @@ class Oasys extends SeedUtility
 				$_provider
 			);
 
-			//
+			//	Jam the store
 			static::sync();
 		}
 
@@ -497,7 +497,7 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Interfaces\ProviderLike[] $providerCache
+	 * @param ProviderLike $providerCache
 	 */
 	public static function setProviderCache( $providerCache )
 	{
@@ -505,7 +505,7 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\Interfaces\ProviderLike[]
+	 * @return ProviderLike
 	 */
 	public static function getProviderCache()
 	{
@@ -530,15 +530,21 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @param \DreamFactory\Oasys\Interfaces\StorageProviderLike $store
+	 * @param StorageProviderLike $store
+	 * @param bool                $carryForward If true, prior existing store merged into new store
 	 */
-	public static function setStore( $store )
+	public static function setStore( $store, $carryForward = false )
 	{
+		if ( false !== $carryForward && !empty( static::$_store ) )
+		{
+			$store->merge( static::$_store->get() );
+		}
+
 		static::$_store = $store;
 	}
 
 	/**
-	 * @return \DreamFactory\Oasys\Interfaces\StorageProviderLike
+	 * @return StorageProviderLike
 	 */
 	public static function getStore()
 	{

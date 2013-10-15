@@ -19,6 +19,7 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
+use DreamFactory\Jetpack\Salesforce\Clients\RestClient;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
@@ -273,7 +274,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param ProviderClientLike $client
+	 * @param RestClient $client
 	 *
 	 * @return BaseProvider
 	 */
@@ -285,7 +286,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @return ProviderClientLike
+	 * @return RestClient
 	 */
 	public function getClient()
 	{
