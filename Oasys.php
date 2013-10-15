@@ -114,7 +114,7 @@ class Oasys extends SeedUtility
 		}
 
 		//	No store provided, make one...
-		if ( empty( static::$_store ) )
+		if ( empty( static::$_store ) && isset( $_SESSION ) && PHP_SESSION_DISABLED != session_status() )
 		{
 			static::$_store =
 				( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );

@@ -83,6 +83,25 @@ class FileSystem extends BaseOasysStore
 	}
 
 	/**
+	 * Revoke stored token
+	 *
+	 * @param bool $delete If true (default), row is deleted from storage
+	 *
+	 * @return bool
+	 */
+	public function revoke( $delete = true )
+	{
+		$_file = $this->_storagePath . DIRECTORY_SEPARATOR . $this->_fileName;
+
+		if ( is_file( $_file ) && file_exists( $_file ) && is_readable( $_file ) )
+		{
+			return @unlink( $_file );
+		}
+
+		return true;
+	}
+
+	/**
 	 * Saves off any data to the file system
 	 */
 	protected function _save()

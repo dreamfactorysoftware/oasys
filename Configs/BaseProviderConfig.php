@@ -99,7 +99,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	{
 		if ( null !== ( $_store = Oasys::getStore() ) )
 		{
-			$_store->merge( $this->toArray() );
+			$_store->merge( $this->toArray(), true, true );
 		}
 
 		return $this;
@@ -132,11 +132,11 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 							 'class' => 'uneditable-input',
 							 'label' => 'Provider Type',
 							 'value' =>
-								 str_ireplace(
-									 'oauth',
-									 'OAuth',
-									 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
-								 ),
+							 str_ireplace(
+								 'oauth',
+								 'OAuth',
+								 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
+							 ),
 						 ),
 					),
 					$_schema
@@ -216,7 +216,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 
 			if ( method_exists( $this, $_setter ) )
 			{
-				call_user_func( array($this, $_setter), $_value );
+				call_user_func( array( $this, $_setter ), $_value );
 				unset( $settings, $_key, $_setter );
 			}
 		}

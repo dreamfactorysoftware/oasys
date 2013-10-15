@@ -69,10 +69,11 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 *
 	 * @param array|\Traversable $data
 	 * @param bool               $overwrite
+	 * @param bool               $force If true, $data overwrites unconditionally
 	 *
 	 * @return array
 	 */
-	public function merge( $data = array(), $overwrite = true )
+	public function merge( $data = array(), $overwrite = true, $force = false )
 	{
 		if ( empty( $data ) )
 		{
@@ -83,9 +84,9 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 		{
 			$_local = static::get( $_key );
 
-			if ( ( null === $_local && null !== $_value ) || ( null !== $_local && null !== $_value && $_value != $_local ) )
+			if ( false !== $force || ( ( null === $_local && null !== $_value ) || ( null !== $_local && null !== $_value && $_value != $_local ) ) )
 			{
-				static::set( $_key, $_value, $overwrite );
+				static::set( $_key, $_value, false !== $force ? true : $overwrite );
 			}
 		}
 
@@ -135,13 +136,4 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 		return $_removed;
 	}
 
-	/**
-	 * Synchronize any in-memory data with the store itself
-	 *
-	 * @return bool True if work was done
-	 */
-	public function sync()
-	{
-		return false;
-	}
 }

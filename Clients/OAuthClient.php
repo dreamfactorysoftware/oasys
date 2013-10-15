@@ -32,6 +32,7 @@ use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Configs\OAuthProviderConfig;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Enums\HttpResponse;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Seed;
@@ -206,6 +207,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			//	Error
 			Log::error( 'Error returned from oauth token request: ' . print_r( $_info, true ) );
 
+			$this->_revokeAuthorization();
+
 			return false;
 		}
 
@@ -216,14 +219,52 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 	/**
 	 * @param array|\stdClass $data
+	 *
+	 * @return bool
 	 */
 	protected function _processReceivedToken( $data )
 	{
-		$this->_config->setAccessToken( Option::get( $data, 'access_token' ) );
+		$_tokenFound = false;
+
+		if ( null !== ( $_token = Option::get( $data, 'access_token' ) ) )
+		{
+			$_tokenFound = true;
+			$this->_config->setAccessToken( $_token );
+		}
+
 		$this->_config->setAccessTokenExpires( Option::get( $data, 'expires' ) );
+
+		if ( null !== ( $_token = Option::get( $data, 'refresh_token' ) ) )
+		{
+			$this->_config->setRefreshToken( $_token );
+		}
+
+		if ( null !== ( $_scope = Option::get( $data, 'scope' ) ) )
+		{
+			$this->_config->setScope( $_scope );
+		}
 
 		//	Sync!
 		$this->_config->sync();
+
+		return $_tokenFound;
+	}
+
+	/**
+	 *
+	 */
+	protected function _revokeAuthorization()
+	{
+		$this->_config->setAccessToken( null );
+		$this->_config->setAccessTokenExpires( null );
+		$this->_config->setRefreshToken( null );
+		$this->_config->setRefreshTokenExpires( null );
+		$this->_buildAuthHeader( true );
+
+		//	Sync!
+		$this->_config->sync();
+
+		Log::debug( 'Revoked authorization for "' . $this->_config->getProviderId() . '"' );
 
 		return;
 	}
@@ -304,33 +345,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		if ( !empty( $_result ) )
 		{
 			$_payload = (array)$_result;
-			$_token = null;
-
-			foreach ( $_payload as $_key => $_value )
-			{
-				switch ( $_key )
-				{
-					case 'access_token':
-						$_token = $_value;
-						$this->_config->setAccessToken( $_value );
-						break;
-
-					case 'expires':
-						$this->_config->setAccessTokenExpires( $_value );
-						break;
-
-					case 'refresh_token':
-						$this->_config->setRefreshToken( $_value );
-						break;
-
-					case 'scope':
-						if ( !empty( $_value ) )
-						{
-							$this->_config->setScope( $_value );
-						}
-						break;
-				}
-			}
+			$_token = $this->_processReceivedToken( $_payload );
 
 			//	It worked! Or not...
 			if ( null === $_token )
@@ -365,10 +380,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
 	{
-		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
-		{
-			$headers[] = $_authHeader;
-		}
+		$_headers = $headers ? : array();
 
 		//	Get the service endpoint and make the url spiffy
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
@@ -387,7 +399,15 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$payload
 		);
 
-		$_response = $this->_makeRequest( $_url, $_payload, $method, $headers );
+		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
+		{
+			if ( false === array_search( $_authHeader, $_headers ) )
+			{
+				$_headers[] = $_authHeader;
+			}
+		}
+
+		$_response = $this->_makeRequest( $_url, $_payload, $method, $_headers );
 
 		//	Authorization failure?
 		$_result = Option::get( $_response, 'result', array() );
@@ -405,22 +425,43 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			//	token no good?
 			if ( Scalar::in( $_code, HttpResponse::Forbidden, HttpResponse::Unauthorized ) && null !== ( $_refreshToken = $this->_config->getRefreshToken() ) )
 			{
+				static $_inRefresh = false;
+
 				//	Clear out our tokens and junk
-				$this->_buildAuthHeader( true );
 				$this->_config->setAccessToken( null );
 				$this->_config->setAccessTokenExpires( null );
+				$this->_buildAuthHeader( true );
 
-				//	Can I get a refresh?
-				if ( $this->requestRefreshToken( $payload ) )
+				if ( !$_inRefresh )
 				{
-					//	Try it now!
-					return $this->fetch( $resource, $payload, $method, $headers );
+					$_inRefresh = true;
+
+					//	Can I get a refresh?
+					if ( $this->requestRefreshToken( $payload ) )
+					{
+						//	Stow it...
+						$this->_config->sync();
+
+						//	Try it now!
+						$_response = $this->fetch( $resource, $payload, $method, $headers );
+
+						//	And we're done in here...
+						$_inRefresh = false;
+					}
 				}
+				else
+				{
+					//	Apparently refresh was bad, just start over
+					$this->_config->setPayload( null );
 
-				//	Jump back to the redirect URL
-				throw new RedirectRequiredException();
+					//	Revoke all...
+					$this->_revokeAuthorization();
+					Oasys::getStore()->revoke();
+
+					//	Jump back to the redirect URL
+					$this->checkAuthenticationProgress();
+				}
 			}
-
 			//	Otherwise pass through...
 		}
 
@@ -486,6 +527,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		if ( false !== $reset || null == $_tokenHeader )
 		{
+			$_tokenHeader = null;
+
 			$_token = $this->_config->getAccessToken();
 
 			//	Use the resource url if provided...

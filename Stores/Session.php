@@ -76,4 +76,28 @@ class Session extends BaseOasysStore
 
 		return true;
 	}
+
+	/**
+	 * Revoke stored token
+	 *
+	 * @param bool $delete If true (default), row is deleted from storage
+	 *
+	 * @return bool
+	 */
+	public function revoke( $delete = true )
+	{
+		if ( !isset( $_SESSION ) || PHP_SESSION_DISABLED == session_status() )
+		{
+			return true;
+		}
+
+		if ( isset( $_SESSION[static::KEY_PREFIX . '.data'] ) )
+		{
+			unset( $_SESSION[static::KEY_PREFIX . '.data'] );
+
+			return true;
+		}
+
+		return false;
+	}
 }

@@ -76,4 +76,13 @@ interface StorageProviderLike extends BagLike
 	 * @return array
 	 */
 	public function merge( $data = array(), $overwrite = true );
+
+	/**
+	 * Revoke stored token
+	 *
+	 * @param bool $delete If true (default), row is deleted from storage
+	 *
+	 * @return bool
+	 */
+	public function revoke( $delete = true );
 }
