@@ -247,7 +247,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	Sync!
 		$this->_config->sync();
 
-		return $_tokenFound;
+		return $_tokenFound ? $data['access_token'] : null;
 	}
 
 	/**
@@ -263,6 +263,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		//	Sync!
 		$this->_config->sync();
+		Oasys::getStore()->sync();
 
 		Log::debug( 'Revoked authorization for "' . $this->_config->getProviderId() . '"' );
 
@@ -373,9 +374,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 * @param string $method
 	 * @param array  $headers
 	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
-	 * @throws \Kisma\Core\Exceptions\NotImplementedException
-	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
+	 * @throws \Exception
 	 * @return array
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
@@ -396,7 +395,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$_payload = array_merge(
 			Option::get( $_endpoint, 'parameters', array() ),
-			$payload
+			empty( $payload ) ? array() : $payload
 		);
 
 		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
@@ -431,6 +430,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				$this->_config->setAccessToken( null );
 				$this->_config->setAccessTokenExpires( null );
 				$this->_buildAuthHeader( true );
+				$this->_config->sync();
+				Oasys::getStore()->sync();
 
 				if ( !$_inRefresh )
 				{
@@ -439,14 +440,21 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 					//	Can I get a refresh?
 					if ( $this->requestRefreshToken( $payload ) )
 					{
-						//	Stow it...
-						$this->_config->sync();
-
 						//	Try it now!
-						$_response = $this->fetch( $resource, $payload, $method, $headers );
+						try
+						{
+							$_response = array(
+								'result' => $this->fetch( $resource, $payload, $method, $headers ),
+								'code'   => Curl::getLastHttpCode(),
+							);
 
-						//	And we're done in here...
-						$_inRefresh = false;
+							//	And we're done in here...
+							$_inRefresh = false;
+						}
+						catch ( \Exception $_ex )
+						{
+							throw $_ex;
+						}
 					}
 				}
 				else
