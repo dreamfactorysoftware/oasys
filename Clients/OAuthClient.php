@@ -152,7 +152,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		if ( empty( $_code ) )
 		{
 			$_payload = Option::clean( $this->_config->getPayload() );
-
 			$_redirectUrl = $this->getAuthorizationUrl( $_payload );
 
 			Log::debug( 'Redirect required: ' . $_redirectUrl );
@@ -177,15 +176,15 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-			GrantTypes::AUTHORIZATION_CODE,
-			array_merge(
-				Option::clean( $this->_config->getPayload() ),
-				array(
-					 'code'         => $_code,
-					 'redirect_uri' => $_redirectUri,
-					 'state'        => Option::request( 'state' ),
-				)
-			)
+					   GrantTypes::AUTHORIZATION_CODE,
+					   array_merge(
+						   Option::clean( $this->_config->getPayload() ),
+						   array(
+								'code'         => $_code,
+								'redirect_uri' => $_redirectUri,
+								'state'        => Option::request( 'state' ),
+						   )
+					   )
 		);
 
 		$_info = null;
@@ -247,7 +246,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	Sync!
 		$this->_config->sync();
 
-		return $_tokenFound ? $data['access_token'] : null;
+		return $_tokenFound;
 	}
 
 	/**
@@ -263,7 +262,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		//	Sync!
 		$this->_config->sync();
-		Oasys::getStore()->sync();
 
 		Log::debug( 'Revoked authorization for "' . $this->_config->getProviderId() . '"' );
 
@@ -374,7 +372,9 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 * @param string $method
 	 * @param array  $headers
 	 *
-	 * @throws \Exception
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
+	 * @throws \Kisma\Core\Exceptions\NotImplementedException
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 * @return array
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
@@ -395,7 +395,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$_payload = array_merge(
 			Option::get( $_endpoint, 'parameters', array() ),
-			empty( $payload ) ? array() : $payload
+			$payload
 		);
 
 		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
@@ -430,8 +430,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				$this->_config->setAccessToken( null );
 				$this->_config->setAccessTokenExpires( null );
 				$this->_buildAuthHeader( true );
-				$this->_config->sync();
-				Oasys::getStore()->sync();
 
 				if ( !$_inRefresh )
 				{
@@ -440,21 +438,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 					//	Can I get a refresh?
 					if ( $this->requestRefreshToken( $payload ) )
 					{
-						//	Try it now!
-						try
-						{
-							$_response = array(
-								'result' => $this->fetch( $resource, $payload, $method, $headers ),
-								'code'   => Curl::getLastHttpCode(),
-							);
+						//	Stow it...
+						$this->_config->sync();
 
-							//	And we're done in here...
-							$_inRefresh = false;
-						}
-						catch ( \Exception $_ex )
-						{
-							throw $_ex;
-						}
+						//	Try it now!
+						$_response = $this->fetch( $resource, $payload, $method, $headers );
+
+						//	And we're done in here...
+						$_inRefresh = false;
 					}
 				}
 				else
@@ -491,9 +482,12 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$_proxyUrl = $this->_config->getRedirectProxyUrl();
 
 		$_state = array(
-			'origin'  => $_redirectUri, //	Original redirect URI, where we go back to...
-			'api_key' => sha1( $_redirectUri ),
+			'origin'       => $_redirectUri, //	Original redirect URI, where we go back to...
+			'api_key'      => sha1( $_redirectUri ),
+			'redirect_uri' => Curl::currentUrl(),
 		);
+
+		Log::debug( 'Auth url "state" built: ' . print_r( $_state, true ) );
 
 		$_payload = array_merge(
 			array(
