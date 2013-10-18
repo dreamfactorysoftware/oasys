@@ -176,15 +176,15 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-					   GrantTypes::AUTHORIZATION_CODE,
-					   array_merge(
-						   Option::clean( $this->_config->getPayload() ),
-						   array(
-								'code'         => $_code,
-								'redirect_uri' => $_redirectUri,
-								'state'        => Option::request( 'state' ),
-						   )
-					   )
+			GrantTypes::AUTHORIZATION_CODE,
+			array_merge(
+				Option::clean( $this->_config->getPayload() ),
+				array(
+					 'code'         => $_code,
+					 'redirect_uri' => $_redirectUri,
+					 'state'        => Option::request( 'state' ),
+				)
+			)
 		);
 
 		$_info = null;
@@ -198,6 +198,9 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			else
 			{
 				parse_str( $_token['result'], $_info );
+
+				//	Fix up payload that came in as a string...
+				$this->_config->setPayload( $_info );
 			}
 		}
 
@@ -390,13 +393,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		else
 		{
 			//	Use given url
-			$_url = $resource;
+			$_url = $_endpoint = $resource;
 		}
-
-		$_payload = array_merge(
-			Option::get( $_endpoint, 'parameters', array() ),
-			$payload
-		);
 
 		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
 		{
@@ -405,6 +403,19 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				$_headers[] = $_authHeader;
 			}
 		}
+
+		$_payload = $this->_config->getPayload();
+
+		if ( empty( $_payload ) || !is_array( $_payload ) )
+		{
+			$_payload = array();
+		}
+
+		$_payload = array_merge(
+			Option::get( $_endpoint, 'parameters', array() ),
+			$_payload,
+			$payload
+		);
 
 		$_response = $this->_makeRequest( $_url, $_payload, $method, $_headers );
 
@@ -422,44 +433,44 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		if ( $_error || $_code >= 400 )
 		{
 			//	token no good?
-			if ( Scalar::in( $_code, HttpResponse::Forbidden, HttpResponse::Unauthorized ) && null !== ( $_refreshToken = $this->_config->getRefreshToken() ) )
+			if ( Scalar::in( $_code, HttpResponse::Forbidden, HttpResponse::Unauthorized ) )
 			{
-				static $_inRefresh = false;
-
-				//	Clear out our tokens and junk
-				$this->_config->setAccessToken( null );
-				$this->_config->setAccessTokenExpires( null );
-				$this->_buildAuthHeader( true );
-
-				if ( !$_inRefresh )
+				if ( null !== ( $_refreshToken = $this->_config->getRefreshToken() ) )
 				{
-					$_inRefresh = true;
+					static $_inRefresh = false;
 
-					//	Can I get a refresh?
-					if ( $this->requestRefreshToken( $payload ) )
+					//	Clear out our tokens and junk
+					$this->_config->setAccessToken( null );
+					$this->_config->setAccessTokenExpires( null );
+					$this->_buildAuthHeader( true );
+
+					if ( !$_inRefresh )
 					{
-						//	Stow it...
-						$this->_config->sync();
+						$_inRefresh = true;
 
-						//	Try it now!
-						$_response = $this->fetch( $resource, $payload, $method, $headers );
+						//	Can I get a refresh?
+						if ( $this->requestRefreshToken( $payload ) )
+						{
+							//	Stow it...
+							$this->_config->sync();
 
-						//	And we're done in here...
-						$_inRefresh = false;
+							//	Try it now!
+							$_response = $this->fetch( $resource, $payload, $method, $headers );
+
+							//	And we're done in here...
+							$_inRefresh = false;
+
+							return $_response;
+						}
 					}
 				}
-				else
-				{
-					//	Apparently refresh was bad, just start over
-					$this->_config->setPayload( null );
 
-					//	Revoke all...
-					$this->_revokeAuthorization();
-					Oasys::getStore()->revoke();
+				//	Apparently refresh was bad, just revoke all...
+				$this->_revokeAuthorization();
+				Oasys::getStore()->revoke();
 
-					//	Jump back to the redirect URL
-					$this->checkAuthenticationProgress();
-				}
+				//	Jump back to the redirect URL
+				$this->checkAuthenticationProgress();
 			}
 			//	Otherwise pass through...
 		}
@@ -489,6 +500,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		Log::debug( 'Auth url "state" built: ' . print_r( $_state, true ) );
 
+		$_queryString = http_build_query( $payload );
+
+		if ( !empty( $_queryString ) )
+		{
+			$_redirectUri .= ( false === strpos( $_redirectUri, '?' ) ? '?' : '&' ) . $_queryString;
+			unset( $payload );
+		}
+
 		$_payload = array_merge(
 			array(
 				 'response_type' => 'code',
@@ -497,7 +516,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				 'state'         => Storage::freeze( $_state ),
 				 'scope'         => is_array( $_scope ) ? implode( ',', $_scope ) : $_scope,
 			),
-			Option::clean( $payload ),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
 
@@ -541,7 +559,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				switch ( $this->_config->getAccessTokenType() )
 				{
 					case TokenTypes::URI:
-						$payload[$this->_config->getAccessTokenParamName()] = $_token;
+						$_payload = $this->_config->getPayload();
+						Option::set( $_payload, $this->_config->getAccessTokenParamName(), $_token );
+						$this->_config->setPayload( $_payload );
+
 						$_authHeaderName = null;
 						break;
 
