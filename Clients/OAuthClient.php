@@ -396,6 +396,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_url = $_endpoint = $resource;
 		}
 
+		if ( null !== ( $_parameters = Option::get( $_endpoint, 'parameters' ) ) && is_array( $payload ) )
+		{
+			$payload = array_merge(
+				$_parameters,
+				$payload
+			);
+		}
+
 		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
 		{
 			if ( false === array_search( $_authHeader, $_headers ) )
@@ -648,7 +656,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			CURLOPT_HTTPHEADER     => $headers,
 		);
 
-		if ( static::Get == $method && false === strpos( $url, '?' ) && !empty( $payload ) )
+		if ( static::Get == $method && false === strpos( $url, '?' ) && is_array( $payload ) && !empty( $payload ) )
 		{
 			$url .= '?' . ( is_array( $payload ) ? http_build_query( $payload, null, '&' ) : $payload );
 			$payload = array();
@@ -663,10 +671,20 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_resetRequest();
 
+		if ( $this->_autoDecodeJson && !is_string( $payload ) )
+		{
+			$payload = json_encode( $payload );
+		}
+
+		Log::debug( '>> ' . $method . ' to ' . $url . ' with: ' . print_r( $payload, true ) );
+
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
+			Log::debug( '<< ERROR: ' . print_r( $_result, true ) );
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
+
+		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
