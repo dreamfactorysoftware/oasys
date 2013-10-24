@@ -62,6 +62,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	protected $_autoDecodeJson = true;
 	/**
+	 * @var bool If true, outbound content is encoded to JSON before being sent.
+	 */
+	protected $_autoEncodeJson = false;
+	/**
 	 * @var mixed The last response from the API
 	 */
 	protected $_lastResponse = null;
@@ -266,7 +270,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	Sync!
 		$this->_config->sync();
 
-		Log::debug( 'Revoked authorization for "' . $this->_config->getProviderId() . '"' );
+		Log::debug( 'Revoked prior authorization' );
 
 		return;
 	}
@@ -648,7 +652,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			CURLOPT_HTTPHEADER     => $headers,
 		);
 
-		if ( static::Get == $method && false === strpos( $url, '?' ) && !empty( $payload ) )
+		if ( static::Get == $method && false === strpos( $url, '?' ) && is_array( $payload ) && !empty( $payload ) )
 		{
 			$url .= '?' . ( is_array( $payload ) ? http_build_query( $payload, null, '&' ) : $payload );
 			$payload = array();
@@ -663,16 +667,25 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_resetRequest();
 
-		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
+		//	Convert to JSON string if requested
+		if ( $this->_autoEncodeJson && !is_string( $payload ) )
+		{
+			if ( false !== ( $_payload = json_encode( $payload ) ) )
+			{
+				$payload = $_payload;
+			}
+		}
+
+//		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
-			Log::debug( '<< ERROR: ' . print_r( $_result, true ) );
+//			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
 
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
 
-		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
+//		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
@@ -798,4 +811,25 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	{
 		return $this->_lastResponse;
 	}
+
+	/**
+	 * @param boolean $autoEncodeJson
+	 *
+	 * @return OAuthClient
+	 */
+	public function setAutoEncodeJson( $autoEncodeJson )
+	{
+		$this->_autoEncodeJson = $autoEncodeJson;
+
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getAutoEncodeJson()
+	{
+		return $this->_autoEncodeJson;
+	}
+
 }
