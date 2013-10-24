@@ -400,6 +400,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_url = $_endpoint = $resource;
 		}
 
+		if ( null !== ( $_parameters = Option::get( $_endpoint, 'parameters' ) ) && is_array( $payload ) )
+		{
+			$payload = array_merge(
+				$_parameters,
+				$payload
+			);
+		}
+
 		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
 		{
 			if ( false === array_search( $_authHeader, $_headers ) )
