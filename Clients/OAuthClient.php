@@ -663,10 +663,16 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_resetRequest();
 
+		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
+
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
+			Log::debug( '<< ERROR: ' . print_r( $_result, true ) );
+
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
+
+		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
