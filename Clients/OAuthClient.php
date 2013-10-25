@@ -96,7 +96,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		if ( null === $config->getRedirectUri() )
 		{
-			$this->_config->setRedirectUri( Curl::currentUrl( false ) );
+			Log::debug( 'Current URL = ' . $_url = Curl::currentUrl( false ) );
+			$this->_config->setRedirectUri( $_url );
 		}
 
 		$_cert = $config->getCertificateFile();
@@ -122,6 +123,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		{
 			if ( false !== $startFlow )
 			{
+				$this->_autoEncodeJson = false;
+
 				return $this->checkAuthenticationProgress();
 			}
 
@@ -155,8 +158,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	No code is present, request one
 		if ( empty( $_code ) )
 		{
-			$_payload = Option::clean( $this->_config->getPayload() );
-			$_redirectUrl = $this->getAuthorizationUrl( $_payload );
+			$_redirectUrl = $this->getAuthorizationUrl( Option::clean( $this->_config->getPayload() ) );
 
 			Log::debug( 'Redirect required: ' . $_redirectUrl );
 
@@ -218,9 +220,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			return false;
 		}
 
-		$this->_processReceivedToken( $_info );
-
-		return true;
+		return $this->_processReceivedToken( $_info );
 	}
 
 	/**
@@ -416,16 +416,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			}
 		}
 
-		$_payload = $this->_config->getPayload();
-
-		if ( empty( $_payload ) || !is_array( $_payload ) )
-		{
-			$_payload = array();
-		}
-
 		$_payload = array_merge(
 			Option::get( $_endpoint, 'parameters', array() ),
-			$_payload,
 			$payload
 		);
 
@@ -511,6 +503,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		);
 
 		Log::debug( 'Auth url "state" built: ' . print_r( $_state, true ) );
+
+		if ( empty( $payload ) || !is_array( $payload ) )
+		{
+			$payload = array();
+		}
 
 		$_queryString = http_build_query( $payload );
 
@@ -691,6 +688,12 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 //			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
 
 			throw new AuthenticationException( Curl::getErrorAsString() );
+		}
+
+		//	Shift result from array...
+		if ( is_array( $_result ) && isset( $_result[0] ) && sizeof( $_result ) == 1 && $_result[0] instanceof \stdClass )
+		{
+			$_result = $_result[0];
 		}
 
 //		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
