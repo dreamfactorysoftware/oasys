@@ -523,7 +523,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				 'client_id'     => $this->_config->getClientId(),
 				 'redirect_uri'  => $_redirectUri,
 				 'state'         => Storage::freeze( $_state ),
-				 'scope'         => is_array( $_scope ) ? implode( ',', $_scope ) : $_scope,
+				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
