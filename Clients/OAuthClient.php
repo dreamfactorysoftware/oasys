@@ -187,7 +187,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				Option::clean( $this->_config->getPayload() ),
 				array(
 					 'code'         => $_code,
-					 'redirect_uri' => $_redirectUri,
+//					 'redirect_uri' => $_redirectUri,
 					 'state'        => Option::request( 'state' ),
 				)
 			)
