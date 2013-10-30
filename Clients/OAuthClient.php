@@ -408,7 +408,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			);
 		}
 
-		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
+		if ( null !== ( $_authHeader = $this->_buildAuthHeader( false, $payload ) ) )
 		{
 			if ( false === array_search( $_authHeader, $_headers ) )
 			{
@@ -523,7 +523,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				 'client_id'     => $this->_config->getClientId(),
 				 'redirect_uri'  => $_redirectUri,
 				 'state'         => Storage::freeze( $_state ),
-				 'scope'         => is_array( $_scope ) ? implode( ',', $_scope ) : $_scope,
+				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
@@ -544,13 +544,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	}
 
 	/**
-	 * @param bool $reset
+	 * @param bool  $reset
+	 * @param array $payload
 	 *
-	 * @return string
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \Kisma\Core\Exceptions\NotImplementedException
+	 * @return string
 	 */
-	protected function _buildAuthHeader( $reset = false )
+	protected function _buildAuthHeader( $reset = false, &$payload = array() )
 	{
 		static $_tokenHeader;
 
@@ -568,10 +569,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				switch ( $this->_config->getAccessTokenType() )
 				{
 					case TokenTypes::URI:
-						$_payload = $this->_config->getPayload();
-						Option::set( $_payload, $this->_config->getAccessTokenParamName(), $_token );
-						$this->_config->setPayload( $_payload );
-
+						Option::set( $payload, $this->_config->getAccessTokenParamName(), $_token );
 						$_authHeaderName = null;
 						break;
 
