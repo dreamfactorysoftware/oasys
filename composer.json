@@ -13,8 +13,7 @@
 	"authors":           [
 		{
 			"name":  "Jerry Ablan",
-			"email": "jerryablan@dreamfactory.com",
-			"role":  "Lead Developer"
+			"email": "jerryablan@dreamfactory.com"
 		}
 	],
 	"support":           {
@@ -23,7 +22,8 @@
 	"require":           {
 		"php":         ">=5.3.10",
 		"ext-curl":    "*",
-		"kisma/kisma": "*"
+		"ext-oauth":    "*",
+		"kisma/kisma": ">=0.1.4"
 	},
 	"autoload":          {
 		"psr-0": {
