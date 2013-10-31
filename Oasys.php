@@ -48,10 +48,6 @@ class Oasys extends SeedUtility
 	 */
 	const DEFAULT_PROVIDER_NAMESPACE = 'DreamFactory\\Oasys\\Providers';
 	/**
-	 * @var string
-	 */
-	const DEFAULT_CLASS_NAMESPACE = 'DreamFactory\\Oasys\\Providers';
-	/**
 	 * @var string The prefix to provider IDs that want to use the generic
 	 */
 	const GENERIC_PROVIDER_PATTERN = 'generic:';
@@ -105,7 +101,7 @@ class Oasys extends SeedUtility
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers' );
+			static::$_providerPaths = array(static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers');
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -120,14 +116,8 @@ class Oasys extends SeedUtility
 				( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
 		}
 
-		//	No redirect URI, make one...
-		if ( null === static::getGlobal( 'redirect_uri' ) )
-		{
-			static::setGlobal( 'redirect_uri', Curl::currentUrl() );
-		}
-
 		//	Render any stored errors
-		if ( null !== ( $_error = static::getGlobal( 'error', null, true ) ) )
+		if ( null !== ( $_error = static::getOptions( 'error', null, true ) ) )
 		{
 			if ( isset( $_error['exception'] ) )
 			{
@@ -156,22 +146,21 @@ class Oasys extends SeedUtility
 		if ( !empty( $_store ) && !empty( $_cache ) )
 		{
 			/** @var ProviderLike[] $_cache */
-			foreach ( $_cache as $_id => $_provider )
+			foreach ( $_cache as $_provider )
 			{
-				foreach ( $_provider->getConfigForStorage() as $_key => $_value )
-				{
-					$_store->set( $_key, $_value );
-				}
+				$_store->set( $_provider->getConfigForStorage(), null );
 			}
 		}
 	}
 
 	/**
-	 * Save myself!
+	 * @param string $namespace
+	 * @param string $path
 	 */
-	public function __destruct()
+	public static function addProviderPath( $namespace, $path )
 	{
-		static::sync();
+		static::$_providerPaths[$namespace] = $path;
+		static::_mapProviders();
 	}
 
 	/**
@@ -425,43 +414,31 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * Convenience shortcut to the goodie bag
-	 *
-	 * @param string $key
-	 * @param mixed  $defaultValue
-	 * @param bool   $burnAfterReading
-	 *
-	 * @throws OasysException
-	 * @return mixed
-	 */
-	public static function getGlobal( $key, $defaultValue = null, $burnAfterReading = false )
-	{
-		return Option::get( static::$_options, $key, $defaultValue, $burnAfterReading );
-	}
-
-	/**
-	 * Convenience shortcut to the goodie bag
+	 * Gets a global Oasys option
 	 *
 	 * @param string $key
 	 * @param mixed  $value
-	 * @param bool   $overwrite
+	 * @param mixed  $defaultValue
+	 * @param bool   $burnAfterReading
 	 *
-	 * @throws OasysException
-	 * @return mixed|void
+	 * @return mixed
 	 */
-	public static function setGlobal( $key, $value = null, $overwrite = true )
+	public static function getOption( $key, $value = null, $defaultValue = null, $burnAfterReading = false )
 	{
-		return Option::set( static::$_options, $key, $value, $overwrite );
+		return Option::get( static::$_options, $key, $value, $defaultValue, $burnAfterReading );
 	}
 
 	/**
-	 * @param string $namespace
-	 * @param string $path
+	 * Sets a global Oasys option
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 *
+	 * @return mixed
 	 */
-	public static function addProviderPath( $namespace, $path )
+	public static function setOption( $key, $value = null )
 	{
-		static::$_providerPaths[$namespace] = $path;
-		static::_mapProviders();
+		return Option::set( static::$_options, $key, $value );
 	}
 
 	/**

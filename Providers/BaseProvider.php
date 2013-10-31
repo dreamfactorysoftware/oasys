@@ -362,42 +362,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * @param string $key
-	 * @param mixed  $value
-	 * @param bool   $overwrite
-	 *
-	 * @return BaseProvider
-	 */
-	public function setGlobal( $key, $value = null, $overwrite = true )
-	{
-		Oasys::setGlobal( $key, $value, $overwrite );
-
-		return $this;
-	}
-
-	/**
-	 * @param string $key
-	 * @param mixed  $defaultValue
-	 * @param bool   $burnAfterReading
-	 *
-	 * @return mixed
-	 */
-	public function getGlobal( $key, $defaultValue = null, $burnAfterReading = false )
-	{
-		return Oasys::getGlobal( $key, $defaultValue, $burnAfterReading );
-	}
-
-	/**
-	 * Returns all global settings
-	 *
-	 * @return array
-	 */
-	public function getGlobals()
-	{
-		return Oasys::getOptions();
-	}
-
-	/**
 	 * @param int $type
 	 *
 	 * @return BaseProvider
@@ -462,4 +426,5 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	{
 		return $this->_config->toArray();
 	}
+
 }
