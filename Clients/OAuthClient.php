@@ -62,6 +62,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	 */
 	protected $_autoDecodeJson = true;
 	/**
+	 * @var bool If true, outbound content is encoded to JSON before being sent.
+	 */
+	protected $_autoEncodeJson = false;
+	/**
 	 * @var mixed The last response from the API
 	 */
 	protected $_lastResponse = null;
@@ -92,7 +96,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		if ( null === $config->getRedirectUri() )
 		{
-			$this->_config->setRedirectUri( Curl::currentUrl( false ) );
+			Log::debug( 'Current URL = ' . $_url = Curl::currentUrl( false ) );
+			$this->_config->setRedirectUri( $_url );
 		}
 
 		$_cert = $config->getCertificateFile();
@@ -118,6 +123,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		{
 			if ( false !== $startFlow )
 			{
+				$this->_autoEncodeJson = false;
+
 				return $this->checkAuthenticationProgress();
 			}
 
@@ -151,8 +158,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	No code is present, request one
 		if ( empty( $_code ) )
 		{
-			$_payload = Option::clean( $this->_config->getPayload() );
-			$_redirectUrl = $this->getAuthorizationUrl( $_payload );
+			$_redirectUrl = $this->getAuthorizationUrl( Option::clean( $this->_config->getPayload() ) );
 
 			Log::debug( 'Redirect required: ' . $_redirectUrl );
 
@@ -214,9 +220,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			return false;
 		}
 
-		$this->_processReceivedToken( $_info );
-
-		return true;
+		return $this->_processReceivedToken( $_info );
 	}
 
 	/**
@@ -266,7 +270,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		//	Sync!
 		$this->_config->sync();
 
-		Log::debug( 'Revoked authorization for "' . $this->_config->getProviderId() . '"' );
+		Log::debug( 'Revoked prior authorization' );
 
 		return;
 	}
@@ -404,7 +408,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			);
 		}
 
-		if ( null !== ( $_authHeader = $this->_buildAuthHeader() ) )
+		if ( null !== ( $_authHeader = $this->_buildAuthHeader( false, $payload ) ) )
 		{
 			if ( false === array_search( $_authHeader, $_headers ) )
 			{
@@ -412,16 +416,8 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			}
 		}
 
-		$_payload = $this->_config->getPayload();
-
-		if ( empty( $_payload ) || !is_array( $_payload ) )
-		{
-			$_payload = array();
-		}
-
 		$_payload = array_merge(
 			Option::get( $_endpoint, 'parameters', array() ),
-			$_payload,
 			$payload
 		);
 
@@ -508,6 +504,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		Log::debug( 'Auth url "state" built: ' . print_r( $_state, true ) );
 
+		if ( empty( $payload ) || !is_array( $payload ) )
+		{
+			$payload = array();
+		}
+
 		$_queryString = http_build_query( $payload );
 
 		if ( !empty( $_queryString ) )
@@ -522,7 +523,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				 'client_id'     => $this->_config->getClientId(),
 				 'redirect_uri'  => $_redirectUri,
 				 'state'         => Storage::freeze( $_state ),
-				 'scope'         => is_array( $_scope ) ? implode( ',', $_scope ) : $_scope,
+				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
@@ -543,13 +544,14 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	}
 
 	/**
-	 * @param bool $reset
+	 * @param bool  $reset
+	 * @param array $payload
 	 *
-	 * @return string
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \Kisma\Core\Exceptions\NotImplementedException
+	 * @return string
 	 */
-	protected function _buildAuthHeader( $reset = false )
+	protected function _buildAuthHeader( $reset = false, &$payload = array() )
 	{
 		static $_tokenHeader;
 
@@ -567,10 +569,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 				switch ( $this->_config->getAccessTokenType() )
 				{
 					case TokenTypes::URI:
-						$_payload = $this->_config->getPayload();
-						Option::set( $_payload, $this->_config->getAccessTokenParamName(), $_token );
-						$this->_config->setPayload( $_payload );
-
+						Option::set( $payload, $this->_config->getAccessTokenParamName(), $_token );
 						$_authHeaderName = null;
 						break;
 
@@ -671,20 +670,31 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_resetRequest();
 
-		if ( $this->_autoDecodeJson && !is_string( $payload ) )
+		//	Convert to JSON string if requested
+		if ( $this->_autoEncodeJson && !is_string( $payload ) )
 		{
-			$payload = json_encode( $payload );
+			if ( false !== ( $_payload = json_encode( $payload ) ) )
+			{
+				$payload = $_payload;
+			}
 		}
 
-		Log::debug( '>> ' . $method . ' to ' . $url . ' with: ' . print_r( $payload, true ) );
+//		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
-			Log::debug( '<< ERROR: ' . print_r( $_result, true ) );
+//			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
+
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
 
-		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
+		//	Shift result from array...
+		if ( is_array( $_result ) && isset( $_result[0] ) && sizeof( $_result ) == 1 && $_result[0] instanceof \stdClass )
+		{
+			$_result = $_result[0];
+		}
+
+//		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
@@ -810,4 +820,25 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	{
 		return $this->_lastResponse;
 	}
+
+	/**
+	 * @param boolean $autoEncodeJson
+	 *
+	 * @return OAuthClient
+	 */
+	public function setAutoEncodeJson( $autoEncodeJson )
+	{
+		$this->_autoEncodeJson = $autoEncodeJson;
+
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getAutoEncodeJson()
+	{
+		return $this->_autoEncodeJson;
+	}
+
 }

@@ -27,6 +27,7 @@ use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Utility\Curl;
+use Kisma\Core\Utility\Log;
 
 /**
  * BaseOAuthProvider
