@@ -1,6 +1,6 @@
 {
 	"name":              "dreamfactory/oasys",
-	"version":           "0.2.3",
+	"version":           "0.3.0",
 	"description":       "DreamFactory Oasys (Open Authentication SYStem)",
 	"keywords":          ["oasis", "dsp", "dsp-core", "dreamfactory", "openid", "facebook", "google", "twitter", "oauth"],
 	"homepage":          "http://dreamfactorysoftware.github.io",
@@ -14,7 +14,6 @@
 		{
 			"name":  "Jerry Ablan",
 			"email": "jerryablan@dreamfactory.com",
-			"role":  "Lead Developer"
 		}
 	],
 	"support":           {
