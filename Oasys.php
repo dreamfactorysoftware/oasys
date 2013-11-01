@@ -29,7 +29,6 @@ use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
 use Kisma\Core\Interfaces;
 use Kisma\Core\SeedUtility;
-use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
@@ -101,7 +100,7 @@ class Oasys extends SeedUtility
 		//	Set the default Providers path.
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array(static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers');
+			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers' );
 		}
 
 		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
@@ -145,11 +144,14 @@ class Oasys extends SeedUtility
 		//	Save off the store
 		if ( !empty( $_store ) && !empty( $_cache ) )
 		{
-			/** @var ProviderLike[] $_cache */
-			foreach ( $_cache as $_provider )
+			foreach ( $_cache as $_id => $_provider )
 			{
-				$_store->set( $_provider->getConfigForStorage(), null );
+				foreach ( $_provider->getConfig()->toArray() as $_key => $_value )
+				{
+					$_store->set( $_id . '.' . $_key, $_value );
+				}
 			}
+			//	Store will sync when it's destroyed...
 		}
 	}
 
@@ -474,7 +476,7 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @param ProviderLike $providerCache
+	 * @param ProviderLike[] $providerCache
 	 */
 	public static function setProviderCache( $providerCache )
 	{
@@ -482,7 +484,7 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @return ProviderLike
+	 * @return ProviderLike[]
 	 */
 	public static function getProviderCache()
 	{
