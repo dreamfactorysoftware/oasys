@@ -49,10 +49,10 @@ class Session extends BaseOasysStore
 		}
 
 		parent::__construct(
-			array_merge(
-				json_decode( Option::get( $_SESSION, static::KEY_PREFIX . '.data', json_encode( array() ) ) ),
-				$contents
-			)
+			  array_merge(
+				  json_decode( Option::get( $_SESSION, static::KEY_PREFIX . '.data', json_encode( array() ) ) ),
+				  $contents
+			  )
 		);
 	}
 

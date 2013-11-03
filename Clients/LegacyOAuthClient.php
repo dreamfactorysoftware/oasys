@@ -59,16 +59,18 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	 */
 	public function __construct( $config )
 	{
+		if ( null === ( $_consumerKey = Option::get( $config, 'consumer_key' ) ) || null === (
+			$_consumerSecret = Option::get( $config, 'consumer_secret' ) )
+		)
+		{
+			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
+		}
+
 		parent::__construct();
 
 		$this->_config = $config;
 
-		$this->_client = new \OAuth(
-			$this->_config->getConsumerKey(),
-			$this->_config->getConsumerSecret(),
-			$this->_config->getSignatureMethod(),
-			$this->_config->getAuthType()
-		);
+		$this->_client = new \OAuth( $_consumerKey, $_consumerSecret, $this->_config->getSignatureMethod(), $this->_config->getAuthType() );
 
 		//	Set up for fetchin'
 		if ( 2 == $this->_config->getState() )

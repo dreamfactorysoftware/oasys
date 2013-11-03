@@ -20,9 +20,6 @@
 namespace DreamFactory\Oasys\Providers;
 
 use DreamFactory\Oasys\Components\GenericUser;
-use DreamFactory\Oasys\Clients\LegacyOAuthClient;
-use DreamFactory\Oasys\Exceptions\OasysException;
-use Kisma\Core\Utility\Log;
 
 /**
  * Twitter
@@ -41,5 +38,6 @@ class Twitter extends BaseLegacyOAuthProvider
 	 */
 	public function getUserData()
 	{
+		return new GenericUser();
 	}
 }

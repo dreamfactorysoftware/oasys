@@ -85,12 +85,17 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	/**
 	 * @param OAuthProviderConfig|ProviderConfigLike $config
 	 *
-	 * @throws \InvalidArgumentException
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @return \DreamFactory\Oasys\Clients\OAuthClient
 	 */
 	public function __construct( $config )
 	{
 		parent::__construct();
+
+		if ( null === Option::get( $config, 'client_id' ) || null === Option::get( $config, 'client_secret' ) )
+		{
+			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
+		}
 
 		$this->_config = $config;
 
@@ -104,7 +109,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		if ( !empty( $_cert ) && ( !is_file( $_cert ) || !is_readable( $_cert ) ) )
 		{
-			throw new \InvalidArgumentException( 'The specified certificate file "' . $_cert . '" was not found' );
+			throw new OasysConfigurationException( 'The specified certificate file "' . $_cert . '" was not found' );
 		}
 	}
 
@@ -250,9 +255,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$this->_config->setScope( $_scope );
 		}
 
-		//	Sync!
-		$this->_config->sync();
-
 		return $_tokenFound;
 	}
 
@@ -266,9 +268,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$this->_config->setRefreshToken( null );
 		$this->_config->setRefreshTokenExpires( null );
 		$this->_buildAuthHeader( true );
-
-		//	Sync!
-		$this->_config->sync();
 
 		Log::debug( 'Revoked prior authorization' );
 
@@ -455,9 +454,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 						//	Can I get a refresh?
 						if ( $this->requestRefreshToken( $payload ) )
 						{
-							//	Stow it...
-							$this->_config->sync();
-
 							//	Try it now!
 							$_response = $this->fetch( $resource, $payload, $method, $headers );
 
@@ -679,11 +675,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			}
 		}
 
-//		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
+		//		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
-//			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
+			//			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
 
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
@@ -694,7 +690,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_result = $_result[0];
 		}
 
-//		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
+		//		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
@@ -705,12 +701,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_config->setPayload( $_result );
 
-		return
-			$this->_lastResponse = array(
-				'result'       => $_result,
-				'code'         => Curl::getLastHttpCode(),
-				'content_type' => $_contentType,
-			);
+		return $this->_lastResponse = array(
+			'result'       => $_result,
+			'code'         => Curl::getLastHttpCode(),
+			'content_type' => $_contentType,
+		);
 	}
 
 	/**
@@ -840,5 +835,4 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	{
 		return $this->_autoEncodeJson;
 	}
-
 }

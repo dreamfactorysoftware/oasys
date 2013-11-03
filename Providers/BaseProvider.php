@@ -72,9 +72,13 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected $_interactive = false;
 	/**
-	 * @var array The payload of the request, if any.
+	 * @var array Any outbound payload
 	 */
 	protected $_payload;
+	/**
+	 * @var array The payload of the request, if any.
+	 */
+	protected $_requestPayload;
 
 	//*************************************************************************
 	//	Methods
@@ -121,6 +125,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _createConfiguration( $config = null )
 	{
+		/** @var array $_defaults */
 		$_defaults = null;
 
 		foreach ( Oasys::getProviderPaths() as $_path )
@@ -136,16 +141,14 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			}
 		}
 
-		if ( null === $_defaults )
+		if ( empty( $_defaults ) )
 		{
 			Log::notice( 'Auto-template for "' . $this->_providerId . '" not found.' );
+			$_defaults = array();
 		}
 
 		//	Merge in the template, stored stuff and user supplied stuff
-		$_config = null !== $config ? array_merge(
-			$_defaults,
-			Option::clean( $config )
-		) : $_defaults;
+		$_config = null !== $config ? array_merge( $_defaults, Option::clean( $config ) ) : $_defaults;
 
 		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
 		{
@@ -161,7 +164,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
 		);
 
-//		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
+		//		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
 
 		//	Instantiate!
 		return new $_class( $_config );
@@ -177,7 +180,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	{
 		if ( !empty( $payload ) )
 		{
-			$this->_payload = array_merge( $this->_payload, $this->_parseResult( $payload ) );
+			$this->_payload = array_merge( $this->_payload, $this->_parseQuery( $payload ) );
 		}
 
 		return $this->authorized( true );
@@ -217,9 +220,6 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _redirect( $uri )
 	{
-		//	Store our junk before death
-		$this->_config->sync();
-
 		//	Throw redirect exception for non-interactive
 		if ( false !== $this->_interactive )
 		{
@@ -234,24 +234,24 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	}
 
 	/**
-	 * Parse  a JSON or HTTP query string into an array
+	 * Parse a JSON or HTTP query string into an array
 	 *
 	 * @param string $result
 	 *
-	 * @return mixed
+	 * @return array
 	 */
-	protected function _parseResult( $result )
+	protected function _parseQuery( $result )
 	{
 		if ( is_string( $result ) && false !== json_decode( $result ) )
 		{
-			$_result = json_decode( $result );
+			$_result = json_decode( $result, true );
 		}
 		else
 		{
 			parse_str( $result, $_result );
 		}
 
-		return $_result;
+		return false === $_result ? array() : $_result;
 	}
 
 	/**
@@ -320,7 +320,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function _setRequest( $request )
 	{
-		$this->_parseResult( $request );
+		$this->_parseRequest( $request );
 
 		return $this;
 	}
@@ -427,4 +427,23 @@ abstract class BaseProvider extends Seed implements ProviderLike
 		return $this->_config->toArray();
 	}
 
+	/**
+	 * @param array $requestPayload
+	 *
+	 * @return BaseProvider
+	 */
+	public function setRequestPayload( $requestPayload )
+	{
+		$this->_requestPayload = $requestPayload;
+
+		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getRequestPayload()
+	{
+		return $this->_requestPayload;
+	}
 }

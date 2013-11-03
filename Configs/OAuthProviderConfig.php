@@ -24,7 +24,6 @@ use DreamFactory\Oasys\Enums\GrantTypes;
 use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Enums\OAuthTypes;
 use DreamFactory\Oasys\Enums\AccessTypes;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
 /**
