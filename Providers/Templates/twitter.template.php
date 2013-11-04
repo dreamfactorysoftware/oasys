@@ -29,7 +29,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  */
 return array(
 	'type'            => ProviderConfigTypes::LEGACY_OAUTH,
-	'consumer_key'     => '{{consumer_key}}',
+	'consumer_key'    => '{{consumer_key}}',
 	'consumer_secret' => '{{consumer_secret}}',
 	'endpoint_map'    => array(
 		EndpointTypes::SERVICE       => 'https://api.twitter.com/1.1',

@@ -206,7 +206,7 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	public function resetAuthorization()
 	{
-		Oasys::getStore()->removeMany( '/^' . $this->_providerId . '\\./i' );
+		Oasys::getStore()->removeMany( '/^' . $this->_providerId . '\./i' );
 
 		return $this;
 	}
@@ -261,16 +261,18 @@ abstract class BaseProvider extends Seed implements ProviderLike
 	 */
 	protected function _parseRequest()
 	{
+		$_payload = array();
+
 		if ( !empty( $_REQUEST ) )
 		{
-			$this->_payload = $_REQUEST;
+			$_payload = $_REQUEST;
 		}
 
 		//	Bust it wide open
 		parse_str( Option::server( 'QUERY_STRING' ), $_query );
 
 		//	Set it and forget it
-		return $this->_payload = array_merge( $_query, Option::clean( $this->_payload ) );
+		return $this->_requestPayload = $this->_payload = !empty( $_query ) ? array_merge( $_query, $_payload ) : $_payload;
 	}
 
 	/**
