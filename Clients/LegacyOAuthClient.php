@@ -261,4 +261,28 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	{
 		return $this->_config;
 	}
+
+	/**
+	 * @return string The last request response
+	 */
+	public function getLastResponse()
+	{
+		// TODO: Implement getLastResponse() method.
+	}
+
+	/**
+	 * @return string The last error message
+	 */
+	public function getLastError()
+	{
+		// TODO: Implement getLastError() method.
+	}
+
+	/**
+	 * @return int The last error code
+	 */
+	public function getLastErrorCode()
+	{
+		// TODO: Implement getLastErrorCode() method.
+	}
 }

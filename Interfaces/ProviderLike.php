@@ -20,10 +20,12 @@
 namespace DreamFactory\Oasys\Interfaces;
 
 use DreamFactory\Oasys\Components\GenericUser;
+use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use Kisma\Core\Enums\HttpMethod;
 
 /**
  * ProviderLike
+ * Describes something that acts like an authentication provider
  */
 interface ProviderLike
 {
@@ -32,12 +34,22 @@ interface ProviderLike
 	//*************************************************************************
 
 	/**
-	 * Returns the provider configuration
+	 * @param string|ProviderConfigLike $property Sets a single config setting or replace the entire configuration object
+	 * @param mixed                     $value
+	 * @param bool                      $overwrite
 	 *
-	 *
-	 * @return ProviderConfigLike
+	 * @return $this
 	 */
-	public function getConfig();
+	public function setConfig( $property, $value = null, $overwrite = true );
+
+	/**
+	 * @param string|null $property         Sets a single config setting or the configuration object itself if $property is null
+	 * @param mixed       $defaultValue
+	 * @param bool        $burnAfterReading If true, $property is removed from the configuration settings after it has been read
+	 *
+	 * @return ProviderConfigLike|mixed
+	 */
+	public function getConfig( $property = null, $defaultValue = null, $burnAfterReading = false );
 
 	/**
 	 * Returns the provider configuration with keys prefixed with provider name

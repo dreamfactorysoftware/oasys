@@ -108,10 +108,6 @@ class OAuthProviderConfig extends BaseProviderConfig
 	 * @var int
 	 */
 	protected $_refreshTokenExpires;
-	/**
-	 * @var string Full file name of a certificate to use for this connection
-	 */
-	protected $_certificateFile;
 
 	//*************************************************************************
 	//* Methods

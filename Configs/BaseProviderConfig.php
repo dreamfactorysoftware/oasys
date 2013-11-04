@@ -59,9 +59,9 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 */
 	protected $_userAgent;
 	/**
-	 * @var array
+	 * @var string Full file name of a certificate to use for this connection
 	 */
-	protected $_payload;
+	protected $_certificateFile;
 	/**
 	 * @var array This configuration's schema for use with \Kisma\Utility\SchemaFormBuilder
 	 */
@@ -475,26 +475,6 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	}
 
 	/**
-	 * @param array $payload
-	 *
-	 * @return BaseProviderConfig
-	 */
-	public function setPayload( $payload )
-	{
-		$this->_payload = $payload;
-
-		return $this;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getPayload()
-	{
-		return $this->_payload;
-	}
-
-	/**
 	 * @param string $providerId
 	 *
 	 * @return BaseProviderConfig
@@ -541,4 +521,25 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	{
 		return SchemaFormBuilder::create( $this->_schema, true );
 	}
+
+	/**
+	 * @param string $certificateFile
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function setCertificateFile( $certificateFile )
+	{
+		$this->_certificateFile = $certificateFile;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getCertificateFile()
+	{
+		return $this->_certificateFile;
+	}
+
 }

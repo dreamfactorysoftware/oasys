@@ -17,42 +17,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Tests\Oasys;
-
-use DreamFactory\Oasys\Oasys;
-use DreamFactory\Oasys\Stores\FileSystem;
-use Kisma\Core\Utility\Log;
+namespace DreamFactory\Oasys\Enums;
 
 /**
- * OasysTest
- * Tests the methods in the Oasys class
+ * DataFormatTypes
+ * The supported types of provider data
  */
-class OasysTest extends \PHPUnit_Framework_TestCase
+class DataFormatTypes extends SeedEnum
 {
-	protected function setUp()
-	{
-		Log::setDefaultLog( __DIR__ . '/log/error.log' );
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
 
-		Oasys::setStore( new FileSystem( __FILE__ ) );
-
-		parent::setUp();
-	}
-
-	public function testGetProvider()
-	{
-		//	Good
-		$_provider = Oasys::getProvider( 'stack_exchange' );
-		$this->assertInstanceOf( 'DreamFactory\\Oasys\\Providers\\BaseProvider', $_provider );
-
-		//	Bad
-		$this->setExpectedException( '\\InvalidArgumentException' );
-		Oasys::getProvider( 'yoohoo' );
-	}
-
-	protected function tearDown()
-	{
-		$this->_oasys = null;
-
-		parent::tearDown();
-	}
+	/**
+	 * @var int Data is expected to be JSON
+	 */
+	const JSON = 0;
+	/**
+	 * @var int No translation
+	 */
+	const RAW = 1;
+	/**
+	 * @var int Data is expected to be XML
+	 */
+	const XML = 2;
 }
