@@ -674,35 +674,4 @@ class OAuthClient extends BaseClient implements OAuthServiceLike
 			'content_type' => $_contentType,
 		);
 	}
-
-	/**
-	 * Called before a request to get any additional auth header(s) or payload parameters
-	 * (query string for non-POST-type requests) needed for the call.
-	 *
-	 * Append them to the $headers array as strings in "header: value" format:
-	 *
-	 * <code>
-	 *        $_contentType = 'Content-Type: application/json';
-	 *        $_origin = 'Origin: teefury.com';
-	 *
-	 *        $headers[] = $_contentType;
-	 *        $headers[] = $_origin;
-	 * </code>
-	 *
-	 * and/or append them to the $payload array in $key => $value format:
-	 *
-	 * <code>
-	 *        $payload['param1'] = 'value1';
-	 *        $payload['param2'] = 'value2';
-	 *        $payload['param3'] = 'value3';
-	 * </code>
-	 *
-	 * @param array $headers The current headers that are going to be sent
-	 * @param array $payload
-	 * @param bool  $reset   If true, reset the cached auth headers/parameters and rebuild them.
-	 */
-	protected function _getAuthParameters( &$headers = array(), &$payload = array(), $reset = false )
-	{
-		// TODO: Implement _getAuthParameters() method.
-	}
 }

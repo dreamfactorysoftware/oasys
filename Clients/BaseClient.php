@@ -230,9 +230,8 @@ abstract class BaseClient extends Seed implements ProviderClientLike
 	 *
 	 * @param array $headers The current headers that are going to be sent
 	 * @param array $payload
-	 * @param bool  $reset   If true, reset the cached auth headers/parameters and rebuild them.
 	 */
-	abstract protected function _getAuthParameters( &$headers = array(), &$payload = array(), $reset = false );
+	abstract protected function _getAuthParameters( &$headers = array(), &$payload = array() );
 
 	/**
 	 * @param array $payload

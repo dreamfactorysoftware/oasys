@@ -76,19 +76,21 @@ class Facebook extends BaseOAuthProvider
 			'givenName'  => Option::get( $_profile, 'first_name' ),
 		);
 
-		return new GenericUser( array(
-									 'user_id'            => $_profileId,
-									 'published'          => Option::get( $_profile, 'updated_time' ),
-									 'updated'            => Option::get( $_profile, 'updated_time' ),
-									 'display_name'       => $_name['formatted'],
-									 'name'               => $_name,
-									 'preferred_username' => Option::get( $_profile, 'username' ),
-									 'gender'             => Option::get( $_profile, 'gender' ),
-									 'email_address'      => Option::get( $_profile, 'email' ),
-									 'urls'               => array( Option::get( $_profile, 'link' ) ),
-									 'relationships'      => Option::get( $_profile, 'friends' ),
-									 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
-									 'user_data'          => $_profile,
-								) );
+		return new GenericUser(
+			array(
+				 'user_id'            => $_profileId,
+				 'published'          => Option::get( $_profile, 'updated_time' ),
+				 'updated'            => Option::get( $_profile, 'updated_time' ),
+				 'display_name'       => $_name['formatted'],
+				 'name'               => $_name,
+				 'preferred_username' => Option::get( $_profile, 'username' ),
+				 'gender'             => Option::get( $_profile, 'gender' ),
+				 'email_address'      => Option::get( $_profile, 'email' ),
+				 'urls'               => array( Option::get( $_profile, 'link' ) ),
+				 'relationships'      => Option::get( $_profile, 'friends' ),
+				 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
+				 'user_data'          => $_profile,
+			)
+		);
 	}
 }

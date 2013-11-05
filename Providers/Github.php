@@ -92,19 +92,21 @@ class Github extends BaseOAuthProvider
 			}
 		}
 
-		return new GenericUser( array(
-									 'provider_id'        => $this->getProviderId(),
-									 'user_id'            => $_profileId,
-									 'published'          => Option::get( $_profile, 'created_at' ),
-									 'display_name'       => $_formatted,
-									 'name'               => $_name,
-									 'email_address'      => Option::get( $_profile, 'email' ),
-									 'preferred_username' => $_login,
-									 'urls'               => array( Option::get( $_profile, 'url' ) ),
-									 'thumbnail_url'      => Option::get( $_profile, 'avatar_url' ),
-									 'updated'            => Option::get( $_profile, 'updated_at' ),
-									 'relationships'      => Option::get( $_profile, 'followers' ),
-									 'user_data'          => $_profile,
-								) );
+		return new GenericUser(
+			array(
+				 'provider_id'        => $this->getProviderId(),
+				 'user_id'            => $_profileId,
+				 'published'          => Option::get( $_profile, 'created_at' ),
+				 'display_name'       => $_formatted,
+				 'name'               => $_name,
+				 'email_address'      => Option::get( $_profile, 'email' ),
+				 'preferred_username' => $_login,
+				 'urls'               => array( Option::get( $_profile, 'url' ) ),
+				 'thumbnail_url'      => Option::get( $_profile, 'avatar_url' ),
+				 'updated'            => Option::get( $_profile, 'updated_at' ),
+				 'relationships'      => Option::get( $_profile, 'followers' ),
+				 'user_data'          => $_profile,
+			)
+		);
 	}
 }
