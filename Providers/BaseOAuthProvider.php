@@ -2,8 +2,8 @@
 /**
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
- * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * DreamFactory Oasys (Open Authentication SYStem) http://dreamfactorysoftware.github.io
+ * Copyright 2013 DreamFactory Software, Inc. support@dreamfactory.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use Kisma\Core\Utility\Curl;
+use Kisma\Core\Utility\Log;
+use Kisma\Core\Utility\Option;
 
 /**
  * BaseOAuthProvider
@@ -122,7 +124,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	No code is present, request one
 		if ( empty( $_code ) )
 		{
-			$_redirectUrl = $this->getAuthorizationUrl( Option::clean( $this->_requestPayload ) );
+			$_redirectUrl = $this->getAuthorizationUrl();
 
 			Log::debug( 'Redirect required: ' . $_redirectUrl );
 
@@ -147,15 +149,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
 			GrantTypes::AUTHORIZATION_CODE,
-			array_merge(
-				Option::clean(
-					$this->_requestPayload,
-					array(
-						 'code'         => $_code,
-						 'redirect_uri' => $_redirectUri,
-						 'state'        => Option::request( 'state' ),
-					)
-				)
+			array(
+				 'code'         => $_code,
+				 'redirect_uri' => $_redirectUri,
+				 'state'        => Option::request( 'state' ),
 			)
 		);
 
@@ -467,29 +464,36 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_map = $this->getConfig()->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->getConfig( 'scope' );
-		$_redirectUri = $this->getConfig( 'redirect_uri' );
+		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
+		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
 		$_proxyUrl = $this->getConfig( 'redirect_proxy_url' );
+		$_payload = Option::clean( empty( $payload ) ? $this->_requestPayload : $payload );
 
 		$_state = array(
-			'origin'       => $_redirectUri, //	Original redirect URI, where we go back to...
-			'api_key'      => sha1( $_redirectUri ),
-			'redirect_uri' => Curl::currentUrl(),
+			'origin'       => $_origin,
+			'api_key'      => sha1( $_origin ),
+			'redirect_uri' => $_redirectUri,
+			'request'      => array(
+				'method'       => Option::server( 'REQUEST_METHOD' ),
+				'payload'      => $_payload,
+				'query_string' => Option::server( 'QUERY_STRING' ),
+				'referrer'     => Option::server( 'HTTP_REFERER' ),
+				'remote_addr'  => Option::server( 'REMOTE_ADDR' ),
+				'remote_host'  => Option::server( 'REMOTE_HOST' ),
+				'time'         => microtime( true ),
+				'uri'          => Option::server( 'REQUEST_URI' ),
+			),
 		);
 
-		Log::debug( 'Auth url "state" built: ' . print_r( $_state, true ) );
+		Log::debug( 'Request state built', $_state );
 
-		if ( empty( $payload ) || !is_array( $payload ) )
-		{
-			$payload = array();
-		}
-
-		$_queryString = http_build_query( $payload );
-
-		if ( !empty( $_queryString ) )
-		{
-			$_redirectUri .= ( false === strpos( $_redirectUri, '?' ) ? '?' : '&' ) . $_queryString;
-			unset( $payload );
-		}
+//		$_queryString = http_build_query( $_payload );
+//
+//		if ( !empty( $_queryString ) )
+//		{
+//			$_redirectUri .= ( false === strpos( $_redirectUri, '?' ) ? '?' : '&' ) . $_queryString;
+//			unset( $payload );
+//		}
 
 		$_payload = array_merge(
 			array(
@@ -504,18 +508,15 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 		if ( !empty( $_proxyUrl ) )
 		{
-			Log::info( 'Proxied provider: ' . $_redirectUri . ' => ' . $_redirectUri );
+			Log::info( 'Proxied provider', array( 'source' => $_redirectUri, 'destination' => $_proxyUrl ) );
 			$_payload['redirect_uri'] = $_proxyUrl;
 		}
 
 		$_qs = http_build_query( $_payload );
+		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
+		Log::debug( 'Redirect request payload built', $_payload );
 
-		Log::debug( 'Redirect payload: ' . print_r( $_payload, true ) );
-
-		$this->setConfig(
-			'authorize_url',
-			$_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs )
-		);
+		Log::debug( 'Authorization URL created: ' . $_authorizeUrl );
 
 		return $_authorizeUrl;
 	}
@@ -608,7 +609,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	protected function _resetRequest()
 	{
-		$this->_lastResponse = $this->_lastResponseCode = $this->_lastError = $this->_lastErrorCode = null;
+		$this->_responsePayload = $this->_lastResponse = $this->_lastResponseCode = $this->_lastError = $this->_lastErrorCode = null;
 	}
 
 	/**

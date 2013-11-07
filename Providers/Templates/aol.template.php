@@ -27,6 +27,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * This is the template for connecting AOL.
  */
 return array(
-	'type'          => ProviderConfigTypes::OPENID,
-	'openid_id'     => '{{openid_id}}',
+	'type'            => ProviderConfigTypes::OPENID,
+	'openid_id'       => '{{openid_id}}',
+	'referrer_domain' => 'aol.com',
 );

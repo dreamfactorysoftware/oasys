@@ -29,13 +29,14 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  */
 
 return array(
-	'type'          => ProviderConfigTypes::OAUTH,
-	'client_id'     => '{{client_id}}',
-	'client_secret' => '{{client_secret}}',
-	'scope'         => 'wl.basic wl.emails wl.signin wl.share wl.birthday',
-	'endpoint_map'  => array(
+	'type'            => ProviderConfigTypes::OAUTH,
+	'client_id'       => '{{client_id}}',
+	'client_secret'   => '{{client_secret}}',
+	'scope'           => 'wl.basic wl.emails wl.signin wl.share wl.birthday',
+	'endpoint_map'    => array(
 		EndpointTypes::AUTHORIZE    => 'https://login.live.com/oauth20_authorize.srf',
 		EndpointTypes::ACCESS_TOKEN => 'https://login.live.com/oauth20_token.srf',
 		EndpointTypes::SERVICE      => 'https://apis.live.net/v5.0/',
 	),
+	'referrer_domain' => 'live.com',
 );

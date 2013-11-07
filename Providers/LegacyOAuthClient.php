@@ -14,66 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Clients;
+namespace DreamFactory\Oasys\Providers;
 
+use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Interfaces\LegacyOAuthServiceLike;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
-use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig;
-use Kisma\Core\Exceptions\NotImplementedException;
-use Kisma\Core\Seed;
-use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Log;
-use Kisma\Core\Utility\FilterInput;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
 /**
  * LegacyOAuthClient
- * An base that knows how to talk dirty. Er, uhm, I mean, OAuth v1.x
+ * A base that knows how to talk dirty. Er, uhm, I mean, OAuth v1.x
  */
-class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthServiceLike
+abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAuthServiceLike
 {
-	//**************************************************************************
-	//* Members
-	//**************************************************************************
-
-	/**
-	 * @var LegacyOAuthProviderConfig|ProviderConfigLike
-	 */
-	protected $_config;
-
 	//**************************************************************************
 	//* Methods
 	//**************************************************************************
 
 	/**
+	 * @param string                                       $providerId
 	 * @param LegacyOAuthProviderConfig|ProviderConfigLike $config
 	 *
-	 * @throws \InvalidArgumentException
-	 * @return \DreamFactory\Oasys\Clients\LegacyOAuthClient
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
+	 * @return \DreamFactory\Oasys\Providers\BaseLegacyOAuthProvider
 	 */
-	public function __construct( $config )
+	public function __construct( $providerId, $config )
 	{
-		if ( null === ( $_consumerKey = Option::get( $config, 'consumer_key' ) ) || null === (
-			$_consumerSecret = Option::get( $config, 'consumer_secret' ) )
-		)
+		if ( null === ( $_consumerKey = Option::get( $config, 'consumer_key' ) ) || null === ( $_consumerSecret = Option::get( $config, 'consumer_secret' ) ) )
 		{
 			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
 
-		parent::__construct();
+		parent::__construct( $providerId, $config );
 
 		$this->_config = $config;
 
-		$this->_client = new \OAuth( $_consumerKey, $_consumerSecret, $this->_config->getSignatureMethod(), $this->_config->getAuthType() );
-
 		//	Set up for fetchin'
-		if ( 2 == $this->_config->getState() )
+		if ( 2 == $this->getConfig( 'state' ) )
 		{
 			$this->_setToken();
 		}
@@ -88,7 +71,7 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	 */
 	public function authorized( $startFlow = false )
 	{
-		$_token = $this->_config->getAccessToken();
+		$_token = $this->getConfig( 'access_token' );
 
 		if ( empty( $_token ) )
 		{
@@ -134,12 +117,12 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 			{
 				$_url = $this->_config->getEndpointUrl( EndpointTypes::REQUEST_TOKEN );
 
-				$_token = $this->_client->getRequestToken( $_url );
-				$this->_config->setAccessTokenSecret( $_tokenSecret = Option::get( $_token, 'oauth_token_secret' ) );
-				$this->_config->setState( 1 );
+				$_token = $this->getRequestToken( $_url );
+				$this->setAccessTokenSecret( $_tokenSecret = Option::get( $_token, 'oauth_token_secret' ) );
+				$this->setState( 1 );
 
 				//	Construct the redirect for authorization
-				$_redirectUrl = $this->_config->getEndpointUrl( EndpointTypes::AUTHORIZE ) . '?oauth_token=' . Option::get( $_token, 'oauth_token' );
+				$_redirectUrl = $this->getEndpointUrl( EndpointTypes::AUTHORIZE ) . '?oauth_token=' . Option::get( $_token, 'oauth_token' );
 
 				if ( !empty( $this->_redirectProxyUrl ) )
 				{
@@ -236,30 +219,10 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	 */
 	protected function _setToken( $token = null, $secret = null )
 	{
-		return $this->_client->setToken(
+		return $this->setToken(
 			$token ? : $this->_config->getAccessToken(),
 			$secret ? : $this->_config->getAccessTokenSecret()
 		);
-	}
-
-	/**
-	 * @param \DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig $config
-	 *
-	 * @return LegacyOAuthClient
-	 */
-	public function setConfig( $config )
-	{
-		$this->_config = $config;
-
-		return $this;
-	}
-
-	/**
-	 * @return \DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig
-	 */
-	public function getConfig()
-	{
-		return $this->_config;
 	}
 
 	/**
@@ -284,5 +247,47 @@ class LegacyOAuthClient extends Seed implements ProviderClientLike, LegacyOAuthS
 	public function getLastErrorCode()
 	{
 		// TODO: Implement getLastErrorCode() method.
+	}
+
+	/**
+	 * Called before a request to get any additional auth header(s) or payload parameters
+	 * (query string for non-POST-type requests) needed for the call.
+	 *
+	 * Append them to the $headers array as strings in "header: value" format:
+	 *
+	 * <code>
+	 *        $_contentType = 'Content-Type: application/json';
+	 *        $_origin = 'Origin: teefury.com';
+	 *
+	 *        $headers[] = $_contentType;
+	 *        $headers[] = $_origin;
+	 * </code>
+	 *
+	 * and/or append them to the $payload array in $key => $value format:
+	 *
+	 * <code>
+	 *        $payload['param1'] = 'value1';
+	 *        $payload['param2'] = 'value2';
+	 *        $payload['param3'] = 'value3';
+	 * </code>
+	 *
+	 * @param array $headers The current headers that are going to be sent
+	 * @param array $payload The current payload that is going to be sent
+	 *
+	 * @return void
+	 */
+	protected function _getAuthParameters( &$headers = array(), &$payload = array() )
+	{
+		// TODO: Implement _getAuthParameters() method.
+	}
+
+	/**
+	 * Returns the normalized provider's user profile
+	 *
+	 * @return GenericUser
+	 */
+	public function getUserData()
+	{
+		// TODO: Implement getUserData() method.
 	}
 }

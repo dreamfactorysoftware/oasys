@@ -45,11 +45,7 @@ return array(
 	'grant_type'              => array(
 		'type'  => 'select',
 		'value' => GrantTypes::AUTHORIZATION_CODE,
-		'data'  => GrantTypes::getDefinedConstants(
-			true,
-			null,
-			true
-		)
+		'data'  => GrantTypes::getDefinedConstants( true, null, true ),
 	),
 	'auth_type'               => array( 'type' => 'select', 'value' => OAuthTypes::URI, 'data' => OAuthTypes::getDefinedConstants( true, null, true ) ),
 	'access_type'             => array( 'type' => 'select', 'value' => AccessTypes::OFFLINE, 'data' => AccessTypes::getDefinedConstants( true, null, true ) ),

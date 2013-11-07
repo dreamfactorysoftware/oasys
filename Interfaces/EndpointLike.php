@@ -21,7 +21,7 @@ namespace DreamFactory\Oasys\Interfaces;
 
 /**
  * EndpointLike
- * Acts like an endpoint
+ * A thing that looks like an endpoint
  */
 interface EndpointLike
 {
@@ -75,14 +75,18 @@ interface EndpointLike
 	public function getEndpointMap();
 
 	/**
-	 * @param int|string $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
-	 * @param bool       $urlOnly
+	 * Returns the endpoint array for $type
 	 *
-	 * @return array
+	 * @param int|string $type    endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
+	 * @param bool       $urlOnly If true, only the URL is returned in a string
+	 *
+	 * @return array|string
 	 */
 	public function getEndpoint( $type = self::SERVICE, $urlOnly = false );
 
 	/**
+	 * Returns the endpoint URL for $type
+	 *
 	 * @param int|string $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
 	 *
 	 * @return string
@@ -90,9 +94,24 @@ interface EndpointLike
 	public function getEndpointUrl( $type = self::SERVICE );
 
 	/**
+	 * Returns the parameters for the endpoint of $type
+	 *
 	 * @param int|string $type endpoint map type (@see EndpointTypes). Defaults to the main service endpoint
 	 *
 	 * @return array
 	 */
 	public function getEndpointParameters( $type = self::SERVICE );
+
+	/**
+	 * Maps one or more endpoints for this provider
+	 *
+	 * @param int|array[]  $type       An EndpointTypes constant or an array of mappings
+	 * @param string|array $endpoint   Call with null to remove a mapping
+	 * @param array        $parameters KVPs of additional parameters
+	 *
+	 * @throws \InvalidArgumentException
+	 * @return $this
+	 */
+	public function mapEndpoint( $type, $endpoint = null, $parameters = null );
+
 }

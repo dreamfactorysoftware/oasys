@@ -92,9 +92,34 @@ interface ProviderLike
 	public function resetAuthorization();
 
 	/**
+	 * Checks the progress of any in-flight OAuth requests
+	 *
+	 * @throws RedirectRequiredException
+	 *
+	 * @return string
+	 */
+	public function checkAuthenticationProgress();
+
+	/**
+	 * @return string The last request response
+	 */
+	public function getLastResponse();
+
+	/**
+	 * @return string The last error message
+	 */
+	public function getLastError();
+
+	/**
+	 * @return int The last error code
+	 */
+	public function getLastErrorCode();
+
+	/**
 	 * Returns the normalized provider's user profile
 	 *
 	 * @return GenericUser
 	 */
 	public function getUserData();
+
 }

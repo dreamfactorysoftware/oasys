@@ -37,4 +37,6 @@ return array(
 		EndpointTypes::ACCESS_TOKEN => 'https://disqus.com/api/3.0/oauth/2.0/access_token',
 		EndpointTypes::SERVICE      => 'https://disqus.com/api/3.0',
 	),
+	'referrer_domain'   => 'disqus.com',
+
 );
