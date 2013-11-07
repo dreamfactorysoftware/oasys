@@ -19,8 +19,6 @@
  */
 namespace DreamFactory\Oasys\Interfaces;
 
-use DreamFactory\Oasys\Interfaces\ProviderLike;
-
 /**
  * OAuthServiceLike
  * An oauth service

@@ -24,7 +24,6 @@ use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
-use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
 use Kisma\Core\Interfaces;
@@ -35,6 +34,8 @@ use Kisma\Core\Utility\Option;
 /**
  * Oasys
  * The mother ship
+ *
+ * @todo Add database caching of mappings for faster instantiation
  */
 class Oasys extends SeedUtility
 {
@@ -60,10 +61,6 @@ class Oasys extends SeedUtility
 	 */
 	protected static $_store = null;
 	/**
-	 * @var array Oasys configuration options
-	 */
-	protected static $_options = array();
-	/**
 	 * @var ProviderLike[]
 	 */
 	protected static $_providerCache = array();
@@ -85,49 +82,22 @@ class Oasys extends SeedUtility
 	//*************************************************************************
 
 	/**
-	 * @param array $settings
-	 *
-	 * @throws
 	 * @throws \DreamFactory\Oasys\OasysException
 	 */
-	public static function initialize( $settings = array() )
+	public static function initialize()
 	{
 		if ( static::$_initialized )
 		{
 			return;
 		}
 
-		//	Set the default Providers path.
+		//	Set the default Providers path if not already set
 		if ( empty( static::$_providerPaths ) )
 		{
-			static::$_providerPaths = array( static::DEFAULT_PROVIDER_NAMESPACE => __DIR__ . '/Providers' );
+			static::$_providerPaths = array();
 		}
 
-		if ( is_string( $settings ) && is_file( $settings ) && is_readable( $settings ) )
-		{
-			$settings = file_get_contents( $settings );
-		}
-
-		//	No store provided, make one...
-		if ( empty( static::$_store ) && isset( $_SESSION ) && PHP_SESSION_DISABLED != session_status() )
-		{
-			static::$_store =
-				( 'cli' == PHP_SAPI ? new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ), null, $settings ) : new Session( $settings ) );
-		}
-
-		//	Render any stored errors
-		if ( null !== ( $_error = static::getOptions( 'error', null, true ) ) )
-		{
-			if ( isset( $_error['exception'] ) )
-			{
-				throw $_error['exception'];
-			}
-
-			if ( isset( $_error['code'] ) && isset( $_error['message'] ) )
-			{
-				throw new OasysException( Option::get( $_error, 'message' ), Option::get( $_error, 'code', 500 ) );
-			}
-		}
+		Option::sins( static::$_providerPaths, static::DEFAULT_PROVIDER_NAMESPACE, __DIR__ . '/Providers' );
 
 		static::_mapProviders();
 		static::$_initialized = true;
@@ -146,12 +116,8 @@ class Oasys extends SeedUtility
 		{
 			foreach ( $_cache as $_id => $_provider )
 			{
-				foreach ( $_provider->getConfig()->toArray() as $_key => $_value )
-				{
-					$_store->set( $_id . '.' . $_key, $_value );
-				}
+				$_store->set( $_id . '.data', $_provider->getConfig()->toArray( true ) );
 			}
-			//	Store will sync when it's destroyed...
 		}
 	}
 
@@ -182,31 +148,13 @@ class Oasys extends SeedUtility
 			static::initialize();
 		}
 
-		$_providerId = $_mapKey = $providerId;
-		$_type = null;
-		$_generic = false;
+		list( $_providerId, $_type, $_mapKey, $_generic ) = static::_normalizeProviderId( $providerId );
 
-		if ( false === strpos( $_providerId, static::GENERIC_PROVIDER_PATTERN, 0 ) )
-		{
-			$_providerId = static::_cleanProviderId( $providerId );
-		}
-		else
-		{
-			$_parts = explode( ':', $_providerId );
+		$_cacheKey = $_mapKey . ( $_generic ? : null );
+		$_config = empty( $config ) ? array() : $config;
 
-			if ( empty( $_parts ) || 3 != sizeof( $_parts ) )
-			{
-				throw new \InvalidArgumentException( 'Invalid provider ID specified. Use predefined or generic "generic:providerId:type" format.' );
-			}
-
-			$_providerId = static::_cleanProviderId( $_parts[1] );
-			$_type = str_ireplace( 'oauth', 'OAuth', ProviderConfigTypes::nameOf( $_parts[2] ) );
-			$_mapKey = 'generic' . $_type;
-			$_generic = ':' . $_providerId;
-		}
-
-		//	Cached?
-		if ( null === ( $_provider = Option::get( static::$_providerCache, $_mapKey . ( $_generic ? : null ) ) ) )
+		// Look up provider in the cache and use it as a base, otherwise, create a new one using the defaults provided by the provider's author.
+		if ( null === ( $_provider = Option::get( static::$_providerCache, $_cacheKey ) ) )
 		{
 			//	Get the class mapping...
 			if ( null === ( $_map = Option::get( static::$_classMap, $_mapKey ) ) )
@@ -214,54 +162,46 @@ class Oasys extends SeedUtility
 				throw new \InvalidArgumentException( 'The provider "' . $_providerId . '" has no associated mapping. Cannot create.' );
 			}
 
-			if ( true !== $createIfNotFound && null === $config )
+			if ( true !== $createIfNotFound && array() == $_config )
 			{
 				return null;
 			}
 
-			if ( null !== $config && !( $config instanceof ProviderConfigLike ) && !is_array( $config ) && !is_object( $config ) )
+			if ( !empty( $_config ) && !( $_config instanceof ProviderConfigLike ) && !is_array( $_config ) && !is_object( $_config ) )
 			{
-				throw new \InvalidArgumentException( 'The $config specified my be null, an array, or an instance of ProviderConfigLike.' );
+				throw new \InvalidArgumentException( 'The "$config" value specified must be null, an object, an array, or an instance of ProviderConfigLike.' );
 			}
 
 			/** @noinspection PhpIncludeInspection */
 			require $_map['path'];
 
-			if ( empty( $config ) )
+			if ( empty( $_config ) )
 			{
-				$config = array();
-			}
-
-			//	Fill the config with the store values if any
-			if ( null !== $_type && null == Option::get( $config, 'type' ) )
-			{
-				Option::set( $config, 'type', $_type );
+				$_config = array();
 			}
 
 			$_className = $_map['namespace'] . '\\' . $_map['class_name'];
 			$_mirror = new \ReflectionClass( $_className );
 
+			//	Fill the config with the store values if any
+			if ( null !== $_type )
+			{
+				Option::sins( $_config, 'type', $_type );
+			}
+
 			//	Load any stored configuration
-			$config = static::_loadConfigFromStore( $_providerId, $config );
+			$_config = static::_mergeConfigFromStore( $_providerId, $_config );
 
 			//	Instantiate!
-			/** @var BaseProvider $_provider */
 			$_provider = $_mirror->newInstanceArgs(
 				array(
 					 $_providerId,
-					 $config
+					 $_config
 				)
 			);
 
-			//	Keep a copy...
-			Option::set(
-				static::$_providerCache,
-				$_mapKey . ( $_generic ? : null ),
-				$_provider
-			);
-
-			//	Jam the store
-			static::sync();
+			//	Cache the current version...
+			Option::set( static::$_providerCache, $_cacheKey, $_provider );
 		}
 
 		return $_provider;
@@ -282,26 +222,57 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * Return all available providers and their status
+	 * Return all known provider IDs
+	 *
+	 * @return array
 	 */
 	public static function getProviders()
 	{
-		$_response = array();
-
-		foreach ( static::$_options['providers'] as $_providerId => $_config )
-		{
-			$_response[] = $_providerId;
-		}
-
-		return $_response;
+		return array_keys( static::$_classMap );
 	}
 
 	/**
-	 * Deauthorize a single provider
+	 * De-authorize a single provider
 	 */
 	public static function resetProvider( $providerId )
 	{
 		static::getProvider( $providerId )->resetAuthorization();
+	}
+
+	/**
+	 * Parses a provider ID spec ([generic:]providerId[:type])
+	 *
+	 * @param string $providerId
+	 *
+	 * @return array
+	 * @throws \InvalidArgumentException
+	 */
+	protected static function _normalizeProviderId( $providerId )
+	{
+		$_providerId = $_mapKey = $providerId;
+		$_type = null;
+		$_generic = false;
+
+		if ( false === strpos( $_providerId, static::GENERIC_PROVIDER_PATTERN, 0 ) )
+		{
+			$_providerId = static::_cleanProviderId( $_providerId );
+		}
+		else
+		{
+			$_parts = explode( ':', $_providerId );
+
+			if ( empty( $_parts ) || 3 != sizeof( $_parts ) )
+			{
+				throw new \InvalidArgumentException( 'Invalid provider ID specified. Use predefined or generic "generic:providerId:type" format.' );
+			}
+
+			$_providerId = static::_cleanProviderId( $_parts[1] );
+			$_type = str_ireplace( 'oauth', 'OAuth', ProviderConfigTypes::nameOf( $_parts[2] ) );
+			$_mapKey = 'generic' . $_type;
+			$_generic = ':' . $_providerId;
+		}
+
+		return array( $_providerId, $_type, $_mapKey, $_generic );
 	}
 
 	/**
@@ -310,36 +281,28 @@ class Oasys extends SeedUtility
 	 *
 	 * @return array
 	 */
-	protected static function _loadConfigFromStore( $providerId, $config )
+	protected static function _mergeConfigFromStore( $providerId, $config )
 	{
-		$_check = $providerId . '.';
-		$_checkLength = strlen( $_check );
-		$_defaults = array();
+		$_storedConfig = static::getStore()->get( $providerId . '.data' );
 
-		$_storedConfig = Oasys::getStore()->get();
-
-		foreach ( $_storedConfig as $_key => $_value )
+		if ( empty( $_storedConfig ) )
 		{
-			if ( $_check == substr( $_key, 0, $_checkLength ) && ( '' !== $_value && null !== $_value ) )
-			{
-				$_key = substr( $_key, $_checkLength );
-				Option::set( $_defaults, $_key, $_value );
-			}
+			return $config;
 		}
 
 		if ( $config instanceof ProviderConfigLike )
 		{
-			$config->mergeSettings( $_defaults );
+			$config->mergeSettings( $_storedConfig );
 		}
 		else
 		{
 			$config = array_merge(
-				$_defaults,
+				$_storedConfig,
 				$config
 			);
 		}
 
-		unset( $_defaults, $_storedConfig );
+		unset( $_storedConfig );
 
 		//	Clean up blanks in the config as to not overwrite defaults
 		foreach ( $config as $_key => $_value )
@@ -412,35 +375,7 @@ class Oasys extends SeedUtility
 
 		//	Merge in the found classes
 		static::$_classMap = array_merge( static::$_classMap, $_classMap );
-//		Log::debug( 'Classes mapped: ' . print_r( static::$_classMap, true ) );
-	}
-
-	/**
-	 * Gets a global Oasys option
-	 *
-	 * @param string $key
-	 * @param mixed  $value
-	 * @param mixed  $defaultValue
-	 * @param bool   $burnAfterReading
-	 *
-	 * @return mixed
-	 */
-	public static function getOption( $key, $value = null, $defaultValue = null, $burnAfterReading = false )
-	{
-		return Option::get( static::$_options, $key, $value, $defaultValue, $burnAfterReading );
-	}
-
-	/**
-	 * Sets a global Oasys option
-	 *
-	 * @param string $key
-	 * @param mixed  $value
-	 *
-	 * @return mixed
-	 */
-	public static function setOption( $key, $value = null )
-	{
-		return Option::set( static::$_options, $key, $value );
+		//		Log::debug( 'Classes mapped: ' . print_r( static::$_classMap, true ) );
 	}
 
 	/**
@@ -457,22 +392,6 @@ class Oasys extends SeedUtility
 	public static function getClassMap()
 	{
 		return static::$_classMap;
-	}
-
-	/**
-	 * @param array $options
-	 */
-	public static function setOptions( $options )
-	{
-		static::$_options = $options;
-	}
-
-	/**
-	 * @return array
-	 */
-	public static function getOptions()
-	{
-		return static::$_options;
 	}
 
 	/**
@@ -527,6 +446,20 @@ class Oasys extends SeedUtility
 	 */
 	public static function getStore()
 	{
+		//	No store provided, make one...
+		if ( empty( static::$_store ) )
+		{
+			//	Session or file store...
+			if ( isset( $_SESSION ) && PHP_SESSION_DISABLED != session_status() && 'cli' != PHP_SAPI )
+			{
+				static::$_store = new Session();
+			}
+			else
+			{
+				static::$_store = new FileSystem( \hash( 'sha256', getmypid() . microtime( true ) ) );
+			}
+		}
+
 		return static::$_store;
 	}
 }

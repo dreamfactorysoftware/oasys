@@ -4,23 +4,21 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.composer" />
+      <excludeFolder url="file://$MODULE_DIR$/log" />
       <excludeFolder url="file://$MODULE_DIR$/tests/log" />
-      <excludeFolder url="file://$MODULE_DIR$/tests/metrics" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/composer" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/kisma/kisma" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/kisma/kisma.setdev-on" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/kisma/kisma/examples" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/kisma/kisma/tests" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/kisma/kisma/vendor" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
       <library name="PHP">
         <CLASSES>
-          <root url="file://$MODULE_DIR$/vendor/composer" />
-          <root url="file://$MODULE_DIR$/vendor/kisma/kisma" />
           <root url="file:///usr/share/php" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$MODULE_DIR$/vendor/composer" />
-          <root url="file://$MODULE_DIR$/vendor/kisma/kisma" />
           <root url="file:///usr/share/php" />
         </SOURCES>
       </library>

@@ -98,7 +98,7 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 * @param mixed  $value
 	 * @param bool   $overwrite
 	 *
-	 * @return SeedBag
+	 * @return \Kisma\Core\SeedBag|BaseOasysStore
 	 */
 	public function set( $key, $value = null, $overwrite = true )
 	{
@@ -118,7 +118,7 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	/**
 	 * @param string $pattern
 	 *
-	 * @return array|null
+	 * @return array|null An array of the removed keys and their values
 	 */
 	public function removeMany( $pattern )
 	{
