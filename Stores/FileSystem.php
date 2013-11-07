@@ -21,7 +21,6 @@ namespace DreamFactory\Oasys\Stores;
 
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 use Kisma\Core\Utility;
 
