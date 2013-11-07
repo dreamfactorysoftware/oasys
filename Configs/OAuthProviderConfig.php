@@ -24,7 +24,6 @@ use DreamFactory\Oasys\Enums\GrantTypes;
 use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Enums\OAuthTypes;
 use DreamFactory\Oasys\Enums\AccessTypes;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -109,10 +108,6 @@ class OAuthProviderConfig extends BaseProviderConfig
 	 * @var int
 	 */
 	protected $_refreshTokenExpires;
-	/**
-	 * @var string Full file name of a certificate to use for this connection
-	 */
-	protected $_certificateFile;
 
 	//*************************************************************************
 	//* Methods

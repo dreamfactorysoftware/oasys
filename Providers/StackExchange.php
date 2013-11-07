@@ -53,7 +53,7 @@ class StackExchange extends BaseOAuthProvider
 	 */
 	public function getUserData()
 	{
-		$_response = $this->_client->fetch( '/me' );
+		$_response = $this->fetch( '/me' );
 
 		if ( 200 != ( $_code = Option::get( $_response, 'code' ) ) )
 		{

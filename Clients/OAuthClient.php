@@ -47,37 +47,8 @@ use Kisma\Core\Utility\Storage;
  * OAuthClient
  * An base that knows how to talk OAuth2
  */
-class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
+class OAuthClient extends BaseClient implements OAuthServiceLike
 {
-	//**************************************************************************
-	//* Members
-	//**************************************************************************
-
-	/**
-	 * @var OAuthProviderConfig|ProviderConfigLike
-	 */
-	protected $_config;
-	/**
-	 * @var bool If true, inbound JSON content is decoded before it's returned
-	 */
-	protected $_autoDecodeJson = true;
-	/**
-	 * @var bool If true, outbound content is encoded to JSON before being sent.
-	 */
-	protected $_autoEncodeJson = false;
-	/**
-	 * @var mixed The last response from the API
-	 */
-	protected $_lastResponse = null;
-	/**
-	 * @var string The last error returned
-	 */
-	protected $_lastError = null;
-	/**
-	 * @var int The last error code returned
-	 */
-	protected $_lastErrorCode = null;
-
 	//**************************************************************************
 	//* Methods
 	//**************************************************************************
@@ -85,26 +56,27 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 	/**
 	 * @param OAuthProviderConfig|ProviderConfigLike $config
 	 *
-	 * @throws \InvalidArgumentException
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @return \DreamFactory\Oasys\Clients\OAuthClient
 	 */
 	public function __construct( $config )
 	{
-		parent::__construct();
+		parent::__construct( $config );
 
-		$this->_config = $config;
-
-		if ( null === $config->getRedirectUri() )
+		if ( null === $this->getConfig( 'client_id' ) || null === $this->getConfig( 'client_secret' ) )
 		{
-			Log::debug( 'Current URL = ' . $_url = Curl::currentUrl( false ) );
-			$this->_config->setRedirectUri( $_url );
+			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
 		}
 
-		$_cert = $config->getCertificateFile();
-
-		if ( !empty( $_cert ) && ( !is_file( $_cert ) || !is_readable( $_cert ) ) )
+		if ( null === $this->getConfig( 'redirect_uri' ) )
 		{
-			throw new \InvalidArgumentException( 'The specified certificate file "' . $_cert . '" was not found' );
+			Log::debug( 'Setting redirect URI to current URL: ' . ( $_url = Curl::currentUrl( false ) ) );
+			$this->setConfig( 'redirect_uri', $_url );
+		}
+
+		if ( null !== ( $_certificateFile = $this->getConfig( 'certificate_file' ) ) && ( !is_file( $_certificateFile ) || !is_readable( $_certificateFile ) ) )
+		{
+			throw new OasysConfigurationException( 'The specified certificate file "' . $_certificateFile . '" was not found or cannot be read.' );
 		}
 	}
 
@@ -250,9 +222,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$this->_config->setScope( $_scope );
 		}
 
-		//	Sync!
-		$this->_config->sync();
-
 		return $_tokenFound;
 	}
 
@@ -266,9 +235,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 		$this->_config->setRefreshToken( null );
 		$this->_config->setRefreshTokenExpires( null );
 		$this->_buildAuthHeader( true );
-
-		//	Sync!
-		$this->_config->sync();
 
 		Log::debug( 'Revoked prior authorization' );
 
@@ -455,9 +421,6 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 						//	Can I get a refresh?
 						if ( $this->requestRefreshToken( $payload ) )
 						{
-							//	Stow it...
-							$this->_config->sync();
-
 							//	Try it now!
 							$_response = $this->fetch( $resource, $payload, $method, $headers );
 
@@ -679,11 +642,11 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			}
 		}
 
-//		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
+		//		Log::debug( '>> REQUEST: ' . $method . ' to ' . $url . ' with payload: ' . print_r( $payload, true ) );
 
 		if ( false === ( $_result = Curl::request( $method, $url, $payload, $_curlOptions ) ) )
 		{
-//			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
+			//			Log::debug( '<< ERROR: ' . print_r( Curl::getInfo(), true ) );
 
 			throw new AuthenticationException( Curl::getErrorAsString() );
 		}
@@ -694,7 +657,7 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 			$_result = $_result[0];
 		}
 
-//		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
+		//		Log::debug( '<< RESPONSE: ' . print_r( $_result, true ) );
 
 		$_contentType = Curl::getInfo( 'content_type' );
 
@@ -705,140 +668,10 @@ class OAuthClient extends Seed implements ProviderClientLike, OAuthServiceLike
 
 		$this->_config->setPayload( $_result );
 
-		return
-			$this->_lastResponse = array(
-				'result'       => $_result,
-				'code'         => Curl::getLastHttpCode(),
-				'content_type' => $_contentType,
-			);
+		return $this->_lastResponse = array(
+			'result'       => $_result,
+			'code'         => Curl::getLastHttpCode(),
+			'content_type' => $_contentType,
+		);
 	}
-
-	/**
-	 * Clean up members for a new request
-	 */
-	protected function _resetRequest()
-	{
-		$this->_lastResponse = $this->_lastError = $this->_lastErrorCode = null;
-	}
-
-	/**
-	 * @param \DreamFactory\Oasys\Configs\OAuthProviderConfig $config
-	 *
-	 * @return OAuthClient
-	 */
-	public function setConfig( $config )
-	{
-		$this->_config = $config;
-
-		return $this;
-	}
-
-	/**
-	 * @return \DreamFactory\Oasys\Configs\OAuthProviderConfig
-	 */
-	public function getConfig()
-	{
-		return $this->_config;
-	}
-
-	/**
-	 * @param boolean $autoDecodeJson
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAutoDecodeJson( $autoDecodeJson )
-	{
-		$this->_autoDecodeJson = $autoDecodeJson;
-
-		return $this;
-	}
-
-	/**
-	 * @return boolean
-	 */
-	public function getAutoDecodeJson()
-	{
-		return $this->_autoDecodeJson;
-	}
-
-	/**
-	 * @param string $lastError
-	 *
-	 * @return OAuthClient
-	 */
-	public function setLastError( $lastError )
-	{
-		$this->_lastError = $lastError;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getLastError()
-	{
-		return $this->_lastError;
-	}
-
-	/**
-	 * @param int $lastErrorCode
-	 *
-	 * @return OAuthClient
-	 */
-	public function setLastErrorCode( $lastErrorCode )
-	{
-		$this->_lastErrorCode = $lastErrorCode;
-
-		return $this;
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getLastErrorCode()
-	{
-		return $this->_lastErrorCode;
-	}
-
-	/**
-	 * @param mixed $lastResponse
-	 *
-	 * @return OAuthClient
-	 */
-	public function setLastResponse( $lastResponse )
-	{
-		$this->_lastResponse = $lastResponse;
-
-		return $this;
-	}
-
-	/**
-	 * @return mixed
-	 */
-	public function getLastResponse()
-	{
-		return $this->_lastResponse;
-	}
-
-	/**
-	 * @param boolean $autoEncodeJson
-	 *
-	 * @return OAuthClient
-	 */
-	public function setAutoEncodeJson( $autoEncodeJson )
-	{
-		$this->_autoEncodeJson = $autoEncodeJson;
-
-		return $this;
-	}
-
-	/**
-	 * @return boolean
-	 */
-	public function getAutoEncodeJson()
-	{
-		return $this->_autoEncodeJson;
-	}
-
 }

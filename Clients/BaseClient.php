@@ -1,8 +1,5 @@
 <?php
 /**
- * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
- *
- * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
  * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,73 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Providers;
+namespace DreamFactory\Oasys\Clients;
 
-use DreamFactory\Oasys\Clients\BaseClient;
+use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
-use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
-use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
-use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\ProviderClientLike;
-use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use DreamFactory\Oasys\Interfaces\ProviderLike;
-use DreamFactory\Oasys\Oasys;
-use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
-use Kisma\Core\Utility\Inflector;
-use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility\Xml;
 
 /**
- * BaseProvider
- * A base class for all providers
+ * BaseClient
+ *
+ * An abstract base class for customized authentication clients.
+ * Provides basic fetch() method with hook for adding authentication headers and
+ * simple request/response translation.
  */
-abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
+abstract class BaseClient extends Seed implements ProviderClientLike
 {
-	//*************************************************************************
-	//	Constants
-	//*************************************************************************
-
-	/**
-	 * @var string The default namespace for authentication configuration classes. NOTE TRAILING SLASHES!
-	 */
-	const DEFAULT_CONFIG_NAMESPACE = 'DreamFactory\\Oasys\\Configs\\';
-
-	//*************************************************************************
+	//**************************************************************************
 	//* Members
-	//*************************************************************************
+	//**************************************************************************
 
 	/**
-	 * @var string The ID of this provider
+	 * @var BaseProviderConfig
 	 */
-	protected $_providerId;
-	/**
-	 * @var int The type of authentication this provider provides
-	 */
-	protected $_type;
-	/**
-	 * @var ProviderConfigLike The configuration options for this provider
-	 */
-	protected $_config;
-	/**
-	 * @var ProviderClientLike Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK), or maybe an alternative transport layer? whatever
-	 */
-	protected $_client;
-	/**
-	 * @var bool If true, the user will be redirected if necessary. Otherwise the URL of the expected redirect is returned
-	 */
-	protected $_interactive = false;
-	/**
-	 * @var array Any inbound payload
-	 */
-	protected $_responsePayload;
-	/**
-	 * @var array The payload of the request, if any.
-	 */
-	protected $_requestPayload;
+	protected $_config = null;
 	/**
 	 * @var int The format of data sent to the provider
 	 */
@@ -109,251 +68,19 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 */
 	protected $_lastErrorCode = null;
 
-	//*************************************************************************
-	//	Methods
-	//*************************************************************************
+	//**************************************************************************
+	//* Methods
+	//**************************************************************************
 
 	/**
-	 * @param string                   $providerId The name/ID of this provider
-	 * @param array|ProviderConfigLike $config
+	 * @param BaseProviderConfig $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
-	 * @throws \InvalidArgumentException
-	 *
-	 * @return \DreamFactory\Oasys\Providers\BaseProvider
+	 * @return \DreamFactory\Oasys\Clients\BaseClient
 	 */
-	public function __construct( $providerId, $config = null )
+	public function __construct( $config )
 	{
-		$this->_providerId = $providerId;
-
-		if ( empty( $this->_config ) && ( null === $config || !( $config instanceof BaseProviderConfig ) ) )
-		{
-			$this->_config = $this->_createConfiguration( $config );
-		}
-
-		if ( empty( $this->_providerId ) )
-		{
-			throw new \InvalidArgumentException( 'No provider specified.' );
-		}
-
-		$this->init();
-
-		//	By this point, $_config is required.
-		if ( empty( $this->_config ) )
-		{
-			throw new OasysConfigurationException( 'No configuration was specified or set.' );
-		}
-	}
-
-	/**
-	 * @param array $config
-	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
-	 * @throws \InvalidArgumentException
-	 * @return
-	 */
-	protected function _createConfiguration( $config = null )
-	{
-		/** @var array $_defaults */
-		$_defaults = null;
-
-		foreach ( Oasys::getProviderPaths() as $_path )
-		{
-			//	See if there is a default template and load up the defaults
-			$_template = $_path . '/Templates/' . $this->_providerId . '.template.php';
-
-			if ( is_file( $_template ) && is_readable( $_template ) )
-			{
-				/** @noinspection PhpIncludeInspection */
-				$_defaults = require( $_template );
-				break;
-			}
-		}
-
-		if ( empty( $_defaults ) )
-		{
-			Log::notice( 'Auto-template for "' . $this->_providerId . '" not found.' );
-			$_defaults = array();
-		}
-
-		//	Merge in the template, stored stuff and user supplied stuff
-		$_config = null !== $config ? array_merge( $_defaults, Option::clean( $config ) ) : $_defaults;
-
-		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
-		{
-			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
-		}
-
-		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
-
-		//	Build the class name for the type of authentication of this provider
-		$_class = str_ireplace(
-			'oauth',
-			'OAuth',
-			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
-		);
-
-		//		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
-
-		//	Instantiate!
-		return new $_class( $_config );
-	}
-
-	/**
-	 * @param array $payload If empty, request query string is used
-	 *
-	 * @return bool
-	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
-	 */
-	public function handleRequest( $payload = null )
-	{
-		if ( !empty( $payload ) )
-		{
-			$this->_requestPayload = array_merge( $this->_requestPayload, $this->_parseQuery( $payload ) );
-		}
-
-		return $this->authorized( true );
-	}
-
-	/**
-	 * Called after construction of the provider
-	 *
-	 * @return bool
-	 */
-	public function init()
-	{
-		//	Parse the inbound payload
-		$this->_requestPayload = $this->_parseRequest();
-
-		return true;
-	}
-
-	/**
-	 * Clear out any settings for this provider
-	 *
-	 * @return $this
-	 */
-	public function resetAuthorization()
-	{
-		Oasys::getStore()->removeMany( '/^' . $this->_providerId . '\./i' );
-
-		return $this;
-	}
-
-	/**
-	 * Internally used redirect method.
-	 *
-	 * @param string $uri
-	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
-	 */
-	protected function _redirect( $uri )
-	{
-		//	Throw redirect exception for non-interactive
-		if ( false !== $this->_interactive )
-		{
-			throw new RedirectRequiredException( $uri );
-		}
-
-		//	Redirect!
-		header( 'Location: ' . $uri );
-
-		//	And... we're spent
-		die();
-	}
-
-	/**
-	 * Parse a JSON or HTTP query string into an array
-	 *
-	 * @param string $result
-	 *
-	 * @return array
-	 */
-	protected function _parseQuery( $result )
-	{
-		if ( is_string( $result ) && false !== json_decode( $result ) )
-		{
-			$_result = json_decode( $result, true );
-		}
-		else
-		{
-			parse_str( $result, $_result );
-		}
-
-		return false === $_result ? array() : $_result;
-	}
-
-	/**
-	 * Parses the inbound request + query string into a single KVP array
-	 *
-	 * @return array
-	 */
-	protected function _parseRequest()
-	{
-		$_payload = array();
-
-		if ( !empty( $_REQUEST ) )
-		{
-			$_payload = $_REQUEST;
-		}
-
-		//	Bust it wide open
-		parse_str( Option::server( 'QUERY_STRING' ), $_query );
-
-		//	Set it and forget it
-		return !empty( $_query ) ? array_merge( $_query, $_payload ) : $_payload;
-	}
-
-	/**
-	 * @param ProviderClientLike|BaseClient $client
-	 *
-	 * @return BaseProvider
-	 */
-	protected function _setClient( $client )
-	{
-		$this->_client = $client;
-
-		return $this;
-	}
-
-	/**
-	 * @return ProviderClientLike|BaseClient
-	 */
-	public function getClient()
-	{
-		return $this->_client;
-	}
-
-	/**
-	 * @param string $providerId
-	 *
-	 * @return BaseProvider
-	 */
-	protected function _setProviderId( $providerId )
-	{
-		$this->_providerId = $providerId;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getProviderId()
-	{
-		return $this->_providerId;
-	}
-
-	/**
-	 * @param mixed $request
-	 *
-	 * @return BaseProvider
-	 */
-	public function _setRequest( $request )
-	{
-		$this->_requestPayload = $this->_parseRequest( $request );
-
-		return $this;
+		parent::__construct( array( 'config' => $config ) );
 	}
 
 	/**
@@ -410,7 +137,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 * @param array  $headers     Array of HTTP headers to send in array( 'header: value', 'header: value', ... ) format
 	 * @param array  $curlOptions Array of options to pass to CURL
 	 *
-	 * @throws AuthenticationException
+	 * @throws \DreamFactory\Oasys\Exceptions\AuthenticationException
 	 * @return array
 	 */
 	protected function _makeRequest( $url, array $payload = array(), $method = self::Get, array $headers = array(), array $curlOptions = array() )
@@ -502,9 +229,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 * </code>
 	 *
 	 * @param array $headers The current headers that are going to be sent
-	 * @param array $payload The current payload that is going to be sent
-	 *
-	 * @return
+	 * @param array $payload
 	 */
 	abstract protected function _getAuthParameters( &$headers = array(), &$payload = array() );
 
@@ -570,33 +295,21 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	}
 
 	/**
-	 * @param string|ProviderConfigLike $property
-	 * @param mixed                     $value
-	 * @param bool                      $overwrite
+	 * @param string $property
+	 * @param mixed  $value
+	 * @param bool   $overwrite
 	 *
-	 * @throws \InvalidArgumentException
 	 * @return $this
 	 */
 	public function setConfig( $property, $value = null, $overwrite = true )
 	{
-		if ( $property instanceof ProviderConfigLike )
+		if ( $property instanceof BaseProviderConfig )
 		{
 			$this->_config = $property;
-		}
-		else if ( is_array( $property ) )
-		{
-			foreach ( $property as $_key => $_value )
-			{
-				Option::set( $this->_config, $_key, $_value );
-			}
 		}
 		else if ( is_string( $property ) )
 		{
 			Option::set( $this->_config, $property, $value, $overwrite );
-		}
-		else
-		{
-			throw new \InvalidArgumentException( 'Unknown type of $property value given.' );
 		}
 
 		return $this;
@@ -620,85 +333,9 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	}
 
 	/**
-	 * @return array
-	 */
-	public function getRequestPayload()
-	{
-		return $this->_requestPayload;
-	}
-
-	/**
-	 * @return \DreamFactory\Oasys\Interfaces\StorageProviderLike
-	 */
-	public function getStore()
-	{
-		return Oasys::getStore();
-	}
-
-	/**
-	 * @param boolean $interactive
-	 *
-	 * @return BaseProvider
-	 */
-	protected function _setInteractive( $interactive )
-	{
-		$this->_interactive = $interactive;
-
-		return $this;
-	}
-
-	/**
-	 * @return boolean
-	 */
-	public function getInteractive()
-	{
-		return $this->_interactive;
-	}
-
-	/**
-	 * @param int $type
-	 *
-	 * @return BaseProvider
-	 */
-	public function setType( $type )
-	{
-		$this->_type = $type;
-
-		return $this;
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getType()
-	{
-		return $this->_type;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getConfigForStorage()
-	{
-		return $this->getConfig()->toArray();
-	}
-
-	/**
-	 * @param array $requestPayload
-	 *
-	 * @return BaseProvider
-	 */
-	public function setRequestPayload( $requestPayload )
-	{
-		$this->_requestPayload = $requestPayload;
-
-		return $this;
-	}
-
-	/**
 	 * @param string $lastError
 	 *
-	 * @return BaseProvider
+	 * @return BaseClient
 	 */
 	public function setLastError( $lastError )
 	{
@@ -718,7 +355,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	/**
 	 * @param int $lastErrorCode
 	 *
-	 * @return BaseProvider
+	 * @return BaseClient
 	 */
 	public function setLastErrorCode( $lastErrorCode )
 	{
@@ -738,7 +375,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	/**
 	 * @param mixed $lastResponse
 	 *
-	 * @return BaseProvider
+	 * @return BaseClient
 	 */
 	public function setLastResponse( $lastResponse )
 	{
@@ -756,9 +393,9 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	}
 
 	/**
-	 * @param int $lastResponseCode
+	 * @param mixed $lastResponseCode
 	 *
-	 * @return BaseProvider
+	 * @return BaseClient
 	 */
 	public function setLastResponseCode( $lastResponseCode )
 	{
@@ -768,7 +405,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	}
 
 	/**
-	 * @return int
+	 * @return mixed
 	 */
 	public function getLastResponseCode()
 	{
@@ -778,7 +415,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	/**
 	 * @param int $requestFormat
 	 *
-	 * @return BaseProvider
+	 * @return BaseClient
 	 */
 	public function setRequestFormat( $requestFormat )
 	{
@@ -798,7 +435,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	/**
 	 * @param int $responseFormat
 	 *
-	 * @return BaseProvider
+	 * @return BaseClient
 	 */
 	public function setResponseFormat( $responseFormat )
 	{
@@ -813,14 +450,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	public function getResponseFormat()
 	{
 		return $this->_responseFormat;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getResponsePayload()
-	{
-		return $this->_responsePayload;
 	}
 
 }

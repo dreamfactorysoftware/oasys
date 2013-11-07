@@ -34,11 +34,12 @@ class GenericOAuth extends BaseOAuthProvider
 	 * @param array  $payload
 	 * @param string $method
 	 * @param array  $headers
+	 * @param array  $curlOptions
 	 *
 	 * @return GenericUser
 	 */
-	public function getUserData( $resource = null, $payload = array(), $method = self::Get, $headers = array() )
+	public function getUserData( $resource = null, $payload = array(), $method = self::Get, $headers = array(), array $curlOptions = array() )
 	{
-		return $this->_client->fetch( $resource, $payload, $method, $headers );
+		return $this->fetch( $resource, $payload, $method, $headers, $curlOptions );
 	}
 }

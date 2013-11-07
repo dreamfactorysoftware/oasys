@@ -43,40 +43,20 @@ abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAu
 	{
 		parent::init();
 
-		if ( !$this->get( 'consumer_key' ) || !$this->get( 'consumer_secret' ) )
-		{
-			throw new OasysConfigurationException( 'Invalid or missing credentials.' );
-		}
-
 		$this->_client = new LegacyOAuthClient( $this->_config );
 	}
 
 	/**
 	 * Checks to see if user is authorized with this provider
 	 *
-	 * @return bool
-	 */
-	public function authorized()
-	{
-		return $this->_client->authorized();
-	}
-
-	/**
-	 * Begin the authorization process
+	 * @param bool $startIfNot If true, and not authorized, the login flow will commence presently
 	 *
-	 * @throws RedirectRequiredException
+	 * @return bool
+	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
 	 */
-	public function startAuthorization()
+	public function authorized( $startIfNot = false )
 	{
 		return $this->_client->authorized( true );
-	}
-
-	/**
-	 * Complete the authorization process
-	 */
-	public function completeAuthorization()
-	{
-		return $this->_client->checkAuthenticationProgress();
 	}
 
 	/**

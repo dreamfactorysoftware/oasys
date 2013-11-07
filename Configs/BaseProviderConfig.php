@@ -23,6 +23,7 @@ use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Oasys;
+use DreamFactory\Oasys\Providers\BaseProvider;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\Seed;
@@ -58,9 +59,9 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 */
 	protected $_userAgent;
 	/**
-	 * @var array
+	 * @var string Full file name of a certificate to use for this connection
 	 */
-	protected $_payload;
+	protected $_certificateFile;
 	/**
 	 * @var array This configuration's schema for use with \Kisma\Utility\SchemaFormBuilder
 	 */
@@ -82,27 +83,60 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	}
 
 	/**
-	 * Destructor
-	 */
-	public function __destruct()
-	{
-		$this->sync();
-		parent::__destruct();
-	}
-
-	/**
-	 * Sync with store...
+	 * Creates a provider configuration from a template
 	 *
-	 * @return $this
+	 * @param string $providerId
+	 * @param array  $config Additional configuration options or overrides
+	 *
+	 * @return ProviderConfigLike
+	 * @throws OasysConfigurationException
 	 */
-	public function sync()
+	public static function createFromTemplate( $providerId, $config = null )
 	{
-		if ( null !== ( $_store = Oasys::getStore() ) )
+		/** @var array $_defaults */
+		$_defaults = null;
+
+		foreach ( Oasys::getProviderPaths() as $_path )
 		{
-			$_store->merge( $this->toArray(), true, true );
+			//	See if there is a default template and load up the defaults
+			$_template = $_path . '/Templates/' . $providerId . '.template.php';
+
+			if ( is_file( $_template ) && is_readable( $_template ) )
+			{
+				/** @noinspection PhpIncludeInspection */
+				$_defaults = require( $_template );
+				break;
+			}
 		}
 
-		return $this;
+		if ( empty( $_defaults ) )
+		{
+			Log::notice( 'Auto-template for "' . $providerId . '" not found.' );
+			$_defaults = array();
+		}
+
+		//	Merge in the template, stored stuff and user supplied stuff
+		$_config = null !== $config ? array_merge( $_defaults, Option::clean( $config ) ) : $_defaults;
+		Option::sins( $_config, 'provider_id', $providerId );
+
+		if ( null === ( $_type = Option::get( $_config, 'type' ) ) )
+		{
+			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
+		}
+
+		$_typeName = ProviderConfigTypes::nameOf( $_type );
+
+		//	Build the class name for the type of authentication of this provider
+		$_class = str_ireplace(
+			'oauth',
+			'OAuth',
+			BaseProvider::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
+		);
+
+		//		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
+
+		//	Instantiate!
+		return new $_class( $_config );
 	}
 
 	/**
@@ -131,8 +165,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 							 'type'  => 'text',
 							 'class' => 'uneditable-input',
 							 'label' => 'Provider Type',
-							 'value' =>
-							 str_ireplace(
+							 'value' => str_ireplace(
 								 'oauth',
 								 'OAuth',
 								 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
@@ -157,8 +190,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 */
 	public function toJson( $returnAll = false, $allowedProperties = array() )
 	{
-		static $_baseProperties
-		= array(
+		static $_baseProperties = array(
 			'type',
 			'endpointMap',
 			'userAgent',
@@ -443,26 +475,6 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	}
 
 	/**
-	 * @param array $payload
-	 *
-	 * @return BaseProviderConfig
-	 */
-	public function setPayload( $payload )
-	{
-		$this->_payload = $payload;
-
-		return $this;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getPayload()
-	{
-		return $this->_payload;
-	}
-
-	/**
 	 * @param string $providerId
 	 *
 	 * @return BaseProviderConfig
@@ -509,4 +521,25 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	{
 		return SchemaFormBuilder::create( $this->_schema, true );
 	}
+
+	/**
+	 * @param string $certificateFile
+	 *
+	 * @return BaseProviderConfig
+	 */
+	public function setCertificateFile( $certificateFile )
+	{
+		$this->_certificateFile = $certificateFile;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getCertificateFile()
+	{
+		return $this->_certificateFile;
+	}
+
 }

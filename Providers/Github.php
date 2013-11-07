@@ -55,7 +55,7 @@ class Github extends BaseOAuthProvider
 	 */
 	public function getUserData( $profile = null )
 	{
-		$_result = $this->_client->fetch( '/user' );
+		$_result = $this->fetch( '/user' );
 
 		if ( empty( $_result ) )
 		{

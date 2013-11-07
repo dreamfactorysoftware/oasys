@@ -17,27 +17,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys\Providers;
+namespace DreamFactory\Oasys\Enums;
 
-use DreamFactory\Oasys\Components\GenericUser;
+use Kisma\Core\Enums\SeedEnum;
 
 /**
- * Twitter
- * A Twitter provider
+ * DataFormatTypes
+ * The supported types of provider data
  */
-class Twitter extends BaseLegacyOAuthProvider
+class DataFormatTypes extends SeedEnum
 {
 	//*************************************************************************
-	//	Methods
+	//	Constants
 	//*************************************************************************
 
 	/**
-	 * @throws \Exception|\OAuthException
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
-	 * @return bool|GenericUser
+	 * @var int Data is expected to be JSON
 	 */
-	public function getUserData()
-	{
-		return new GenericUser();
-	}
+	const JSON = 0;
+	/**
+	 * @var int No translation
+	 */
+	const RAW = 1;
+	/**
+	 * @var int Data is expected to be XML
+	 */
+	const XML = 2;
 }
