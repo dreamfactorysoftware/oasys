@@ -61,7 +61,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Set a default redirect URI if none specified
 		if ( null === $this->getConfig( 'redirect_uri' ) )
 		{
-			Log::debug( 'Setting redirect URI to current URL: ' . ( $_url = Curl::currentUrl( false ) ) );
+			Log::debug( 'Redirect URI set to current URL: ' . ( $_url = Curl::currentUrl( false ) ) );
 			$this->setConfig( 'redirect_uri', $_url );
 		}
 
@@ -122,7 +122,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	No code is present, request one
 		if ( empty( $_code ) )
 		{
-			$_redirectUrl = $this->getAuthorizationUrl( Option::clean( $this->getConfig( 'request_payload' ) ) );
+			$_redirectUrl = $this->getAuthorizationUrl( Option::clean( $this->_requestPayload ) );
 
 			Log::debug( 'Redirect required: ' . $_redirectUrl );
 
@@ -149,7 +149,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			GrantTypes::AUTHORIZATION_CODE,
 			array_merge(
 				Option::clean(
-					$this->getConfig( 'request_payload' ),
+					$this->_requestPayload,
 					array(
 						 'code'         => $_code,
 						 'redirect_uri' => $_redirectUri,
@@ -173,6 +173,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 				//	Fix up payload that came in as a string...
 				$this->setConfig( 'payload', $_info );
+				$this->_responsePayload = $_info;
 			}
 		}
 

@@ -19,6 +19,8 @@
  */
 namespace DreamFactory\Oasys\Enums;
 
+use Kisma\Core\Enums\SeedEnum;
+
 /**
  * DataFormatTypes
  * The supported types of provider data
