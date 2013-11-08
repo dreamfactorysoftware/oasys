@@ -18,6 +18,7 @@ use DreamFactory\Oasys\Providers\Salesforce;
  *
  * Salesforce scopes are listed here: https://help.salesforce.com/apex/HTViewHelpDoc?id=remoteaccess_oauth_scopes.htm&language=en
  */
+
 return array(
 	'type'               => ProviderConfigTypes::OAUTH,
 	'access_token_type'  => TokenTypes::BEARER,
@@ -27,7 +28,13 @@ return array(
 	'scope'              => Salesforce::DEFAULT_SCOPE,
 	'use_sandbox'        => false,
 	'endpoint_map'       => array(
-		EndpointTypes::AUTHORIZE    => 'https://login.salesforce.com/services/oauth2/authorize',
+		EndpointTypes::AUTHORIZE    => array(
+			'endpoint'   => 'https://login.salesforce.com/services/oauth2/authorize',
+			'parameters' => array(
+				'display'   => 'touch',
+				'immediate' => false,
+			),
+		),
 		EndpointTypes::ACCESS_TOKEN => 'https://login.salesforce.com/services/oauth2/token',
 		EndpointTypes::SERVICE      => 'https://{{instance_name}}',
 		EndpointTypes::REVOKE       => 'https://login.salesforce.com/services/oauth2/revoke',

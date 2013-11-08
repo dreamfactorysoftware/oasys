@@ -75,7 +75,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		//	Make sure, if specified, certificate file is valid
-		if ( null !== ( $_certificateFile = $this->getConfig( 'certificate_file' ) ) && ( !is_file( $_certificateFile ) || !is_readable( $_certificateFile ) ) )
+		if ( null !== ( $_certificateFile = $this->getConfig( 'certificate_file' ) ) && ( !is_file( $_certificateFile ) || !is_readable(
+					$_certificateFile
+				) )
+		)
 		{
 			throw new OasysConfigurationException( 'The specified certificate file "' . $_certificateFile . '" was not found or cannot be read.' );
 		}
@@ -174,11 +177,9 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			else
 			{
 				parse_str( $_token['result'], $_info );
-
-				//	Fix up payload that came in as a string...
-				$this->setConfig( 'payload', $_info );
-				$this->_responsePayload = $_info;
 			}
+
+			$this->_responsePayload = $_info;
 		}
 
 		if ( null !== ( $_error = Option::get( $_info, 'error' ) ) )
@@ -358,7 +359,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
 		{
 			$_endpoint = $this->getConfig()->getEndpoint( EndpointTypes::SERVICE );
-			$_url = rtrim( $_endpoint['endpoint'], ' / ' ) . ' / ' . ltrim( $resource, ' / ' );
+			$_url = rtrim( $_endpoint['endpoint'], '/ ' ) . '/' . ltrim( $resource, '/ ' );
 		}
 		else
 		{
@@ -474,48 +475,39 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
 		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
 		$_proxyUrl = $this->getConfig( 'redirect_proxy_url' );
-		$_payload = Option::clean( empty( $payload ) ? $this->_requestPayload : $payload );
+		$_payload = Option::clean( $payload );
 
 		$_state = array(
-			'origin'       => $_origin,
-			'api_key'      => sha1( $_origin ),
-			'redirect_uri' => $_redirectUri,
 			'request'      => array(
 				'method'       => Option::server( 'REQUEST_METHOD' ),
-				'payload'      => $_payload,
+				'payload'      => $this->_requestPayload,
 				'query_string' => Option::server( 'QUERY_STRING' ),
 				'referrer'     => Option::server( 'HTTP_REFERER' ),
 				'remote_addr'  => Option::server( 'REMOTE_ADDR' ),
-				'remote_host'  => Option::server( 'REMOTE_HOST' ),
 				'time'         => microtime( true ),
 				'uri'          => Option::server( 'REQUEST_URI' ),
 			),
+			'origin'       => $_origin,
+			'api_key'      => sha1( $_origin ),
+			'redirect_uri' => $_redirectUri,
 		);
 
-		Log::debug( 'Request state built', $_state );
-
-//		$_queryString = http_build_query( $_payload );
-//
-//		if ( !empty( $_queryString ) )
-//		{
-//			$_redirectUri .= ( false === strpos( $_redirectUri, '?' ) ? '?' : '&' ) . $_queryString;
-//			unset( $payload );
-//		}
+		Log::debug( 'Request state built: ' . var_export( $_state, true ) );
 
 		$_payload = array_merge(
 			array(
-				 'response_type' => 'code',
 				 'client_id'     => $this->getConfig( 'client_id' ),
 				 'redirect_uri'  => $_redirectUri,
-				 'state'         => Storage::freeze( $_state ),
+				 'response_type' => 'code',
 				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
+				 'state'         => Storage::freeze( $_state ),
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
 
 		if ( !empty( $_proxyUrl ) )
 		{
-			Log::info( 'Proxied provider', array( 'source' => $_redirectUri, 'destination' => $_proxyUrl ) );
+			Log::info( 'Proxied provider switch-a-roo', array( 'source' => $_redirectUri, 'destination' => $_proxyUrl ) );
 			$_payload['redirect_uri'] = $_proxyUrl;
 		}
 
@@ -567,8 +559,8 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	protected function _translatePayload( $payload = array(), $response = true, $assocArray = true )
 	{
-		$_format = $response ? $this->_responseFormat : $this->_requestFormat;
 		$_payload = $payload;
+		$_format = ( true === $response ? $this->_responseFormat : $this->_requestFormat );
 
 		switch ( $_format )
 		{
@@ -605,7 +597,6 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 					$_payload = Xml::fromArray( $payload );
 				}
 				break;
-
 		}
 
 		return $_payload;
@@ -685,5 +676,4 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			}
 		}
 	}
-
 }

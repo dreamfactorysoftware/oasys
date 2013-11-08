@@ -2,10 +2,17 @@
 namespace DreamFactory\Oasys\Providers;
 
 use DreamFactory\Oasys\Components\ForceContainer;
+use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
+use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Oasys;
+use DreamFactory\Platform\Exceptions\InternalServerErrorException;
+use Kisma\Core\Enums\HttpResponse;
+use Kisma\Core\Exceptions\HttpException;
+use Kisma\Core\Utility\Convert;
+use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Option;
 use Kisma\Core\Utility\Log;
 
@@ -94,7 +101,7 @@ class Salesforce extends BaseOAuthProvider
 		parent::__construct( $providerId, $config );
 
 		//	Our data formats...
-		$this->_requestFormat = $this->_responseFormat = DataFormatTypes::JSON;
+		$this->_responseFormat = DataFormatTypes::JSON;
 
 		//	Pretend it's a payload...
 		$this->_processReceivedToken( $config instanceof ProviderConfigLike ? $config->toArray() : $config );
@@ -121,7 +128,7 @@ class Salesforce extends BaseOAuthProvider
 
 		$_profile = $this->fetch( $_url );
 
-		Log::debug( 'Profile retrieved: ' . print_r( $_profile, true ) );
+//		Log::debug( 'Profile retrieved: ' . print_r( $_profile, true ) );
 
 		if ( empty( $_profile ) )
 		{
@@ -399,6 +406,9 @@ class Salesforce extends BaseOAuthProvider
 			);
 		}
 
+		//	Send as JSON
+		$this->_requestFormat = DataFormatTypes::JSON;
+
 		//	Fetch the resource
 		$_response = parent::fetch( $_resource, $payload, $method, $headers );
 
@@ -433,24 +443,7 @@ class Salesforce extends BaseOAuthProvider
 		$this->_lastError = $_error;
 		$this->_lastErrorCode = $_code;
 
-		throw new HttpException( $_code );
-	}
-
-	/**
-	 * @param array $payload
-	 *
-	 * @return string
-	 */
-	public function getAuthorizationUrl( $payload = array() )
-	{
-		return parent::getAuthorizationUrl(
-			array_merge(
-				array(
-					 'display' => 'popup',
-				),
-				$payload
-			)
-		);
+		throw new HttpException( $_code, $_error );
 	}
 
 	/**
@@ -477,7 +470,7 @@ class Salesforce extends BaseOAuthProvider
 			switch ( $_key )
 			{
 				case 'instance_url':
-					$this->_instanceName = str_ireplace( array( 'https://', 'http://', '/' ), null, $_value );
+					$this->_instanceName = trim( str_ireplace( array( 'https://', 'http://', '/' ), null, $_value ) );
 
 					$_endpoint = $this->getConfig()->getEndpoint( EndpointTypes::SERVICE );
 					$_endpoint['endpoint'] = str_ireplace( '{{instance_name}}', $this->_instanceName, static::SERVICE_ENDPOINT_PATTERN );
@@ -498,7 +491,7 @@ class Salesforce extends BaseOAuthProvider
 	 */
 	protected function _getDefaultInstance()
 	{
-		return ( $this->_useSandbox ? self::DEFAULT_SANDBOX_INSTANCE_NAME : self::DEFAULT_INSTANCE_NAME );
+		return ( $this->_useSandbox ? static::DEFAULT_SANDBOX_INSTANCE_NAME : static::DEFAULT_INSTANCE_NAME );
 	}
 
 	/**
@@ -657,5 +650,4 @@ class Salesforce extends BaseOAuthProvider
 
 		return $this;
 	}
-
 }
