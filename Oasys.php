@@ -24,6 +24,7 @@ use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
+use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
 use Kisma\Core\Interfaces;
@@ -139,7 +140,7 @@ class Oasys extends SeedUtility
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return ProviderLike
+	 * @return BaseProvider
 	 */
 	public static function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{

@@ -95,17 +95,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_token = $this->getConfig( 'access_token' );
 
-		if ( empty( $_token ) )
+		if ( !empty( $_token ) )
 		{
-			if ( false !== $startFlow )
-			{
-				return $this->checkAuthenticationProgress( true );
-			}
-
-			return false;
+			return true;
 		}
 
-		return true;
+		return ( false !== $startFlow ) ? $this->checkAuthenticationProgress( true ) : false;
 	}
 
 	/**
@@ -135,8 +130,6 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		if ( empty( $_code ) )
 		{
 			$_redirectUrl = $this->getAuthorizationUrl();
-
-			Log::debug( 'Redirect required: ' . $_redirectUrl );
 
 			if ( Flows::SERVER_SIDE == $this->getConfig( 'flow_type' ) )
 			{
@@ -492,7 +485,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			'redirect_uri' => $_redirectUri,
 		);
 
-		Log::debug( 'Request state built: ' . var_export( $_state, true ) );
+		Log::debug( 'Request state built: ' . print_r( $_state, true ) );
 
 		$_payload = array_merge(
 			array(
@@ -507,14 +500,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 		if ( !empty( $_proxyUrl ) )
 		{
-			Log::info( 'Proxied provider switch-a-roo', array( 'source' => $_redirectUri, 'destination' => $_proxyUrl ) );
+			Log::info( 'Proxying request through: ' . $_proxyUrl );
 			$_payload['redirect_uri'] = $_proxyUrl;
 		}
 
 		$_qs = http_build_query( $_payload );
 		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
-		Log::debug( 'Redirect request payload built', $_payload );
-
 		Log::debug( 'Authorization URL created: ' . $_authorizeUrl );
 
 		return $_authorizeUrl;
