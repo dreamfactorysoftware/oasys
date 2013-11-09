@@ -141,6 +141,15 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	}
 
 	/**
+	 * Destructor
+	 */
+	public function __destruct()
+	{
+		Oasys::getStore()->merge( $this->getConfigForStorage() );
+		parent::__destruct();
+	}
+
+	/**
 	 * @param array $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
@@ -530,7 +539,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 					$_payload = Xml::fromArray( $payload );
 				}
 				break;
-
 		}
 
 		return $_payload;
@@ -557,22 +565,20 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 		if ( $property instanceof ProviderConfigLike )
 		{
 			$this->_config = $property;
+
+			return $this;
 		}
-		else if ( is_array( $property ) )
+
+		if ( is_string( $property ) )
 		{
-			foreach ( $property as $_key => $_value )
-			{
-				Option::set( $this->_config, $_key, $_value );
-			}
+			$property = array( $property => $value );
 		}
-		else if ( is_string( $property ) )
+		else if ( !is_array( $property ) )
 		{
-			Option::set( $this->_config, $property, $value, $overwrite );
+			throw new \InvalidArgumentException( '$property must be a string or an array of KVPs.' );
 		}
-		else
-		{
-			throw new \InvalidArgumentException( 'Unknown type of $property value given.' );
-		}
+
+		$this->_config->mergeSettings( $property );
 
 		return $this;
 	}
@@ -797,5 +803,4 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	{
 		return $this->_responsePayload;
 	}
-
 }
