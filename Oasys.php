@@ -361,7 +361,7 @@ class Oasys extends SeedUtility
 	 */
 	protected static function _mergeConfigFromStore( $providerId, $config )
 	{
-		$_storedConfig = static::getStore()->get( $providerId . '.data' );
+		$_storedConfig = static::getStore()->get();
 
 		if ( empty( $_storedConfig ) )
 		{

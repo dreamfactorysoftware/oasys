@@ -141,15 +141,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	}
 
 	/**
-	 * Destructor
-	 */
-	public function __destruct()
-	{
-		Oasys::getStore()->merge( $this->getConfigForStorage() );
-		parent::__destruct();
-	}
-
-	/**
 	 * @param array $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException

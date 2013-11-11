@@ -144,9 +144,6 @@ class Salesforce extends BaseOAuthProvider
 			'formatted'  => Option::get( $_profile, 'display_name', $_login ),
 		);
 
-		/** @noinspection PhpUndefinedMethodInspection */
-		Oasys::getStore()->setProviderUserId( $_profileId )->sync();
-
 		return new GenericUser(
 			array(
 				 'provider_id'        => $this->getProviderId(),

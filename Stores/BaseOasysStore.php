@@ -71,7 +71,7 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 * @param bool               $overwrite
 	 * @param bool               $force If true, $data overwrites unconditionally
 	 *
-	 * @return array
+	 * @return $this|array|\Kisma\Core\SeedBag
 	 */
 	public function merge( $data = array(), $overwrite = true, $force = false )
 	{
@@ -90,7 +90,7 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 			}
 		}
 
-		return $this->contents();
+		return $this;
 	}
 
 	/**
