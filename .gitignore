@@ -6,3 +6,4 @@ composer.lock
 tests/log
 tests/config/keys.php
 tests/metrics
+log
