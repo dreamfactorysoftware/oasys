@@ -26,12 +26,13 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * foursquare.config.php.dist
  */
 return array(
-	'type'          => ProviderConfigTypes::OAUTH,
-	'client_id'     => '{{client_id}}',
-	'client_secret' => '{{client_secret}}',
-	'endpoint_map'  => array(
+	'type'            => ProviderConfigTypes::OAUTH,
+	'client_id'       => '{{client_id}}',
+	'client_secret'   => '{{client_secret}}',
+	'endpoint_map'    => array(
 		EndpointTypes::AUTHORIZE    => 'https://foursquare.com/oauth2/authenticate',
 		EndpointTypes::ACCESS_TOKEN => 'https://foursquare.com/oauth2/access_token',
 		EndpointTypes::SERVICE      => 'https://api.foursquare.com/v2',
 	),
+	'referrer_domain' => 'foursquare.com',
 );

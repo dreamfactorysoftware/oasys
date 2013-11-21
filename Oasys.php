@@ -24,12 +24,17 @@ use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
+use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
+use Kisma\Core\Enums\HttpResponse;
+use Kisma\Core\Exceptions\HttpException;
 use Kisma\Core\Interfaces;
 use Kisma\Core\SeedUtility;
 use Kisma\Core\Utility\Inflector;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility\Storage;
 
 /**
  * Oasys
@@ -139,7 +144,7 @@ class Oasys extends SeedUtility
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
 	 * @throws \InvalidArgumentException
-	 * @return ProviderLike
+	 * @return BaseProvider
 	 */
 	public static function getProvider( $providerId, $config = null, $createIfNotFound = true )
 	{
@@ -148,18 +153,130 @@ class Oasys extends SeedUtility
 			static::initialize();
 		}
 
+		//	Look up provider in the cache and use it as a base, otherwise, create a new one using the defaults provided by the provider's author.
+		return static::_createProvider( $providerId, $config, $createIfNotFound );
+	}
+
+	/**
+	 * Return true if current user is connected with a given provider
+	 *
+	 * @param string                   $providerId
+	 * @param ProviderConfigLike|array $config
+	 * @param bool                     $startFlow
+	 *
+	 * @return bool
+	 */
+	public static function authorized( $providerId, $config = null, $startFlow = false )
+	{
+		return static::getProvider( $providerId, $config )->authorized( $startFlow );
+	}
+
+	/**
+	 * Return all known provider IDs
+	 *
+	 * @return array
+	 */
+	public static function getProviders()
+	{
+		return array_keys( static::$_classMap );
+	}
+
+	/**
+	 * De-authorize a single provider
+	 */
+	public static function resetProvider( $providerId )
+	{
+		static::getProvider( $providerId )->resetAuthorization();
+	}
+
+	/**
+	 * Validates an inbound relay request
+	 *
+	 * @param string $state If not supplied, $_REQUEST['state'] is used.
+	 *
+	 * @throws \Kisma\Core\Exceptions\HttpException
+	 * @return array
+	 */
+	public static function validateAuthState( $state = null )
+	{
+		$_state = static::_decodeState( $state );
+		$_origin = Option::get( $_state, 'origin' );
+		$_apiKey = Option::get( $_state, 'api_key' );
+
+		if ( empty( $_origin ) || empty( $_apiKey ) )
+		{
+			throw new HttpException( HttpResponse::BadRequest, 'Invalid auth state' );
+		}
+
+		if ( $_apiKey != ( $_testKey = sha1( $_origin ) ) )
+		{
+			Log::error( 'API Key mismatch: ' . $_apiKey . ' != ' . $_testKey );
+			throw new HttpException( HttpResponse::Forbidden, 'Invalid API key' );
+		}
+
+		return $_state;
+	}
+
+	/**
+	 * Parses a provider ID spec ([generic:]providerId[:type])
+	 *
+	 * @param string $providerId
+	 *
+	 * @return array
+	 * @throws \InvalidArgumentException
+	 */
+	protected static function _normalizeProviderId( $providerId )
+	{
+		$_providerId = $_mapKey = $providerId;
+		$_type = null;
+		$_generic = false;
+
+		if ( false === strpos( $_providerId, static::GENERIC_PROVIDER_PATTERN, 0 ) )
+		{
+			$_providerId = static::_cleanProviderId( $_providerId );
+		}
+		else
+		{
+			$_parts = explode( ':', $_providerId );
+
+			if ( empty( $_parts ) || 3 != sizeof( $_parts ) )
+			{
+				throw new \InvalidArgumentException( 'Invalid provider ID specified. Use predefined or generic "generic:providerId:type" format.' );
+			}
+
+			$_providerId = static::_cleanProviderId( $_parts[1] );
+			$_type = str_ireplace( 'oauth', 'OAuth', ProviderConfigTypes::nameOf( $_parts[2] ) );
+			$_mapKey = 'generic' . $_type;
+			$_generic = ':' . $_providerId;
+		}
+
+		return array( $_providerId, $_type, $_mapKey, $_generic );
+	}
+
+	/**
+	 * Create/De-cache a provider and return it
+	 *
+	 * @param string                   $providerId
+	 * @param array|ProviderConfigLike $config
+	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
+	 *
+	 * @throws \InvalidArgumentException
+	 * @return BaseProvider
+	 */
+	protected static function _createProvider( $providerId, $config = null, $createIfNotFound = true )
+	{
 		list( $_providerId, $_type, $_mapKey, $_generic ) = static::_normalizeProviderId( $providerId );
 
 		$_cacheKey = $_mapKey . ( $_generic ? : null );
-		$_config = empty( $config ) ? array() : $config;
 
-		// Look up provider in the cache and use it as a base, otherwise, create a new one using the defaults provided by the provider's author.
 		if ( null === ( $_provider = Option::get( static::$_providerCache, $_cacheKey ) ) )
 		{
+			$_config = empty( $config ) ? array() : $config;
+
 			//	Get the class mapping...
 			if ( null === ( $_map = Option::get( static::$_classMap, $_mapKey ) ) )
 			{
-				throw new \InvalidArgumentException( 'The provider "' . $_providerId . '" has no associated mapping. Cannot create.' );
+				throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
 			}
 
 			if ( true !== $createIfNotFound && array() == $_config )
@@ -208,71 +325,32 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * Return true if current user is connected with a given provider
+	 * Given an inbound state string, convert to original defrosted state
 	 *
-	 * @param string                   $providerId
-	 * @param ProviderConfigLike|array $config
-	 * @param bool                     $startFlow
-	 *
-	 * @return bool
-	 */
-	public static function authorized( $providerId, $config = null, $startFlow = false )
-	{
-		return static::getProvider( $providerId, $config )->authorized( $startFlow );
-	}
-
-	/**
-	 * Return all known provider IDs
+	 * @param string $state If not supplied, $_REQUEST['state'] is used.
 	 *
 	 * @return array
 	 */
-	public static function getProviders()
+	protected static function _decodeState( $state = null )
 	{
-		return array_keys( static::$_classMap );
+		if ( null === ( $_state = $state ? : Option::request( 'state' ) ) )
+		{
+			return array();
+		}
+
+		return Storage::defrost( $_state );
 	}
 
 	/**
-	 * De-authorize a single provider
-	 */
-	public static function resetProvider( $providerId )
-	{
-		static::getProvider( $providerId )->resetAuthorization();
-	}
-
-	/**
-	 * Parses a provider ID spec ([generic:]providerId[:type])
+	 * Creates a compact string representing $data
 	 *
-	 * @param string $providerId
+	 * @param array $data
 	 *
-	 * @return array
-	 * @throws \InvalidArgumentException
+	 * @return string
 	 */
-	protected static function _normalizeProviderId( $providerId )
+	protected static function _encodeState( $data = array() )
 	{
-		$_providerId = $_mapKey = $providerId;
-		$_type = null;
-		$_generic = false;
-
-		if ( false === strpos( $_providerId, static::GENERIC_PROVIDER_PATTERN, 0 ) )
-		{
-			$_providerId = static::_cleanProviderId( $_providerId );
-		}
-		else
-		{
-			$_parts = explode( ':', $_providerId );
-
-			if ( empty( $_parts ) || 3 != sizeof( $_parts ) )
-			{
-				throw new \InvalidArgumentException( 'Invalid provider ID specified. Use predefined or generic "generic:providerId:type" format.' );
-			}
-
-			$_providerId = static::_cleanProviderId( $_parts[1] );
-			$_type = str_ireplace( 'oauth', 'OAuth', ProviderConfigTypes::nameOf( $_parts[2] ) );
-			$_mapKey = 'generic' . $_type;
-			$_generic = ':' . $_providerId;
-		}
-
-		return array( $_providerId, $_type, $_mapKey, $_generic );
+		return Storage::freeze( $data );
 	}
 
 	/**
@@ -283,7 +361,7 @@ class Oasys extends SeedUtility
 	 */
 	protected static function _mergeConfigFromStore( $providerId, $config )
 	{
-		$_storedConfig = static::getStore()->get( $providerId . '.data' );
+		$_storedConfig = static::getStore()->get();
 
 		if ( empty( $_storedConfig ) )
 		{

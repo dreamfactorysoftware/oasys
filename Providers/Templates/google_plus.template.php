@@ -36,4 +36,5 @@ return array(
 		EndpointTypes::AUTHORIZE    => 'https://accounts.google.com/o/oauth2/auth',
 		EndpointTypes::ACCESS_TOKEN => 'https://accounts.google.com/o/oauth2/token',
 	),
+	'referrer_domain' => 'google.com',
 );

@@ -26,12 +26,13 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * instagram.config.php.dist
  */
 return array(
-	'type'          => ProviderConfigTypes::OAUTH,
-	'client_id'     => '{{client_id}}',
-	'client_secret' => '{{client_secret}}',
-	'endpoint_map'  => array(
-		EndpointTypes::SERVICE => 'https://api.instagram.com/v1',
+	'type'            => ProviderConfigTypes::OAUTH,
+	'client_id'       => '{{client_id}}',
+	'client_secret'   => '{{client_secret}}',
+	'endpoint_map'    => array(
+		EndpointTypes::SERVICE      => 'https://api.instagram.com/v1',
 		EndpointTypes::AUTHORIZE    => 'https://api.instagram.com/oauth/authorize',
 		EndpointTypes::ACCESS_TOKEN => 'https://api.instagram.com/oauth/access_token',
 	),
+	'referrer_domain' => 'instagram.com',
 );

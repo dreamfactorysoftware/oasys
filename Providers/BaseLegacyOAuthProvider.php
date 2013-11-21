@@ -19,18 +19,13 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Providers\BaseProvider;
 use DreamFactory\Oasys\Interfaces\LegacyOAuthServiceLike;
-use DreamFactory\Oasys\Clients\LegacyOAuthClient;
-use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
-use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
-use Kisma\Core\Interfaces\HttpMethod;
-use Kisma\Core\Utility\Curl;
+use Kisma\Core\Exceptions\NotImplementedException;
 
 /**
  * BaseLegacyOAuthProvider
  */
-abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAuthServiceLike, HttpMethod
+abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAuthServiceLike
 {
 	//*************************************************************************
 	//	Methods
@@ -41,34 +36,7 @@ abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAu
 	 */
 	public function init()
 	{
-		parent::init();
-
-		$this->_client = new LegacyOAuthClient( $this->_config );
+		throw new NotImplementedException();
 	}
 
-	/**
-	 * Checks to see if user is authorized with this provider
-	 *
-	 * @param bool $startIfNot If true, and not authorized, the login flow will commence presently
-	 *
-	 * @return bool
-	 * @throws \DreamFactory\Oasys\Exceptions\RedirectRequiredException
-	 */
-	public function authorized( $startIfNot = false )
-	{
-		return $this->_client->authorized( true );
-	}
-
-	/**
-	 * @param string $resource
-	 * @param array  $payload
-	 * @param string $method
-	 * @param array  $headers
-	 *
-	 * @return mixed|void
-	 */
-	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
-	{
-		return $this->_client->fetch( $resource, $payload, $method, $headers );
-	}
 }

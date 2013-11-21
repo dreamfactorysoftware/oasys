@@ -43,4 +43,5 @@ return array(
 		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
 		EndpointTypes::SERVICE      => 'https://api.github.com',
 	),
+	'referrer_domain'    => 'github.com',
 );

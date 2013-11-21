@@ -67,7 +67,7 @@ class Github extends BaseOAuthProvider
 			throw new ProviderException( 'No profile available to convert.' );
 		}
 
-		Log::debug( 'Profile retrieved: ' . print_r( $_profile, true ) );
+//		Log::debug( 'Profile retrieved: ' . print_r( $_profile, true ) );
 
 		$_profileId = Option::get( $_profile, 'id' );
 

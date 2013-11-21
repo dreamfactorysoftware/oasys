@@ -28,17 +28,18 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * This is the template for connecting to StackExchange
  */
 return array(
-	'type'          => ProviderConfigTypes::OAUTH,
-	'client_id'     => '{{your_client_id}}',
-	'client_secret' => '{{your_client_secret}}',
-	'client_key'    => null,
-	'scope'         => array(
+	'type'            => ProviderConfigTypes::OAUTH,
+	'client_id'       => '{{your_client_id}}',
+	'client_secret'   => '{{your_client_secret}}',
+	'client_key'      => null,
+	'scope'           => array(
 		'no_expiry',
 		'private_info'
 	),
-	'endpoint_map'  => array(
+	'endpoint_map'    => array(
 		EndpointTypes::AUTHORIZE    => 'https://stackexchange.com/oauth',
 		EndpointTypes::ACCESS_TOKEN => 'https://stackexchange.com/oauth/access_token',
 		EndpointTypes::SERVICE      => 'https://stackexchange.com',
 	),
+	'referrer_domain' => 'stackexchange.com',
 );

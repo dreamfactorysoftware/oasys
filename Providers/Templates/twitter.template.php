@@ -37,4 +37,5 @@ return array(
 		EndpointTypes::REQUEST_TOKEN => 'https://api.twitter.com/oauth/request_token',
 		EndpointTypes::ACCESS_TOKEN  => 'https://api.twitter.com/oauth/access_token',
 	),
+	'referrer_domain' => 'twitter.com',
 );

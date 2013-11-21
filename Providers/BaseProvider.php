@@ -19,14 +19,13 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
-use DreamFactory\Oasys\Clients\BaseClient;
+use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
-use DreamFactory\Oasys\Interfaces\ProviderClientLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Oasys;
@@ -69,10 +68,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 */
 	protected $_config;
 	/**
-	 * @var ProviderClientLike Additional provider-supplied client/SDK that interacts with provider (i.e. Facebook PHP SDK), or maybe an alternative transport layer? whatever
-	 */
-	protected $_client;
-	/**
 	 * @var bool If true, the user will be redirected if necessary. Otherwise the URL of the expected redirect is returned
 	 */
 	protected $_interactive = false;
@@ -81,7 +76,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 */
 	protected $_responsePayload;
 	/**
-	 * @var array The payload of the request, if any.
+	 * @var array The original request payload, if any.
 	 */
 	protected $_requestPayload;
 	/**
@@ -301,27 +296,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 		parse_str( Option::server( 'QUERY_STRING' ), $_query );
 
 		//	Set it and forget it
-		return !empty( $_query ) ? array_merge( $_query, $_payload ) : $_payload;
-	}
-
-	/**
-	 * @param ProviderClientLike|BaseClient $client
-	 *
-	 * @return BaseProvider
-	 */
-	protected function _setClient( $client )
-	{
-		$this->_client = $client;
-
-		return $this;
-	}
-
-	/**
-	 * @return ProviderClientLike|BaseClient
-	 */
-	public function getClient()
-	{
-		return $this->_client;
+		return $this->_cleanRequestPayload( !empty( $_query ) ? array_merge( $_query, $_payload ) : $_payload );
 	}
 
 	/**
@@ -555,7 +530,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 					$_payload = Xml::fromArray( $payload );
 				}
 				break;
-
 		}
 
 		return $_payload;
@@ -567,6 +541,40 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	protected function _resetRequest()
 	{
 		$this->_lastResponse = $this->_lastResponseCode = $this->_lastError = $this->_lastErrorCode = null;
+	}
+
+	/**
+	 * Cleans out the request parameters from the payload
+	 *
+	 * @param array $payload
+	 *
+	 * @return array|bool
+	 */
+	protected function _cleanRequestPayload( $payload = null )
+	{
+		//	This is a list of possible query string options to be removed from the request payload
+		static $_internalOptions = array( 'dfpapikey', 'path', 'interactive', 'flow_type', 'app_name', 'control', '_', 'path' );
+
+		$_payload = $payload ? : $this->_requestPayload;
+
+		if ( empty( $_payload ) )
+		{
+			return false;
+		}
+
+		//	Rebuild with everything but our list...
+		$_removed = $_rebuild = array();
+
+		foreach ( $_payload as $_key => $_value )
+		{
+			if ( !in_array( Inflector::neutralize( $_key ), $_internalOptions ) )
+			{
+				$_rebuild[$_key] = $_value;
+			}
+		}
+
+		//	Set it and forget it!
+		return $this->_requestPayload = $_rebuild;
 	}
 
 	/**
@@ -582,22 +590,20 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 		if ( $property instanceof ProviderConfigLike )
 		{
 			$this->_config = $property;
+
+			return $this;
 		}
-		else if ( is_array( $property ) )
+
+		if ( is_string( $property ) )
 		{
-			foreach ( $property as $_key => $_value )
-			{
-				Option::set( $this->_config, $_key, $_value );
-			}
+			$property = array( $property => $value );
 		}
-		else if ( is_string( $property ) )
+		else if ( !is_array( $property ) )
 		{
-			Option::set( $this->_config, $property, $value, $overwrite );
+			throw new \InvalidArgumentException( '$property must be a string or an array of KVPs.' );
 		}
-		else
-		{
-			throw new \InvalidArgumentException( 'Unknown type of $property value given.' );
-		}
+
+		$this->_config->mergeSettings( $property );
 
 		return $this;
 	}
@@ -607,7 +613,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 * @param mixed  $defaultValue
 	 * @param bool   $burnAfterReading
 	 *
-	 * @return ProviderConfigLike|array
+	 * @return BaseProviderConfig|ProviderConfigLike|array
 	 */
 	public function getConfig( $property = null, $defaultValue = null, $burnAfterReading = false )
 	{
@@ -822,5 +828,4 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	{
 		return $this->_responsePayload;
 	}
-
 }

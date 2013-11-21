@@ -82,6 +82,13 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 		$this->_schema = $this->_schema ? : static::loadDefaultSchema( $this->_type );
 	}
 
+	public function __destruct()
+	{
+		Oasys::getStore()->merge( $this->toArray() );
+
+		parent::__destruct();
+	}
+
 	/**
 	 * Creates a provider configuration from a template
 	 *

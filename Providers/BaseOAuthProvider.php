@@ -2,8 +2,8 @@
 /**
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
- * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * DreamFactory Oasys (Open Authentication SYStem) http://dreamfactorysoftware.github.io
+ * Copyright 2013 DreamFactory Software, Inc. support@dreamfactory.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,23 @@ use DreamFactory\Oasys\Components\OAuth\GrantTypes\ClientCredentials;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\Password;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\RefreshToken;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
+use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\Flows;
+use DreamFactory\Oasys\Enums\GrantTypes;
 use DreamFactory\Oasys\Enums\OAuthTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use DreamFactory\Oasys\Oasys;
+use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Utility\Curl;
+use Kisma\Core\Utility\FilterInput;
+use Kisma\Core\Utility\Log;
+use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility\Storage;
 
 /**
  * BaseOAuthProvider
@@ -66,7 +76,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		//	Make sure, if specified, certificate file is valid
-		if ( null !== ( $_certificateFile = $this->getConfig( 'certificate_file' ) ) && ( !is_file( $_certificateFile ) || !is_readable( $_certificateFile ) ) )
+		if ( null !== ( $_certificateFile = $this->getConfig( 'certificate_file' ) ) && ( !is_file( $_certificateFile ) || !is_readable(
+					$_certificateFile
+				) )
+		)
 		{
 			throw new OasysConfigurationException( 'The specified certificate file "' . $_certificateFile . '" was not found or cannot be read.' );
 		}
@@ -83,17 +96,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_token = $this->getConfig( 'access_token' );
 
-		if ( empty( $_token ) )
+		if ( !empty( $_token ) )
 		{
-			if ( false !== $startFlow )
-			{
-				return $this->checkAuthenticationProgress( true );
-			}
-
-			return false;
+			return true;
 		}
 
-		return true;
+		return ( false !== $startFlow ) ? $this->checkAuthenticationProgress( true ) : false;
 	}
 
 	/**
@@ -122,9 +130,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	No code is present, request one
 		if ( empty( $_code ) )
 		{
-			$_redirectUrl = $this->getAuthorizationUrl( Option::clean( $this->_requestPayload ) );
-
-			Log::debug( 'Redirect required: ' . $_redirectUrl );
+			$_redirectUrl = $this->getAuthorizationUrl();
 
 			if ( Flows::SERVER_SIDE == $this->getConfig( 'flow_type' ) )
 			{
@@ -147,15 +153,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
 			GrantTypes::AUTHORIZATION_CODE,
-			array_merge(
-				Option::clean(
-					$this->_requestPayload,
-					array(
-						 'code'         => $_code,
-						 'redirect_uri' => $_redirectUri,
-						 'state'        => Option::request( 'state' ),
-					)
-				)
+			array(
+				 'code'         => $_code,
+				 'redirect_uri' => $_redirectUri,
+				 'state'        => Option::request( 'state' ),
 			)
 		);
 
@@ -170,11 +171,9 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			else
 			{
 				parse_str( $_token['result'], $_info );
-
-				//	Fix up payload that came in as a string...
-				$this->setConfig( 'payload', $_info );
-				$this->_responsePayload = $_info;
 			}
+
+			$this->_responsePayload = $_info;
 		}
 
 		if ( null !== ( $_error = Option::get( $_info, 'error' ) ) )
@@ -199,12 +198,6 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_tokenFound = false;
 
-		if ( null !== ( $_token = Option::get( $data, 'access_token' ) ) )
-		{
-			$_tokenFound = true;
-			$this->setConfig( 'access_token', $_token );
-		}
-
 		$this->setConfig( 'access_token_expires', Option::get( $data, 'expires' ) );
 
 		if ( null !== ( $_token = Option::get( $data, 'refresh_token' ) ) )
@@ -215,6 +208,15 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		if ( null !== ( $_scope = Option::get( $data, 'scope' ) ) )
 		{
 			$this->setConfig( 'scope', $_scope );
+		}
+
+		if ( null !== ( $_token = Option::get( $data, 'access_token' ) ) )
+		{
+			$_tokenFound = true;
+			$this->setConfig( 'access_token', $_token );
+
+			//	Store...
+			Oasys::getStore()->merge( $this->getConfigForStorage() );
 		}
 
 		return $_tokenFound;
@@ -354,7 +356,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
 		{
 			$_endpoint = $this->getConfig()->getEndpoint( EndpointTypes::SERVICE );
-			$_url = rtrim( $_endpoint['endpoint'], ' / ' ) . ' / ' . ltrim( $resource, ' / ' );
+			$_url = rtrim( $_endpoint['endpoint'], '/ ' ) . '/' . ltrim( $resource, '/ ' );
 		}
 		else
 		{
@@ -467,55 +469,48 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_map = $this->getConfig()->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->getConfig( 'scope' );
-		$_redirectUri = $this->getConfig( 'redirect_uri' );
+		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
+		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
 		$_proxyUrl = $this->getConfig( 'redirect_proxy_url' );
+		$_payload = Option::clean( $payload );
 
 		$_state = array(
-			'origin'       => $_redirectUri, //	Original redirect URI, where we go back to...
-			'api_key'      => sha1( $_redirectUri ),
-			'redirect_uri' => Curl::currentUrl(),
+			'request'      => array(
+				'method'       => Option::server( 'REQUEST_METHOD' ),
+				'payload'      => $this->_requestPayload,
+				'query_string' => Option::server( 'QUERY_STRING' ),
+				'referrer'     => Option::server( 'HTTP_REFERER' ),
+				'remote_addr'  => Option::server( 'REMOTE_ADDR' ),
+				'time'         => microtime( true ),
+				'uri'          => Option::server( 'REQUEST_URI' ),
+			),
+			'origin'       => $_origin,
+			'api_key'      => sha1( $_origin ),
+			'redirect_uri' => $_redirectUri,
 		);
 
-		Log::debug( 'Auth url "state" built: ' . print_r( $_state, true ) );
-
-		if ( empty( $payload ) || !is_array( $payload ) )
-		{
-			$payload = array();
-		}
-
-		$_queryString = http_build_query( $payload );
-
-		if ( !empty( $_queryString ) )
-		{
-			$_redirectUri .= ( false === strpos( $_redirectUri, '?' ) ? '?' : '&' ) . $_queryString;
-			unset( $payload );
-		}
+		Log::debug( 'Request state built: ' . print_r( $_state, true ) );
 
 		$_payload = array_merge(
 			array(
-				 'response_type' => 'code',
 				 'client_id'     => $this->getConfig( 'client_id' ),
 				 'redirect_uri'  => $_redirectUri,
-				 'state'         => Storage::freeze( $_state ),
+				 'response_type' => 'code',
 				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
+				 'state'         => Storage::freeze( $_state ),
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
 
 		if ( !empty( $_proxyUrl ) )
 		{
-			Log::info( 'Proxied provider: ' . $_redirectUri . ' => ' . $_redirectUri );
+			Log::info( 'Proxying request through: ' . $_proxyUrl );
 			$_payload['redirect_uri'] = $_proxyUrl;
 		}
 
 		$_qs = http_build_query( $_payload );
-
-		Log::debug( 'Redirect payload: ' . print_r( $_payload, true ) );
-
-		$this->setConfig(
-			'authorize_url',
-			$_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs )
-		);
+		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
+		Log::debug( 'Authorization URL created: ' . $_authorizeUrl );
 
 		return $_authorizeUrl;
 	}
@@ -559,8 +554,8 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	protected function _translatePayload( $payload = array(), $response = true, $assocArray = true )
 	{
-		$_format = $response ? $this->_responseFormat : $this->_requestFormat;
 		$_payload = $payload;
+		$_format = ( true === $response ? $this->_responseFormat : $this->_requestFormat );
 
 		switch ( $_format )
 		{
@@ -597,7 +592,6 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 					$_payload = Xml::fromArray( $payload );
 				}
 				break;
-
 		}
 
 		return $_payload;
@@ -608,7 +602,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	protected function _resetRequest()
 	{
-		$this->_lastResponse = $this->_lastResponseCode = $this->_lastError = $this->_lastErrorCode = null;
+		$this->_responsePayload = $this->_lastResponse = $this->_lastResponseCode = $this->_lastError = $this->_lastErrorCode = null;
 	}
 
 	/**
@@ -677,5 +671,4 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			}
 		}
 	}
-
 }
