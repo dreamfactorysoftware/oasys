@@ -296,7 +296,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 		parse_str( Option::server( 'QUERY_STRING' ), $_query );
 
 		//	Set it and forget it
-		return !empty( $_query ) ? array_merge( $_query, $_payload ) : $_payload;
+		return $this->_cleanRequestPayload( !empty( $_query ) ? array_merge( $_query, $_payload ) : $_payload );
 	}
 
 	/**
@@ -541,6 +541,40 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	protected function _resetRequest()
 	{
 		$this->_lastResponse = $this->_lastResponseCode = $this->_lastError = $this->_lastErrorCode = null;
+	}
+
+	/**
+	 * Cleans out the request parameters from the payload
+	 *
+	 * @param array $payload
+	 *
+	 * @return array|bool
+	 */
+	protected function _cleanRequestPayload( $payload = null )
+	{
+		//	This is a list of possible query string options to be removed from the request payload
+		static $_internalOptions = array( 'dfpapikey', 'path', 'interactive', 'flow_type', 'app_name', 'control', '_', 'path' );
+
+		$_payload = $payload ? : $this->_requestPayload;
+
+		if ( empty( $_payload ) )
+		{
+			return false;
+		}
+
+		//	Rebuild with everything but our list...
+		$_removed = $_rebuild = array();
+
+		foreach ( $_payload as $_key => $_value )
+		{
+			if ( !in_array( Inflector::neutralize( $_key ), $_internalOptions ) )
+			{
+				$_rebuild[$_key] = $_value;
+			}
+		}
+
+		//	Set it and forget it!
+		return $this->_requestPayload = $_rebuild;
 	}
 
 	/**

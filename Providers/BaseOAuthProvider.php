@@ -34,6 +34,7 @@ use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\FilterInput;
@@ -197,12 +198,6 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_tokenFound = false;
 
-		if ( null !== ( $_token = Option::get( $data, 'access_token' ) ) )
-		{
-			$_tokenFound = true;
-			$this->setConfig( 'access_token', $_token );
-		}
-
 		$this->setConfig( 'access_token_expires', Option::get( $data, 'expires' ) );
 
 		if ( null !== ( $_token = Option::get( $data, 'refresh_token' ) ) )
@@ -213,6 +208,15 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		if ( null !== ( $_scope = Option::get( $data, 'scope' ) ) )
 		{
 			$this->setConfig( 'scope', $_scope );
+		}
+
+		if ( null !== ( $_token = Option::get( $data, 'access_token' ) ) )
+		{
+			$_tokenFound = true;
+			$this->setConfig( 'access_token', $_token );
+
+			//	Store...
+			Oasys::getStore()->merge( $this->getConfigForStorage() );
 		}
 
 		return $_tokenFound;
