@@ -25,6 +25,7 @@ use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
 use DreamFactory\Oasys\Providers\BaseProvider;
+use DreamFactory\Oasys\Stores\BaseOasysStore;
 use DreamFactory\Oasys\Stores\FileSystem;
 use DreamFactory\Oasys\Stores\Session;
 use Kisma\Core\Enums\HttpResponse;
@@ -121,7 +122,7 @@ class Oasys extends SeedUtility
 		{
 			foreach ( $_cache as $_id => $_provider )
 			{
-				$_store->set( $_id . '.data', $_provider->getConfig()->toArray( true ) );
+				$_store->merge( $_provider->getConfigForStorage() );
 			}
 		}
 	}
@@ -520,7 +521,7 @@ class Oasys extends SeedUtility
 	}
 
 	/**
-	 * @return StorageProviderLike
+	 * @return BaseOasysStore
 	 */
 	public static function getStore()
 	{

@@ -210,13 +210,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			$this->setConfig( 'scope', $_scope );
 		}
 
+		//	New token? Update user profile with current stuff
 		if ( null !== ( $_token = Option::get( $data, 'access_token' ) ) )
 		{
 			$_tokenFound = true;
 			$this->setConfig( 'access_token', $_token );
-
-			//	Store...
-			Oasys::getStore()->merge( $this->getConfigForStorage() );
+			$this->_updateUserProfile();
 		}
 
 		return $_tokenFound;
@@ -326,6 +325,9 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			}
 
 			Log::debug( 'Refresh of access token successful for client_id: ' . $this->getConfig( 'client_id' ) );
+
+			//	Update user profile with current stuff
+			$this->_updateUserProfile();
 
 			return true;
 		}
@@ -472,7 +474,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
 		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
 		$_proxyUrl = $this->getConfig( 'redirect_proxy_url' );
-		$_payload = Option::clean( $payload );
+//		$_payload = Option::clean( $payload );
 
 		$_state = array(
 			'request'      => array(
@@ -669,6 +671,28 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			{
 				$headers[] = 'Authorization: ' . $_authHeaderName . ' ' . $_token;
 			}
+		}
+	}
+
+	/**
+	 * Retrieves the users' profile from the provider and stores it
+	 */
+	protected function _updateUserProfile()
+	{
+		$_profile = $this->getUserData();
+
+		if ( !empty( $_profile ) )
+		{
+			//	For us...
+			$_profile->setProviderId( $this->_providerId );
+			$this->setConfig( 'provider_user_id', $_id = $_profile->getUserId() );
+
+			//	For posterity
+			/** @noinspection PhpUndefinedMethodInspection */
+			Oasys::getStore()->setProviderUserId( $_id );
+
+			//	A tag
+			Log::debug( 'User profile updated [' . $this->_providerId . ':' . $_id . ']' );
 		}
 	}
 }

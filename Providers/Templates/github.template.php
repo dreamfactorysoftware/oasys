@@ -44,4 +44,5 @@ return array(
 		EndpointTypes::SERVICE      => 'https://api.github.com',
 	),
 	'referrer_domain'    => 'github.com',
+	'identity_resource'  => '/user',
 );
