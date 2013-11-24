@@ -20,6 +20,7 @@
 namespace DreamFactory\Oasys\Stores;
 
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
+use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\SeedBag;
@@ -40,7 +41,9 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 	 */
 	public function __destruct()
 	{
-		//	Sync before death
+		//	Sync or swim
+		Oasys::sync();
+
 		$this->sync();
 
 		parent::__destruct();
@@ -135,5 +138,4 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 
 		return $_removed;
 	}
-
 }
