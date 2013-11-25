@@ -54,7 +54,7 @@ class Facebook extends BaseOAuthProvider
 	 */
 	public function getUserData()
 	{
-		$_response = $this->fetch( '/me' );
+		$_response = parent::getUserData();
 
 		if ( 200 != ( $_code = Option::get( $_response, 'code', Curl::getLastHttpCode() ) ) )
 		{

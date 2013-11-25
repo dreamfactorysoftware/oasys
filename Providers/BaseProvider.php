@@ -103,10 +103,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 * @var int The provider's last error code returned
 	 */
 	protected $_lastErrorCode = null;
-	/**
-	 * @var string The resource to request to retrieve the user's profile
-	 */
-	protected $_profileResource = null;
 
 	//*************************************************************************
 	//	Methods
@@ -143,8 +139,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 			throw new OasysConfigurationException( 'No configuration was specified or set.' );
 		}
 	}
-
-
 
 	/**
 	 * @param array $config
@@ -799,25 +793,5 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	public function getResponsePayload()
 	{
 		return $this->_responsePayload;
-	}
-
-	/**
-	 * @param string $profileResource
-	 *
-	 * @return BaseProvider
-	 */
-	public function setProfileResource( $profileResource )
-	{
-		$this->_profileResource = $profileResource;
-
-		return $this;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getProfileResource()
-	{
-		return $this->_profileResource;
 	}
 }

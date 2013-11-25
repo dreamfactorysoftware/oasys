@@ -19,6 +19,7 @@
  */
 namespace DreamFactory\Oasys\Providers;
 
+use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\AuthorizationCode;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\ClientCredentials;
 use DreamFactory\Oasys\Components\OAuth\GrantTypes\Password;
@@ -672,6 +673,21 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 				$headers[] = 'Authorization: ' . $_authHeaderName . ' ' . $_token;
 			}
 		}
+	}
+
+	/**
+	 * Returns the normalized provider's user profile
+	 *
+	 * @return GenericUser
+	 */
+	public function getUserData()
+	{
+		if ( null === ( $_resource = $this->_config->getEndpointUrl( EndpointTypes::IDENTITY ) ) )
+		{
+			return null;
+		}
+
+		return $this->fetch( $_resource );
 	}
 
 	/**
