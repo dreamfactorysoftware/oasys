@@ -42,7 +42,7 @@ return array(
 		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
 		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',
 		EndpointTypes::SERVICE      => 'https://api.github.com',
+		EndpointTypes::IDENTITY     => '/user',
 	),
 	'referrer_domain'    => 'github.com',
-	'identity_resource'  => '/user',
 );
