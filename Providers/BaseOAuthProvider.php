@@ -48,6 +48,15 @@ use Kisma\Core\Utility\Storage;
  */
 abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLike
 {
+	//********************************************************************************
+	//* Members
+	//********************************************************************************
+
+	/**
+	 * @var bool
+	 */
+	protected $_needProfileUserId = false;
+
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
@@ -96,13 +105,20 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	public function authorized( $startFlow = false )
 	{
 		$_token = $this->getConfig( 'access_token' );
+		$_result = !empty( $_token );
 
-		if ( !empty( $_token ) )
+		if ( !$_result && $startFlow )
 		{
-			return true;
+			$_result = $this->checkAuthenticationProgress( true );
 		}
 
-		return ( false !== $startFlow ) ? $this->checkAuthenticationProgress( true ) : false;
+		//	Is a profile refresh is needed...
+		if ( $_result && $this->_needProfileUserId )
+		{
+			$this->_updateUserProfile();
+		}
+
+		return $_result;
 	}
 
 	/**
@@ -216,7 +232,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		{
 			$_tokenFound = true;
 			$this->setConfig( 'access_token', $_token );
-			$this->_updateUserProfile();
+			$this->_needProfileUserId = true;
 		}
 
 		return $_tokenFound;
@@ -328,7 +344,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			Log::debug( 'Refresh of access token successful for client_id: ' . $this->getConfig( 'client_id' ) );
 
 			//	Update user profile with current stuff
-			$this->_updateUserProfile();
+			$this->_needProfileUserId = true;
 
 			return true;
 		}
@@ -710,5 +726,25 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			//	A tag
 			Log::debug( 'User profile updated [' . $this->_providerId . ':' . $_id . ']' );
 		}
+	}
+
+	/**
+	 * @param boolean $needProfileUserId
+	 *
+	 * @return BaseOAuthProvider
+	 */
+	public function setNeedProfileUserId( $needProfileUserId = false )
+	{
+		$this->_needProfileUserId = $needProfileUserId;
+
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getNeedProfileUserId()
+	{
+		return $this->_needProfileUserId;
 	}
 }

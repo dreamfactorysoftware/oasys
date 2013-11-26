@@ -87,7 +87,11 @@ abstract class BaseOasysStore extends SeedBag implements StorageProviderLike
 		{
 			$_local = static::get( $_key );
 
-			if ( true === $force || ( ( empty( $_local ) && !empty( $_value ) || ( !empty( $_local ) && !empty( $_value ) && $_value != $_local ) ) ) )
+			$_nullLocal = empty( $_local ) && !empty( $_value );
+			$_notNullLocal = !empty( $_local ) && !empty( $_value );
+			$_unequal = is_scalar( $_value ) ? $_value != $_local : sizeof( $_value ) != sizeof( $_local );
+
+			if ( true === $force || $_nullLocal || ( $_notNullLocal && $_unequal ) )
 			{
 				static::set( $_key, $_value, false !== $force ? true : $overwrite );
 			}

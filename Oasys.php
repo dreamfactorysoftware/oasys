@@ -19,6 +19,7 @@
  */
 namespace DreamFactory\Oasys;
 
+use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
@@ -289,6 +290,11 @@ class Oasys extends SeedUtility
 			{
 				throw new \InvalidArgumentException( 'The "$config" value specified must be null, an object, an array, or an instance of ProviderConfigLike.' );
 			}
+
+			//	Check the endpoint maps...
+			$_template = BaseProviderConfig::getTemplate( $providerId );
+			$_endpoints = Option::get( $_config, 'endpoint_map', array() );
+			Option::set( $_config, 'endpoint_map', array_merge( Option::get( $_template, 'endpoint_map', array() ), $_endpoints ) );
 
 			/** @noinspection PhpIncludeInspection */
 			require $_map['path'];
