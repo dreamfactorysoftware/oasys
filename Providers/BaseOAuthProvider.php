@@ -36,6 +36,7 @@ use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Oasys;
+use DreamFactory\Platform\Yii\Stores\ProviderUserStore;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\FilterInput;
@@ -193,7 +194,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			$this->_responsePayload = $_info;
 		}
 
-		if ( null !== ( $_error = Option::get( $_info, 'error' ) ) )
+		if ( ( !is_array( $_info ) && !is_object( $_info ) ) || null !== ( $_error = Option::get( $_info, 'error' ) ) )
 		{
 			//	Error
 			Log::error( 'Error returned from oauth token request: ' . print_r( $_info, true ) );
@@ -204,6 +205,16 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		return $this->_processReceivedToken( $_info );
+	}
+
+	/**
+	 * Revoke prior auth
+	 *
+	 * @param string $providerUserId
+	 */
+	public function revoke( $providerUserId = null )
+	{
+		$this->_revokeAuthorization( $providerUserId );
 	}
 
 	/**
@@ -239,9 +250,9 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	}
 
 	/**
-	 *
+	 * @param string $providerUserId
 	 */
-	protected function _revokeAuthorization()
+	protected function _revokeAuthorization( $providerUserId = null )
 	{
 		$this->setConfig(
 			array(
@@ -436,7 +447,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	And finally our headers
 		if ( null !== ( $_agent = $this->getConfig( 'user_agent' ) ) )
 		{
-			$headers[] = 'User - Agent: ' . $_agent;
+			$headers[] = 'User-Agent: ' . $_agent;
 		}
 
 		$_curlOptions[CURLOPT_HTTPHEADER] = $headers;
@@ -444,7 +455,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Convert payload to query string for a GET
 		if ( static::Get == $method && !empty( $payload ) )
 		{
-			$url .= ( false === strpos( $url, '?' ) ? '?' : '&' ) . http_build_query( $payload );
+			$url .= Curl::urlSeparator( $url ) . http_build_query( $payload );
 			$payload = array();
 		}
 
@@ -528,7 +539,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		$_qs = http_build_query( $_payload );
-		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
+		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . Curl::urlSeparator( $_map['endpoint'] ) . $_qs ) );
 		Log::debug( 'Authorization URL created: ' . $_authorizeUrl );
 
 		return $_authorizeUrl;

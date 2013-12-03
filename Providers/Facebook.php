@@ -22,7 +22,12 @@ namespace DreamFactory\Oasys\Providers;
 use DreamFactory\Oasys\Components\GenericUser;
 use DreamFactory\Oasys\Exceptions\OasysException;
 use DreamFactory\Oasys\Interfaces\UserLike;
+use DreamFactory\Platform\Exceptions\BadRequestException;
+use DreamFactory\Platform\Resources\User\Session;
+use DreamFactory\Platform\Yii\Models\ProviderUser;
+use Kisma\Core\Enums\HttpMethod;
 use Kisma\Core\Utility\Curl;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -43,6 +48,41 @@ class Facebook extends BaseOAuthProvider
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
+
+	/**
+	 * Revoke a user's app auth on Facebook
+	 *
+	 * @param string $providerUserId
+	 *
+	 * @throws \DreamFactory\Platform\Exceptions\BadRequestException
+	 */
+	protected function _revokeAuthorization( $providerUserId = null )
+	{
+		$_id = $providerUserId ? : null;
+
+		if ( empty( $providerUserId ) && null === ( $_id = $this->getConfig( 'provider_user_id' ) ) )
+		{
+			$_profile = $this->getUserData();
+
+			if ( !empty( $_profile ) && null !== ( $_id = $_profile->getUserId() ) )
+			{
+				throw new BadRequestException( 'Revocation not possible without provider user ID.' );
+			}
+		}
+
+		$_result = $this->fetch( '/' . $_id . '/permissions', array(), HttpMethod::Delete );
+
+		if ( true !== ( $_success = Option::get( $_result, 'result', false ) ) )
+		{
+			Log::error( 'Facebook revocation for user ID "' . $_id . '" FAILED.' );
+
+			return;
+		}
+
+		Log::debug( 'Facebook revocation for user ID "' . $_id . '" successful.' );
+
+		parent::_revokeAuthorization();
+	}
 
 	/**
 	 * Returns this user as a GenericUser
@@ -76,21 +116,19 @@ class Facebook extends BaseOAuthProvider
 			'givenName'  => Option::get( $_profile, 'first_name' ),
 		);
 
-		return new GenericUser(
-			array(
-				 'user_id'            => $_profileId,
-				 'published'          => Option::get( $_profile, 'updated_time' ),
-				 'updated'            => Option::get( $_profile, 'updated_time' ),
-				 'display_name'       => $_name['formatted'],
-				 'name'               => $_name,
-				 'preferred_username' => Option::get( $_profile, 'username' ),
-				 'gender'             => Option::get( $_profile, 'gender' ),
-				 'email_address'      => Option::get( $_profile, 'email' ),
-				 'urls'               => array( Option::get( $_profile, 'link' ) ),
-				 'relationships'      => Option::get( $_profile, 'friends' ),
-				 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
-				 'user_data'          => $_profile,
-			)
-		);
+		return new GenericUser( array(
+									 'user_id'            => $_profileId,
+									 'published'          => Option::get( $_profile, 'updated_time' ),
+									 'updated'            => Option::get( $_profile, 'updated_time' ),
+									 'display_name'       => $_name['formatted'],
+									 'name'               => $_name,
+									 'preferred_username' => Option::get( $_profile, 'username' ),
+									 'gender'             => Option::get( $_profile, 'gender' ),
+									 'email_address'      => Option::get( $_profile, 'email' ),
+									 'urls'               => array( Option::get( $_profile, 'link' ) ),
+									 'relationships'      => Option::get( $_profile, 'friends' ),
+									 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
+									 'user_data'          => $_profile,
+								) );
 	}
 }
