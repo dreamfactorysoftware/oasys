@@ -172,9 +172,9 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		$_token = $this->requestAccessToken(
 			GrantTypes::AUTHORIZATION_CODE,
 			array(
-				 'code'         => $_code,
-				 'redirect_uri' => $_redirectUri,
-				 'state'        => Option::request( 'state' ),
+				'code'         => $_code,
+				'redirect_uri' => $_redirectUri,
+				'state'        => Option::request( 'state' ),
 			)
 		);
 
@@ -256,10 +256,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$this->setConfig(
 			array(
-				 'access_token'          => null,
-				 'access_token_expires'  => null,
-				 'refresh_token'         => null,
-				 'refresh_token_expires' => null,
+				'access_token'          => null,
+				'access_token_expires'  => null,
+				'refresh_token'         => null,
+				'refresh_token_expires' => null,
 			)
 		);
 
@@ -327,7 +327,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		$_payload = array_merge(
 			$payload,
 			array(
-				 'refresh_token' => $_refreshToken,
+				'refresh_token' => $_refreshToken,
 			)
 		);
 
@@ -385,7 +385,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Get the service endpoint and make the url spiffy
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
 		{
-			$_endpoint = $this->getConfig()->getEndpoint( EndpointTypes::SERVICE );
+			$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
 			$_url = rtrim( $_endpoint['endpoint'], '/ ' ) . '/' . ltrim( $resource, '/ ' );
 		}
 		else
@@ -497,7 +497,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	public function getAuthorizationUrl( $payload = array() )
 	{
-		$_map = $this->getConfig()->getEndpoint( EndpointTypes::AUTHORIZE );
+		$_map = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->getConfig( 'scope' );
 		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
 		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
@@ -523,11 +523,11 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 		$_payload = array_merge(
 			array(
-				 'client_id'     => $this->getConfig( 'client_id' ),
-				 'redirect_uri'  => $_redirectUri,
-				 'response_type' => 'code',
-				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
-				 'state'         => Storage::freeze( $_state ),
+				'client_id'     => $this->getConfig( 'client_id' ),
+				'redirect_uri'  => $_redirectUri,
+				'response_type' => 'code',
+				'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
+				'state'         => Storage::freeze( $_state ),
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
