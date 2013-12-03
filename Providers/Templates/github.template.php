@@ -38,6 +38,7 @@ return array(
 	'client_secret'      => '{{client_secret}}',
 	'redirect_proxy_url' => 'https://oasys.cloud.dreamfactory.com/oauth/authorize',
 	'scope'              => 'user:email',
+	'user_agent'         => 'dreamfactory.oasys',
 	'endpoint_map'       => array(
 		EndpointTypes::AUTHORIZE    => 'https://github.com/login/oauth/authorize',
 		EndpointTypes::ACCESS_TOKEN => 'https://github.com/login/oauth/access_token',

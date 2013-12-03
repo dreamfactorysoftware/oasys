@@ -36,6 +36,7 @@ use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Oasys;
+use DreamFactory\Platform\Yii\Stores\ProviderUserStore;
 use Kisma\Core\Exceptions\NotImplementedException;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\FilterInput;
@@ -48,6 +49,15 @@ use Kisma\Core\Utility\Storage;
  */
 abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLike
 {
+	//********************************************************************************
+	//* Members
+	//********************************************************************************
+
+	/**
+	 * @var bool
+	 */
+	protected $_needProfileUserId = false;
+
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
@@ -96,13 +106,20 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	public function authorized( $startFlow = false )
 	{
 		$_token = $this->getConfig( 'access_token' );
+		$_result = !empty( $_token );
 
-		if ( !empty( $_token ) )
+		if ( !$_result && $startFlow )
 		{
-			return true;
+			$_result = $this->checkAuthenticationProgress( true );
 		}
 
-		return ( false !== $startFlow ) ? $this->checkAuthenticationProgress( true ) : false;
+		//	Is a profile refresh is needed...
+		if ( $_result && $this->_needProfileUserId )
+		{
+			$this->_updateUserProfile();
+		}
+
+		return $_result;
 	}
 
 	/**
@@ -155,9 +172,9 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		$_token = $this->requestAccessToken(
 			GrantTypes::AUTHORIZATION_CODE,
 			array(
-				 'code'         => $_code,
-				 'redirect_uri' => $_redirectUri,
-				 'state'        => Option::request( 'state' ),
+				'code'         => $_code,
+				'redirect_uri' => $_redirectUri,
+				'state'        => Option::request( 'state' ),
 			)
 		);
 
@@ -177,7 +194,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			$this->_responsePayload = $_info;
 		}
 
-		if ( null !== ( $_error = Option::get( $_info, 'error' ) ) )
+		if ( ( !is_array( $_info ) && !is_object( $_info ) ) || null !== ( $_error = Option::get( $_info, 'error' ) ) )
 		{
 			//	Error
 			Log::error( 'Error returned from oauth token request: ' . print_r( $_info, true ) );
@@ -188,6 +205,16 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		return $this->_processReceivedToken( $_info );
+	}
+
+	/**
+	 * Revoke prior auth
+	 *
+	 * @param string $providerUserId
+	 */
+	public function revoke( $providerUserId = null )
+	{
+		$this->_revokeAuthorization( $providerUserId );
 	}
 
 	/**
@@ -216,23 +243,23 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		{
 			$_tokenFound = true;
 			$this->setConfig( 'access_token', $_token );
-			$this->_updateUserProfile();
+			$this->_needProfileUserId = true;
 		}
 
 		return $_tokenFound;
 	}
 
 	/**
-	 *
+	 * @param string $providerUserId
 	 */
-	protected function _revokeAuthorization()
+	protected function _revokeAuthorization( $providerUserId = null )
 	{
 		$this->setConfig(
 			array(
-				 'access_token'          => null,
-				 'access_token_expires'  => null,
-				 'refresh_token'         => null,
-				 'refresh_token_expires' => null,
+				'access_token'          => null,
+				'access_token_expires'  => null,
+				'refresh_token'         => null,
+				'refresh_token_expires' => null,
 			)
 		);
 
@@ -300,7 +327,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		$_payload = array_merge(
 			$payload,
 			array(
-				 'refresh_token' => $_refreshToken,
+				'refresh_token' => $_refreshToken,
 			)
 		);
 
@@ -328,7 +355,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			Log::debug( 'Refresh of access token successful for client_id: ' . $this->getConfig( 'client_id' ) );
 
 			//	Update user profile with current stuff
-			$this->_updateUserProfile();
+			$this->_needProfileUserId = true;
 
 			return true;
 		}
@@ -358,7 +385,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Get the service endpoint and make the url spiffy
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
 		{
-			$_endpoint = $this->getConfig()->getEndpoint( EndpointTypes::SERVICE );
+			$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
 			$_url = rtrim( $_endpoint['endpoint'], '/ ' ) . '/' . ltrim( $resource, '/ ' );
 		}
 		else
@@ -420,7 +447,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	And finally our headers
 		if ( null !== ( $_agent = $this->getConfig( 'user_agent' ) ) )
 		{
-			$headers[] = 'User - Agent: ' . $_agent;
+			$headers[] = 'User-Agent: ' . $_agent;
 		}
 
 		$_curlOptions[CURLOPT_HTTPHEADER] = $headers;
@@ -428,7 +455,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		//	Convert payload to query string for a GET
 		if ( static::Get == $method && !empty( $payload ) )
 		{
-			$url .= ( false === strpos( $url, '?' ) ? '?' : '&' ) . http_build_query( $payload );
+			$url .= Curl::urlSeparator( $url ) . http_build_query( $payload );
 			$payload = array();
 		}
 
@@ -470,7 +497,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	public function getAuthorizationUrl( $payload = array() )
 	{
-		$_map = $this->getConfig()->getEndpoint( EndpointTypes::AUTHORIZE );
+		$_map = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->getConfig( 'scope' );
 		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
 		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
@@ -496,11 +523,11 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 		$_payload = array_merge(
 			array(
-				 'client_id'     => $this->getConfig( 'client_id' ),
-				 'redirect_uri'  => $_redirectUri,
-				 'response_type' => 'code',
-				 'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
-				 'state'         => Storage::freeze( $_state ),
+				'client_id'     => $this->getConfig( 'client_id' ),
+				'redirect_uri'  => $_redirectUri,
+				'response_type' => 'code',
+				'scope'         => is_array( $_scope ) ? implode( ' ', $_scope ) : $_scope,
+				'state'         => Storage::freeze( $_state ),
 			),
 			Option::clean( Option::get( $_map, 'parameters', array() ) )
 		);
@@ -512,7 +539,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		}
 
 		$_qs = http_build_query( $_payload );
-		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . '?' . $_qs ) );
+		$this->setConfig( 'authorize_url', $_authorizeUrl = ( $_map['endpoint'] . Curl::urlSeparator( $_map['endpoint'] ) . $_qs ) );
 		Log::debug( 'Authorization URL created: ' . $_authorizeUrl );
 
 		return $_authorizeUrl;
@@ -710,5 +737,25 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			//	A tag
 			Log::debug( 'User profile updated [' . $this->_providerId . ':' . $_id . ']' );
 		}
+	}
+
+	/**
+	 * @param boolean $needProfileUserId
+	 *
+	 * @return BaseOAuthProvider
+	 */
+	public function setNeedProfileUserId( $needProfileUserId = false )
+	{
+		$this->_needProfileUserId = $needProfileUserId;
+
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getNeedProfileUserId()
+	{
+		return $this->_needProfileUserId;
 	}
 }

@@ -92,8 +92,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	/**
 	 * Creates a provider configuration from a template
 	 *
-	 * @param string $providerId
-	 * @param array  $config Additional configuration options or overrides
+	 * @param string                   $providerId
+	 * @param array|BaseProviderConfig $config Additional configuration options or overrides
 	 *
 	 * @return ProviderConfigLike
 	 * @throws OasysConfigurationException
@@ -101,20 +101,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	public static function createFromTemplate( $providerId, $config = null )
 	{
 		/** @var array $_defaults */
-		$_defaults = null;
-
-		foreach ( Oasys::getProviderPaths() as $_path )
-		{
-			//	See if there is a default template and load up the defaults
-			$_template = $_path . '/Templates/' . $providerId . '.template.php';
-
-			if ( is_file( $_template ) && is_readable( $_template ) )
-			{
-				/** @noinspection PhpIncludeInspection */
-				$_defaults = require( $_template );
-				break;
-			}
-		}
+		$_defaults = static::getTemplate( $providerId );
 
 		if ( empty( $_defaults ) )
 		{
@@ -124,7 +111,8 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 
 		//	Merge in the template, stored stuff and user supplied stuff
 		$_config = null !== $config ? array_merge( $_defaults, Option::clean( $config ) ) : $_defaults;
-		Option::sins( $_config, 'provider_id', $providerId );
+
+		Option::set( $_config, 'provider_id', $providerId );
 
 		if ( null === ( $_type = Option::get( $_config, 'type' ) ) )
 		{
@@ -144,6 +132,32 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 
 		//	Instantiate!
 		return new $_class( $_config );
+	}
+
+	/**
+	 * @param string $providerId
+	 *
+	 * @return array
+	 */
+	public static function getTemplate( $providerId )
+	{
+		/** @var array $_defaults */
+		$_defaults = array();
+
+		foreach ( Oasys::getProviderPaths() as $_path )
+		{
+			//	See if there is a default template and load up the defaults
+			$_template = $_path . '/Templates/' . $providerId . '.template.php';
+
+			if ( is_file( $_template ) && is_readable( $_template ) )
+			{
+				/** @noinspection PhpIncludeInspection */
+				$_defaults = require( $_template );
+				break;
+			}
+		}
+
+		return $_defaults;
 	}
 
 	/**
@@ -548,5 +562,4 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	{
 		return $this->_certificateFile;
 	}
-
 }

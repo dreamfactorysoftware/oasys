@@ -123,7 +123,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 
 		if ( empty( $this->_config ) && ( null === $config || !( $config instanceof BaseProviderConfig ) ) )
 		{
-			$this->_config = $this->_createConfiguration( $config );
+			$this->_config = BaseProviderConfig::createFromTemplate( $this->_providerId, $config );
 		}
 
 		if ( empty( $this->_providerId ) )
@@ -138,60 +138,6 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 		{
 			throw new OasysConfigurationException( 'No configuration was specified or set.' );
 		}
-	}
-
-	/**
-	 * @param array $config
-	 *
-	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
-	 * @throws \InvalidArgumentException
-	 * @return
-	 */
-	protected function _createConfiguration( $config = null )
-	{
-		/** @var array $_defaults */
-		$_defaults = null;
-
-		foreach ( Oasys::getProviderPaths() as $_path )
-		{
-			//	See if there is a default template and load up the defaults
-			$_template = $_path . '/Templates/' . $this->_providerId . '.template.php';
-
-			if ( is_file( $_template ) && is_readable( $_template ) )
-			{
-				/** @noinspection PhpIncludeInspection */
-				$_defaults = require( $_template );
-				break;
-			}
-		}
-
-		if ( empty( $_defaults ) )
-		{
-			Log::notice( 'Auto-template for "' . $this->_providerId . '" not found.' );
-			$_defaults = array();
-		}
-
-		//	Merge in the template, stored stuff and user supplied stuff
-		$_config = null !== $config ? array_merge( $_defaults, Option::clean( $config ) ) : $_defaults;
-
-		if ( null === ( $this->_type = Option::get( $_config, 'type' ) ) )
-		{
-			throw new OasysConfigurationException( 'You must specify the "type" of provider when using auto-generated configurations.' );
-		}
-
-		$_typeName = ProviderConfigTypes::nameOf( $this->_type );
-
-		//	Build the class name for the type of authentication of this provider
-		$_class = str_ireplace(
-			'oauth',
-			'OAuth',
-			static::DEFAULT_CONFIG_NAMESPACE . ucfirst( Inflector::deneutralize( strtolower( $_typeName ) . '_provider_config' ) )
-		);
-
-		//		Log::debug( 'Determined class of service to be: ' . $_typeName . '::' . $_class );
-
-		//	Instantiate!
-		return new $_class( $_config );
 	}
 
 	/**
