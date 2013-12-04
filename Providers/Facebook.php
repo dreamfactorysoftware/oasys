@@ -26,6 +26,7 @@ use DreamFactory\Platform\Exceptions\BadRequestException;
 use DreamFactory\Platform\Resources\User\Session;
 use DreamFactory\Platform\Yii\Models\ProviderUser;
 use Kisma\Core\Enums\HttpMethod;
+use Kisma\Core\Enums\HttpResponse;
 use Kisma\Core\Utility\Curl;
 use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
@@ -74,12 +75,21 @@ class Facebook extends BaseOAuthProvider
 
 		if ( true !== ( $_success = Option::get( $_result, 'result', false ) ) )
 		{
-			Log::error( 'Facebook revocation for user ID "' . $_id . '" FAILED.' );
+			if ( HttpResponse::BadRequest !== Option::get( $_result, 'code' ) )
+			{
+				Log::error( 'Facebook revocation for user ID "' . $_id . '" FAILED.' );
 
-			return;
+				return;
+			}
+			else
+			{
+				Log::debug( 'Facebook revocation for user ID "' . $_id . '" already completed.' );
+			}
 		}
-
-		Log::debug( 'Facebook revocation for user ID "' . $_id . '" successful.' );
+		else
+		{
+			Log::debug( 'Facebook revocation for user ID "' . $_id . '" successful.' );
+		}
 
 		parent::_revokeAuthorization();
 	}
@@ -117,18 +127,18 @@ class Facebook extends BaseOAuthProvider
 		);
 
 		return new GenericUser( array(
-									 'user_id'            => $_profileId,
-									 'published'          => Option::get( $_profile, 'updated_time' ),
-									 'updated'            => Option::get( $_profile, 'updated_time' ),
-									 'display_name'       => $_name['formatted'],
-									 'name'               => $_name,
-									 'preferred_username' => Option::get( $_profile, 'username' ),
-									 'gender'             => Option::get( $_profile, 'gender' ),
-									 'email_address'      => Option::get( $_profile, 'email' ),
-									 'urls'               => array( Option::get( $_profile, 'link' ) ),
-									 'relationships'      => Option::get( $_profile, 'friends' ),
-									 'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
-									 'user_data'          => $_profile,
+									'user_id'            => $_profileId,
+									'published'          => Option::get( $_profile, 'updated_time' ),
+									'updated'            => Option::get( $_profile, 'updated_time' ),
+									'display_name'       => $_name['formatted'],
+									'name'               => $_name,
+									'preferred_username' => Option::get( $_profile, 'username' ),
+									'gender'             => Option::get( $_profile, 'gender' ),
+									'email_address'      => Option::get( $_profile, 'email' ),
+									'urls'               => array( Option::get( $_profile, 'link' ) ),
+									'relationships'      => Option::get( $_profile, 'friends' ),
+									'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
+									'user_data'          => $_profile,
 								) );
 	}
 }

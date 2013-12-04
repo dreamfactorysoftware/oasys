@@ -499,20 +499,20 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	{
 		$_map = $this->_config->getEndpoint( EndpointTypes::AUTHORIZE );
 		$_scope = $this->getConfig( 'scope' );
-		$_redirectUri = $this->getConfig( 'redirect_uri', Curl::currentUrl() );
+		$_referrer = Option::get( $this->_requestPayload, 'referrer', Option::server( 'HTTP_REFERER', Curl::currentUrl() ), true );
+		$_redirectUri = $this->getConfig( 'redirect_uri', $_referrer );
 		$_origin = $this->getConfig( 'origin_uri', $_redirectUri );
 		$_proxyUrl = $this->getConfig( 'redirect_proxy_url' );
-//		$_payload = Option::clean( $payload );
 
 		$_state = array(
 			'request'      => array(
 				'method'       => Option::server( 'REQUEST_METHOD' ),
-				'payload'      => $this->_requestPayload,
+				'referrer'     => $_referrer,
 				'query_string' => Option::server( 'QUERY_STRING' ),
-				'referrer'     => Option::server( 'HTTP_REFERER' ),
 				'remote_addr'  => Option::server( 'REMOTE_ADDR' ),
 				'time'         => microtime( true ),
 				'uri'          => Option::server( 'REQUEST_URI' ),
+				'payload'      => $this->_requestPayload,
 			),
 			'origin'       => $_origin,
 			'api_key'      => sha1( $_origin ),
