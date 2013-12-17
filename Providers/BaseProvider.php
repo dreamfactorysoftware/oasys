@@ -22,7 +22,6 @@ namespace DreamFactory\Oasys\Providers;
 use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
@@ -32,8 +31,6 @@ use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
-use Kisma\Core\Utility\Inflector;
-use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -59,6 +56,10 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 * @var string The ID of this provider
 	 */
 	protected $_providerId;
+	/**
+	 * @var string The template used for this provider
+	 */
+	protected $_fromTemplate = null;
 	/**
 	 * @var int The type of authentication this provider provides
 	 */
@@ -109,26 +110,32 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	//*************************************************************************
 
 	/**
-	 * @param string                   $providerId The name/ID of this provider
+	 * @param string                   $providerId   The name/ID of this provider
 	 * @param array|ProviderConfigLike $config
+	 * @param string                   $fromTemplate The template to use if different from $providerId
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \InvalidArgumentException
-	 *
 	 * @return \DreamFactory\Oasys\Providers\BaseProvider
 	 */
-	public function __construct( $providerId, $config = null )
+	public function __construct( $providerId, $config = null, $fromTemplate = null )
 	{
 		$this->_providerId = $providerId;
+		$this->_fromTemplate = $fromTemplate;
 
 		if ( empty( $this->_config ) && ( null === $config || !( $config instanceof BaseProviderConfig ) ) )
 		{
-			$this->_config = BaseProviderConfig::createFromTemplate( $this->_providerId, $config );
+			$this->_config = BaseProviderConfig::createFromTemplate( $this->_fromTemplate ? : $this->_providerId, $config );
 		}
 
 		if ( empty( $this->_providerId ) )
 		{
-			throw new \InvalidArgumentException( 'No provider specified.' );
+			if ( empty( $this->_fromTemplate ) )
+			{
+				throw new \InvalidArgumentException( 'No provider ID or template specified.' );
+			}
+
+			$this->_providerId = $this->_fromTemplate;
 		}
 
 		$this->init();
@@ -740,4 +747,25 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	{
 		return $this->_responsePayload;
 	}
+
+	/**
+	 * @param string $fromTemplate
+	 *
+	 * @return BaseProvider
+	 */
+	public function setFromTemplate( $fromTemplate )
+	{
+		$this->_fromTemplate = $fromTemplate;
+
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getFromTemplate()
+	{
+		return $this->_fromTemplate;
+	}
+
 }

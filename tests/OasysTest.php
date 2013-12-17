@@ -41,18 +41,11 @@ class OasysTest extends \PHPUnit_Framework_TestCase
 	public function testGetProvider()
 	{
 		//	Good
-		$_provider = Oasys::getProvider( 'stack_exchange' );
+		$_provider = Oasys::getProvider( 'fbportal', null, 'facebook' );
 		$this->assertInstanceOf( 'DreamFactory\\Oasys\\Providers\\BaseProvider', $_provider );
 
 		//	Bad
 		$this->setExpectedException( '\\InvalidArgumentException' );
 		Oasys::getProvider( 'yoohoo' );
-	}
-
-	protected function tearDown()
-	{
-		$this->_oasys = null;
-
-		parent::tearDown();
 	}
 }

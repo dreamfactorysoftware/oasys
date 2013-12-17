@@ -65,13 +65,14 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	/**
 	 * @param string             $providerId
 	 * @param ProviderConfigLike $config
+	 * @param string             $fromTemplate The template to use if different from $providerId
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @return \DreamFactory\Oasys\Providers\BaseOAuthProvider
 	 */
-	public function __construct( $providerId, $config = null )
+	public function __construct( $providerId, $config = null, $fromTemplate = null )
 	{
-		parent::__construct( $providerId, $config );
+		parent::__construct( $providerId, $config, $fromTemplate );
 
 		//	Sanity checks for OAuth
 		if ( null === $this->getConfig( 'client_id' ) || null === $this->getConfig( 'client_secret' ) )
@@ -170,12 +171,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-			GrantTypes::AUTHORIZATION_CODE,
-			array(
-				'code'         => $_code,
-				'redirect_uri' => $_redirectUri,
-				'state'        => Option::request( 'state' ),
-			)
+					   GrantTypes::AUTHORIZATION_CODE,
+					   array(
+						   'code'         => $_code,
+						   'redirect_uri' => $_redirectUri,
+						   'state'        => Option::request( 'state' ),
+					   )
 		);
 
 		$_info = null;
@@ -255,12 +256,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	protected function _revokeAuthorization( $providerUserId = null )
 	{
 		$this->setConfig(
-			array(
-				'access_token'          => null,
-				'access_token_expires'  => null,
-				'refresh_token'         => null,
-				'refresh_token_expires' => null,
-			)
+			 array(
+				 'access_token'          => null,
+				 'access_token_expires'  => null,
+				 'refresh_token'         => null,
+				 'refresh_token_expires' => null,
+			 )
 		);
 
 		Log::debug( 'Revoked/reset any session authorization' );
