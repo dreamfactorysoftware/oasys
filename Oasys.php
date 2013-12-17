@@ -142,13 +142,13 @@ class Oasys extends SeedUtility
 	 * Create a provider and return it
 	 *
 	 * @param string                   $providerId
+	 * @param string                   $template         The name of the provider template if different from $providerId
 	 * @param array|ProviderConfigLike $config
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
-	 * @throws \InvalidArgumentException
 	 * @return BaseProvider
 	 */
-	public static function getProvider( $providerId, $config = null, $createIfNotFound = true )
+	public static function getProvider( $providerId, $template = null, $config = null, $createIfNotFound = true )
 	{
 		if ( !static::$_initialized )
 		{
@@ -156,21 +156,22 @@ class Oasys extends SeedUtility
 		}
 
 		//	Look up provider in the cache and use it as a base, otherwise, create a new one using the defaults provided by the provider's author.
-		return static::_createProvider( $providerId, $config, $createIfNotFound );
+		return static::_createProvider( $providerId, $template, $config, $createIfNotFound );
 	}
 
 	/**
 	 * Return true if current user is connected with a given provider
 	 *
 	 * @param string                   $providerId
+	 * @param string                   $template The name of the provider template if different from $providerId
 	 * @param ProviderConfigLike|array $config
 	 * @param bool                     $startFlow
 	 *
 	 * @return bool
 	 */
-	public static function authorized( $providerId, $config = null, $startFlow = false )
+	public static function authorized( $providerId, $template = null, $config = null, $startFlow = false )
 	{
-		return static::getProvider( $providerId, $config )->authorized( $startFlow );
+		return static::getProvider( $providerId, $template, $config )->authorized( $startFlow );
 	}
 
 	/**
@@ -223,19 +224,21 @@ class Oasys extends SeedUtility
 	 * Parses a provider ID spec ([generic:]providerId[:type])
 	 *
 	 * @param string $providerId
+	 * @param string $template The name of the provider template if different from $providerId
 	 *
 	 * @return array
 	 * @throws \InvalidArgumentException
 	 */
-	protected static function _normalizeProviderId( $providerId )
+	protected static function _normalizeProviderId( $providerId, $template )
 	{
-		$_providerId = $_mapKey = $providerId;
+		$_providerId = $_mapKey = $_templateId = $providerId;
 		$_type = null;
 		$_generic = false;
 
 		if ( false === strpos( $_providerId, static::GENERIC_PROVIDER_PATTERN, 0 ) )
 		{
 			$_providerId = static::_cleanProviderId( $_providerId );
+			$_templateId = static::_cleanProviderId( $template );
 		}
 		else
 		{
@@ -252,22 +255,23 @@ class Oasys extends SeedUtility
 			$_generic = ':' . $_providerId;
 		}
 
-		return array( $_providerId, $_type, $_mapKey, $_generic );
+		return array( $_providerId, $_templateId, $_type, $_mapKey, $_generic );
 	}
 
 	/**
 	 * Create/De-cache a provider and return it
 	 *
 	 * @param string                   $providerId
+	 * @param string                   $template         The name of the provider template if different from $providerId
 	 * @param array|ProviderConfigLike $config
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
 	 * @throws \InvalidArgumentException
 	 * @return BaseProvider
 	 */
-	protected static function _createProvider( $providerId, $config = null, $createIfNotFound = true )
+	protected static function _createProvider( $providerId, $template = null, $config = null, $createIfNotFound = true )
 	{
-		list( $_providerId, $_type, $_mapKey, $_generic ) = static::_normalizeProviderId( $providerId );
+		list( $_providerId, $_templateId, $_type, $_mapKey, $_generic ) = static::_normalizeProviderId( $providerId, $template );
 
 		$_cacheKey = $_mapKey . ( $_generic ? : null );
 
@@ -278,7 +282,10 @@ class Oasys extends SeedUtility
 			//	Get the class mapping...
 			if ( null === ( $_map = Option::get( static::$_classMap, $_mapKey ) ) )
 			{
-				throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
+				if ( null === ( $_map = Option::get( static::$_classMap, $_templateId ) ) )
+				{
+					throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
+				}
 			}
 
 			if ( true !== $createIfNotFound && array() == $_config )
@@ -292,7 +299,7 @@ class Oasys extends SeedUtility
 			}
 
 			//	Check the endpoint maps...
-			$_template = BaseProviderConfig::getTemplate( $providerId );
+			$_template = BaseProviderConfig::getTemplate( $_templateId );
 			$_endpoints = Option::get( $_config, 'endpoint_map', array() );
 			Option::set( $_config, 'endpoint_map', array_merge( Option::get( $_template, 'endpoint_map', array() ), $_endpoints ) );
 
@@ -318,10 +325,10 @@ class Oasys extends SeedUtility
 
 			//	Instantiate!
 			$_provider = $_mirror->newInstanceArgs(
-				array(
-					 $_providerId,
-					 $_config
-				)
+								 array(
+									 $_providerId,
+									 $_config
+								 )
 			);
 
 			//	Cache the current version...
@@ -411,16 +418,16 @@ class Oasys extends SeedUtility
 	protected static function _cleanProviderId( $providerId )
 	{
 		return Inflector::neutralize(
-			strtolower(
-				str_ireplace(
-					array(
-						 'Provider.php',
-						 '.php'
-					),
-					null,
-					$providerId
-				)
-			)
+						strtolower(
+							str_ireplace(
+								array(
+									'Provider.php',
+									'.php'
+								),
+								null,
+								$providerId
+							)
+						)
 		);
 	}
 
