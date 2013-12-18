@@ -26,6 +26,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * foursquare.config.php.dist
  */
 return array(
+	'id'              => 'foursquare',
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{client_id}}',
 	'client_secret'   => '{{client_secret}}',

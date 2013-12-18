@@ -28,6 +28,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * This is the template for connecting Facebook.
  */
 return array(
+	'id'              => 'facebook',
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{client_id}}',
 	'client_secret'   => '{{client_secret}}',

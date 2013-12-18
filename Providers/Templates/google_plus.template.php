@@ -28,11 +28,12 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * This is the template for connecting Google Plus.
  */
 return array(
-	'type'          => ProviderConfigTypes::OAUTH,
-	'client_id'     => '{{client_id}}',
-	'client_secret' => '{{client_secret}}',
-	'scope'         => 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.google.com/m8/feeds/',
-	'endpoint_map'  => array(
+	'id'              => 'google_plus',
+	'type'            => ProviderConfigTypes::OAUTH,
+	'client_id'       => '{{client_id}}',
+	'client_secret'   => '{{client_secret}}',
+	'scope'           => 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.google.com/m8/feeds/',
+	'endpoint_map'    => array(
 		EndpointTypes::AUTHORIZE    => 'https://accounts.google.com/o/oauth2/auth',
 		EndpointTypes::ACCESS_TOKEN => 'https://accounts.google.com/o/oauth2/token',
 	),

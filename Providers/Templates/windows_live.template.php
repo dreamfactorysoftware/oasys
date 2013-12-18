@@ -29,6 +29,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  */
 
 return array(
+	'id'              => 'windows_live',
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{client_id}}',
 	'client_secret'   => '{{client_secret}}',

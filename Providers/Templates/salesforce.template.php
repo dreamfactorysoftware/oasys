@@ -20,6 +20,7 @@ use DreamFactory\Oasys\Providers\Salesforce;
  */
 
 return array(
+	'id'                 => 'salesforce',
 	'type'               => ProviderConfigTypes::OAUTH,
 	'access_token_type'  => TokenTypes::BEARER,
 	'client_id'          => '{{client_id}}',

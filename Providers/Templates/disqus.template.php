@@ -27,6 +27,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * disqus.config.php.dist
  */
 return array(
+	'id'                => 'disqus',
 	'type'              => ProviderConfigTypes::OAUTH,
 	'access_token_type' => TokenTypes::URI,
 	'client_id'         => '{{client_id}}',
