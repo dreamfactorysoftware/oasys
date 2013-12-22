@@ -261,7 +261,7 @@ class Oasys extends SeedUtility
 			$_generic = ':' . $_providerId;
 		}
 
-		return array($_providerId, $_type, $_mapKey, $_generic);
+		return array( $_providerId, $_type, $_mapKey, $_generic );
 	}
 
 	/**
