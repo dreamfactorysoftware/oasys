@@ -151,6 +151,11 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 			//	See if there is a default template and load up the defaults
 			$_template = $_path . '/Templates/' . $providerId . '.template.php';
 
+			if ( !is_file( $_template ) )
+			{
+				$_template = $_path . '/Templates/' . Inflector::neutralize( $providerId ) . '.template.php';
+			}
+
 			if ( is_file( $_template ) && is_readable( $_template ) )
 			{
 				/** @noinspection PhpIncludeInspection */
