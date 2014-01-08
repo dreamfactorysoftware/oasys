@@ -28,6 +28,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * This is the template for connecting Google Plus.
  */
 return array(
+	'id'              => 'twitter',
 	'type'            => ProviderConfigTypes::LEGACY_OAUTH,
 	'consumer_key'    => '{{consumer_key}}',
 	'consumer_secret' => '{{consumer_secret}}',

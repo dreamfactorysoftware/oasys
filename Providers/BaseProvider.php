@@ -22,7 +22,6 @@ namespace DreamFactory\Oasys\Providers;
 use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
-use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
@@ -32,8 +31,6 @@ use DreamFactory\Oasys\Oasys;
 use Kisma\Core\Interfaces\HttpMethod;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Curl;
-use Kisma\Core\Utility\Inflector;
-use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -109,12 +106,11 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	//*************************************************************************
 
 	/**
-	 * @param string                   $providerId The name/ID of this provider
+	 * @param string                   $providerId   The name/ID of this provider
 	 * @param array|ProviderConfigLike $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @throws \InvalidArgumentException
-	 *
 	 * @return \DreamFactory\Oasys\Providers\BaseProvider
 	 */
 	public function __construct( $providerId, $config = null )
@@ -128,7 +124,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 
 		if ( empty( $this->_providerId ) )
 		{
-			throw new \InvalidArgumentException( 'No provider specified.' );
+			throw new \InvalidArgumentException( 'No provider ID specified.' );
 		}
 
 		$this->init();
@@ -740,4 +736,5 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	{
 		return $this->_responsePayload;
 	}
+
 }

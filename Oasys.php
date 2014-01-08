@@ -58,6 +58,10 @@ class Oasys extends SeedUtility
 	 * @var string The prefix to provider IDs that want to use the generic
 	 */
 	const GENERIC_PROVIDER_PATTERN = 'generic:';
+	/**
+	 * @var string
+	 */
+	const DEFAULT_TEMPLATE_PATTERN = '*.template.php';
 
 	//*************************************************************************
 	//* Members
@@ -71,6 +75,10 @@ class Oasys extends SeedUtility
 	 * @var ProviderLike[]
 	 */
 	protected static $_providerCache = array();
+	/**
+	 * @var array
+	 */
+	protected static $_templateCache = array();
 	/**
 	 * @var array A namespace => path mapping of provider classes
 	 */
@@ -125,6 +133,8 @@ class Oasys extends SeedUtility
 			{
 				$_store->merge( $_provider->getConfigForStorage() );
 			}
+
+			$_store->set( 'oasys.template_cache', static::$_templateCache );
 		}
 	}
 
@@ -145,7 +155,6 @@ class Oasys extends SeedUtility
 	 * @param array|ProviderConfigLike $config
 	 * @param bool                     $createIfNotFound If false and provider not already created, NULL is returned
 	 *
-	 * @throws \InvalidArgumentException
 	 * @return BaseProvider
 	 */
 	public static function getProvider( $providerId, $config = null, $createIfNotFound = true )
@@ -278,7 +287,10 @@ class Oasys extends SeedUtility
 			//	Get the class mapping...
 			if ( null === ( $_map = Option::get( static::$_classMap, $_mapKey ) ) )
 			{
-				throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
+				if ( null === ( $_map = Option::get( static::$_classMap, $_providerId ) ) )
+				{
+					throw new \InvalidArgumentException( 'The provider "' . $providerId . '" has no associated mapping. Cannot create.' );
+				}
 			}
 
 			if ( true !== $createIfNotFound && array() == $_config )
@@ -291,8 +303,10 @@ class Oasys extends SeedUtility
 				throw new \InvalidArgumentException( 'The "$config" value specified must be null, an object, an array, or an instance of ProviderConfigLike.' );
 			}
 
+			//	Get the base template and merge it into the configuration
+			$_template = BaseProviderConfig::getTemplate( $_providerId );
+
 			//	Check the endpoint maps...
-			$_template = BaseProviderConfig::getTemplate( $providerId );
 			$_endpoints = Option::get( $_config, 'endpoint_map', array() );
 			Option::set( $_config, 'endpoint_map', array_merge( Option::get( $_template, 'endpoint_map', array() ), $_endpoints ) );
 
@@ -318,10 +332,10 @@ class Oasys extends SeedUtility
 
 			//	Instantiate!
 			$_provider = $_mirror->newInstanceArgs(
-				array(
-					 $_providerId,
-					 $_config
-				)
+								 array(
+									 $_providerId,
+									 $_config,
+								 )
 			);
 
 			//	Cache the current version...
@@ -410,18 +424,26 @@ class Oasys extends SeedUtility
 	 */
 	protected static function _cleanProviderId( $providerId )
 	{
-		return Inflector::neutralize(
-			strtolower(
-				str_ireplace(
-					array(
-						 'Provider.php',
-						 '.php'
-					),
-					null,
-					$providerId
-				)
-			)
+		$providerId = Inflector::neutralize(
+							   strtolower(
+								   str_ireplace(
+									   array(
+										   'Provider.php',
+										   '.php'
+									   ),
+									   null,
+									   $providerId
+								   )
+							   )
 		);
+
+		//	GitHub gets special treatment...
+		if ( $providerId == 'git_hub' )
+		{
+			$providerId = 'github';
+		}
+
+		return $providerId;
 	}
 
 	/**
@@ -461,6 +483,58 @@ class Oasys extends SeedUtility
 		//	Merge in the found classes
 		static::$_classMap = array_merge( static::$_classMap, $_classMap );
 		//		Log::debug( 'Classes mapped: ' . print_r( static::$_classMap, true ) );
+
+		//	Load the templates...
+		static::_loadTemplates();
+	}
+
+	/**
+	 * Makes a list of available templates
+	 *
+	 * @param string $pattern
+	 *
+	 * @return void
+	 */
+	protected static function _loadTemplates( $pattern = self::DEFAULT_TEMPLATE_PATTERN )
+	{
+		if ( array() !== ( static::$_templateCache = Oasys::getStore()->get( 'oasys.template_cache', array() ) ) )
+		{
+			//	Loaded from cache...
+			return;
+		}
+
+		$_list = array();
+
+		foreach ( static::$_providerPaths as $_path )
+		{
+			$_templates = glob( $_path . '/Templates/' . $pattern );
+
+			foreach ( $_templates as $_template )
+			{
+				$_templateName = str_ireplace( '.template.php', null, basename( $_template ) );
+				$_templateId = Inflector::neutralize( $_templateName );
+
+				//	Skip base classes in these directories...
+				if ( 'base_' == substr( $_templateId, 0, 4 ) )
+				{
+					continue;
+				}
+
+				$_list[$_templateId] = $_path . '/Templates/' . $_template;
+
+				unset( $_template, $_templateId, $_templateName );
+			}
+
+			unset( $_path, $_templates );
+		}
+
+		//	Merge in the found templates
+		Oasys::getStore()->set(
+			 'oasys.template_cache',
+			 static::$_templateCache = array_merge( static::$_templateCache, $_list )
+		);
+
+		Log::debug( 'Cached templates: ' . implode( ', ', array_keys( static::$_templateCache ) ) );
 	}
 
 	/**
@@ -546,6 +620,22 @@ class Oasys extends SeedUtility
 		}
 
 		return static::$_store;
+	}
+
+	/**
+	 * @param array $templateCache
+	 */
+	public static function setTemplateCache( $templateCache )
+	{
+		self::$_templateCache = $templateCache;
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function getTemplateCache()
+	{
+		return self::$_templateCache;
 	}
 }
 

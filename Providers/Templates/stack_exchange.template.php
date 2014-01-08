@@ -28,6 +28,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * This is the template for connecting to StackExchange
  */
 return array(
+	'id'              => 'stack_exchange',
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{your_client_id}}',
 	'client_secret'   => '{{your_client_secret}}',

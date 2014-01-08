@@ -32,6 +32,7 @@ use DreamFactory\Oasys\Enums\ProviderConfigTypes;
  * GitHub scopes are listed here: http://developer.github.com/v3/oauth/#scopes
  */
 return array(
+	'id'                 => 'github',
 	'type'               => ProviderConfigTypes::OAUTH,
 	'access_token_type'  => TokenTypes::URI,
 	'client_id'          => '{{client_id}}',

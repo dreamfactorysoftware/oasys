@@ -20,6 +20,7 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Oasys;
@@ -28,9 +29,9 @@ use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Inflector;
+use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\SchemaFormBuilder;
 use Kisma\Core\Utility\Option;
-use Kisma\Core\Utility;
 
 /**
  * BaseProviderConfig
@@ -93,15 +94,16 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	 * Creates a provider configuration from a template
 	 *
 	 * @param string                   $providerId
-	 * @param array|BaseProviderConfig $config Additional configuration options or overrides
+	 * @param array|BaseProviderConfig $config       Additional configuration options or overrides
+	 * @param string                   $fromTemplate The template to use if different from $providerId
 	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
 	 * @return ProviderConfigLike
-	 * @throws OasysConfigurationException
 	 */
-	public static function createFromTemplate( $providerId, $config = null )
+	public static function createFromTemplate( $providerId, $config = null, $fromTemplate = null )
 	{
 		/** @var array $_defaults */
-		$_defaults = static::getTemplate( $providerId );
+		$_defaults = static::getTemplate( $fromTemplate ? : $providerId );
 
 		if ( empty( $_defaults ) )
 		{
@@ -149,6 +151,11 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 			//	See if there is a default template and load up the defaults
 			$_template = $_path . '/Templates/' . $providerId . '.template.php';
 
+			if ( !is_file( $_template ) )
+			{
+				$_template = $_path . '/Templates/' . Inflector::neutralize( $providerId ) . '.template.php';
+			}
+
 			if ( is_file( $_template ) && is_readable( $_template ) )
 			{
 				/** @noinspection PhpIncludeInspection */
@@ -182,16 +189,16 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 			{
 				$_schema = array_merge(
 					array(
-						 'provider_type' => array(
-							 'type'  => 'text',
-							 'class' => 'uneditable-input',
-							 'label' => 'Provider Type',
-							 'value' => str_ireplace(
-								 'oauth',
-								 'OAuth',
-								 ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
-							 ),
-						 ),
+						'provider_type' => array(
+							'type'  => 'text',
+							'class' => 'uneditable-input',
+							'label' => 'Provider Type',
+							'value' => str_ireplace(
+								'oauth',
+								'OAuth',
+								ucfirst( Inflector::deneutralize( strtolower( $_typeName ) ) )
+							),
+						),
 					),
 					$_schema
 				);

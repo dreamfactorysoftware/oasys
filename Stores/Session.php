@@ -24,7 +24,7 @@ use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
-use Kisma\Core\Utility;
+use Kisma\Core\Utility\Storage;
 
 /**
  * Session
@@ -48,12 +48,19 @@ class Session extends BaseOasysStore
 			throw new OasysException( 'No session active. Session storage not available.' );
 		}
 
-		parent::__construct(
-			  array_merge(
-				  json_decode( Option::get( $_SESSION, static::KEY_PREFIX . '.data', json_encode( array() ) ) ),
-				  $contents
-			  )
-		);
+		$_data = array();
+
+		if ( null !== ( $_parcel = Option::get( $_SESSION, static::KEY_PREFIX . '.data' ) ) )
+		{
+			$_data = Storage::defrost( $_parcel );
+		}
+
+		if ( is_array( $_data ) )
+		{
+			$_data = array_merge( $_data, $contents );
+		}
+
+		parent::__construct( $_data );
 	}
 
 	/**
@@ -71,7 +78,7 @@ class Session extends BaseOasysStore
 
 		if ( !empty( $_settings ) )
 		{
-			$_SESSION[static::KEY_PREFIX . '.data'] = json_encode( $_settings );
+			$_SESSION[static::KEY_PREFIX . '.data'] = Storage::freeze( $_settings );
 		}
 
 		return true;

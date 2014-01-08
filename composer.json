@@ -1,6 +1,6 @@
 {
 	"name":              "dreamfactory/oasys",
-	"version":           "0.4.2",
+	"version":           "0.4.3",
 	"description":       "DreamFactory Oasys (Open Authentication SYStem)",
 	"keywords":          ["oasis", "dsp", "dsp-core", "dreamfactory", "openid", "facebook", "google", "twitter", "oauth", "ldap", "active directory"],
 	"homepage":          "http://dreamfactorysoftware.github.io",
