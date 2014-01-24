@@ -24,7 +24,7 @@
  */
 
 //	Composer
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
+require dirname( __DIR__ ) . '/vendor/autoload.php';
 
 //	Testing keys
 if ( file_exists( __DIR__ . '/config/keys.php' ) )
