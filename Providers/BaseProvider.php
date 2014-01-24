@@ -100,13 +100,17 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 * @var int The provider's last error code returned
 	 */
 	protected $_lastErrorCode = null;
+	/**
+	 * @var bool If true, the configured keys for the provider will be used for all auth & auth
+	 */
+	protected $_singleUser = false;
 
 	//*************************************************************************
 	//	Methods
 	//*************************************************************************
 
 	/**
-	 * @param string                   $providerId   The name/ID of this provider
+	 * @param string                   $providerId The name/ID of this provider
 	 * @param array|ProviderConfigLike $config
 	 *
 	 * @throws \DreamFactory\Oasys\Exceptions\OasysConfigurationException
@@ -737,4 +741,22 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 		return $this->_responsePayload;
 	}
 
+	/**
+	 * @param boolean $singleUser
+	 *
+	 * @return BaseProvider
+	 */
+	public function setSingleUser( $singleUser )
+	{
+		$this->_singleUser = $singleUser;
+		return $this;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getSingleUser()
+	{
+		return $this->_singleUser;
+	}
 }

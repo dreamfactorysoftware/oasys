@@ -30,10 +30,10 @@ use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Enums\GrantTypes;
 use DreamFactory\Oasys\Enums\OAuthTypes;
 use DreamFactory\Oasys\Enums\TokenTypes;
-use DreamFactory\Oasys\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Exceptions\AuthenticationException;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\OAuthServiceLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
 use DreamFactory\Oasys\Oasys;
 use DreamFactory\Platform\Yii\Stores\ProviderUserStore;
@@ -171,12 +171,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 		//	Got a code, now get a token
 		$_token = $this->requestAccessToken(
-					   GrantTypes::AUTHORIZATION_CODE,
-					   array(
-						   'code'         => $_code,
-						   'redirect_uri' => $_redirectUri,
-						   'state'        => Option::request( 'state' ),
-					   )
+			GrantTypes::AUTHORIZATION_CODE,
+			array(
+				'code'         => $_code,
+				'redirect_uri' => $_redirectUri,
+				'state'        => Option::request( 'state' ),
+			)
 		);
 
 		$_info = null;
@@ -186,8 +186,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			if ( !is_string( $_token['result'] ) )
 			{
 				$_info = $_token['result'];
-			}
-			else
+			} else
 			{
 				parse_str( $_token['result'], $_info );
 			}
@@ -244,7 +243,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		{
 			$_tokenFound = true;
 			$this->setConfig( 'access_token', $_token );
-			$this->_needProfileUserId = true;
+			$this->_needProfileUserId = !$this->_singleUser;
 		}
 
 		return $_tokenFound;
@@ -256,12 +255,12 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	protected function _revokeAuthorization( $providerUserId = null )
 	{
 		$this->setConfig(
-			 array(
-				 'access_token'          => null,
-				 'access_token_expires'  => null,
-				 'refresh_token'         => null,
-				 'refresh_token_expires' => null,
-			 )
+			array(
+				'access_token'          => null,
+				'access_token_expires'  => null,
+				'refresh_token'         => null,
+				'refresh_token_expires' => null,
+			)
 		);
 
 		Log::debug( 'Revoked/reset any session authorization' );
@@ -356,7 +355,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			Log::debug( 'Refresh of access token successful for client_id: ' . $this->getConfig( 'client_id' ) );
 
 			//	Update user profile with current stuff
-			$this->_needProfileUserId = true;
+			$this->_needProfileUserId = !$this->_singleUser;
 
 			return true;
 		}
@@ -388,8 +387,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 		{
 			$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
 			$_url = rtrim( $_endpoint['endpoint'], '/ ' ) . '/' . ltrim( $resource, '/ ' );
-		}
-		else
+		} else
 		{
 			//	Use given url
 			$_url = $_endpoint = $resource;
@@ -597,8 +595,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 					{
 						$_payload = json_decode( $payload, $assocArray );
 					}
-				}
-				else
+				} else
 				{
 					if ( !is_string( $_payload ) )
 					{
@@ -617,8 +614,7 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 				if ( is_object( $payload ) )
 				{
 					$_payload = Xml::fromObject( $payload );
-				}
-				else if ( is_array( $payload ) )
+				} else if ( is_array( $payload ) )
 				{
 					$_payload = Xml::fromArray( $payload );
 				}
