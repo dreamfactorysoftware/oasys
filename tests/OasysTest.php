@@ -17,9 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Tests\Oasys;
+namespace DreamFactory\Oasys;
 
-use DreamFactory\Oasys\Oasys;
 use DreamFactory\Oasys\Stores\FileSystem;
 use Kisma\Core\Utility\Log;
 
