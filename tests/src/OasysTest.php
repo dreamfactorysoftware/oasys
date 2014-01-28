@@ -17,10 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Oasys;
+namespace DreamFactory\Tests\Oasys;
 
+use DreamFactory\Oasys\Oasys;
 use DreamFactory\Oasys\Stores\FileSystem;
-use Kisma\Core\Utility\Log;
 
 /**
  * OasysTest
@@ -30,8 +30,6 @@ class OasysTest extends \PHPUnit_Framework_TestCase
 {
 	protected function setUp()
 	{
-		Log::setDefaultLog( __DIR__ . '/log/error.log' );
-
 		Oasys::setStore( new FileSystem( __FILE__ ) );
 
 		parent::setUp();
@@ -45,6 +43,6 @@ class OasysTest extends \PHPUnit_Framework_TestCase
 
 		//	Bad
 		$this->setExpectedException( '\\InvalidArgumentException' );
-		Oasys::getProvider( 'yoohoo' );
+		Oasys::getProvider( 'woohoo' );
 	}
 }

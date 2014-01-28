@@ -17,12 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * bootstrap.php
  * Bootstrap script for Oasys PHPUnit tests
  */
-
 //	Composer
 require dirname( __DIR__ ) . '/vendor/autoload.php';
 

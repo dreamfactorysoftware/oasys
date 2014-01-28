@@ -15,12 +15,15 @@
 	"require":           {
 		"php":         ">=5.3.18",
 		"ext-curl":    "*",
-		"kisma/kisma": ">=0.2.0"
+		"kisma/kisma": ">=0.2.7"
+	},
+	"require-dev":       {
+		"phpunit/phpunit": "*"
 	},
 	"autoload":          {
-		"psr-0": {
-			"DreamFactory\\Oasys": ""
+		"psr-4": {
+			"DreamFactory\\Oasys\\":        "src/",
+			"DreamFactory\\Tests\\Oasys\\": "tests/src/"
 		}
-	},
-	"target-dir":        "DreamFactory/Oasys"
+	}
 }
