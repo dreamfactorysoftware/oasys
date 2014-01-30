@@ -19,11 +19,11 @@
 	<testsuite name="Release">
 		<directory suffix="Test.php">./tests</directory>
 		<exclude>
+			<directory>./tests/log</directory>
 			<directory>./tests/metrics</directory>
-			<directory>./tests/public</directory>
 			<directory>./tests/config</directory>
 			<directory>./tests/web</directory>
-			<directory>./tests/log</directory>
+			<directory>./tests/public</directory>
 		</exclude>
 	</testsuite>
 	<logging>
