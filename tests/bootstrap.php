@@ -17,14 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use Kisma\Core\Utility\Log;
 
 /**
  * bootstrap.php
  * Bootstrap script for Oasys PHPUnit tests
  */
-
 //	Composer
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
+require dirname( __DIR__ ) . '/vendor/autoload.php';
 
 //	Testing keys
 if ( file_exists( __DIR__ . '/config/keys.php' ) )
@@ -32,3 +32,5 @@ if ( file_exists( __DIR__ . '/config/keys.php' ) )
 	/** @noinspection PhpIncludeInspection */
 	require_once __DIR__ . '/config/keys.php';
 }
+
+Log::setDefaultLog( __DIR__ . '/log/oasys.tests.log' );

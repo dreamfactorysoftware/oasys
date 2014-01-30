@@ -17,11 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace DreamFactory\Tests\Oasys;
+namespace DreamFactory\Oasys;
 
-use DreamFactory\Oasys\Oasys;
 use DreamFactory\Oasys\Stores\FileSystem;
-use Kisma\Core\Utility\Log;
 
 /**
  * OasysTest
@@ -29,15 +27,29 @@ use Kisma\Core\Utility\Log;
  */
 class OasysTest extends \PHPUnit_Framework_TestCase
 {
+	//*************************************************************************
+	//	Methods
+	//*************************************************************************
+
+	/**
+	 * {@InheritDoc}
+	 * @covers \DreamFactory\Oasys\Oasys::setStore
+	 * @covers \DreamFactory\Oasys\Oasys::sync
+	 * @covers \DreamFactory\Oasys\Stores\FileSystem::__construct
+	 * @covers \DreamFactory\Oasys\Stores\FileSystem::sync
+	 * @covers \DreamFactory\Oasys\Stores\FileSystem::_load
+	 * @covers \DreamFactory\Oasys\Stores\FileSystem::_save
+	 */
 	protected function setUp()
 	{
-		Log::setDefaultLog( __DIR__ . '/log/error.log' );
-
 		Oasys::setStore( new FileSystem( __FILE__ ) );
 
 		parent::setUp();
 	}
 
+	/**
+	 * @covers \DreamFactory\Oasys\Oasys::getProvider
+	 */
 	public function testGetProvider()
 	{
 		//	Good
@@ -46,6 +58,6 @@ class OasysTest extends \PHPUnit_Framework_TestCase
 
 		//	Bad
 		$this->setExpectedException( '\\InvalidArgumentException' );
-		Oasys::getProvider( 'yoohoo' );
+		Oasys::getProvider( 'woohoo' );
 	}
 }

@@ -1,4 +1,4 @@
-# Oasys (Open Authentication SYStem)
+# Oasys (Open Authentication SYStem) v0.4.6
 
 Multi-provider, extensible authentication framework
 
@@ -16,7 +16,7 @@ Package installation is handled by Composer.
 ``` json
 {
     "require": {
-        "dreamfactory/oasys": ">=0.4.*"
+        "dreamfactory/oasys": "~0.4.*"
     }
 }
 ```
