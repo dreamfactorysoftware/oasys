@@ -30,8 +30,8 @@
 		"phpunit/php-invoker":          "@stable"
 	},
 	"autoload":          {
-		"psr-0": {
-			"DreamFactory\\Oasys": ""
+		"psr-4": {
+			"DreamFactory\\Oasys\\":        "src/"
 		}
 	}
 }
