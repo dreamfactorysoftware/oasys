@@ -1,12 +1,11 @@
 # Oasys (Open Authentication SYStem) v0.4.6
 
-[![Latest Stable Version](https://poser.pugx.org/dreamfactory/oasys/v/stable.png)](https://packagist.org/packages/dreamfactory/oasys) [![Total Downloads](https://poser.pugx.org/dreamfactory/oasys/downloads.png)](https://packagist.org/packages/dreamfactory/oasys) [![Latest Unstable Version](https://poser.pugx.org/dreamfactory/oasys/v/unstable.png)](https://packagist.org/packages/dreamfactory/oasys) [![License](https://poser.pugx.org/dreamfactory/oasys/license.png)](https://packagist.org/packages/dreamfactory/oasys)
 
 Multi-provider, extensible authentication framework
 
 ## Build Status
 
-<a href="http://tc.dreamfactory.com:8111/viewType.html?buildTypeId=oasys_release&guest=1"><img src="http://tc.dreamfactory.com:8111/app/rest/builds/buildType:(id:oasys_release)/statusIcon"/></a>
+[![Latest Stable Version](https://poser.pugx.org/dreamfactory/oasys/v/stable.png)](https://packagist.org/packages/dreamfactory/oasys) [![Total Downloads](https://poser.pugx.org/dreamfactory/oasys/downloads.png)](https://packagist.org/packages/dreamfactory/oasys) [![Latest Unstable Version](https://poser.pugx.org/dreamfactory/oasys/v/unstable.png)](https://packagist.org/packages/dreamfactory/oasys) [![License](https://poser.pugx.org/dreamfactory/oasys/license.png)](https://packagist.org/packages/dreamfactory/oasys)<a href="http://tc.dreamfactory.com:8111/viewType.html?buildTypeId=oasys_release&guest=1"><img src="http://tc.dreamfactory.com:8111/app/rest/builds/buildType:(id:oasys_release)/statusIcon"/></a>
 
 ## Installation
 
