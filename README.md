@@ -1,5 +1,7 @@
 # Oasys (Open Authentication SYStem) v0.4.6
 
+[![Latest Stable Version](https://poser.pugx.org/dreamfactory/oasys/v/stable.png)](https://packagist.org/packages/dreamfactory/oasys) [![Total Downloads](https://poser.pugx.org/dreamfactory/oasys/downloads.png)](https://packagist.org/packages/dreamfactory/oasys) [![Latest Unstable Version](https://poser.pugx.org/dreamfactory/oasys/v/unstable.png)](https://packagist.org/packages/dreamfactory/oasys) [![License](https://poser.pugx.org/dreamfactory/oasys/license.png)](https://packagist.org/packages/dreamfactory/oasys)
+
 Multi-provider, extensible authentication framework
 
 ## Build Status
