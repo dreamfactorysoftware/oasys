@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Oasys" tests="1" assertions="2" failures="0" errors="0" time="0.202489">
+    <testsuite name="DreamFactory\Oasys\OasysTest" file="/opt/dreamfactory/lib/oasys/tests/src/OasysTest.php" namespace="DreamFactory\Oasys" fullPackage="DreamFactory.Oasys" tests="1" assertions="2" failures="0" errors="0" time="0.202489">
+      <testcase name="testGetProvider" class="DreamFactory\Oasys\OasysTest" file="/opt/dreamfactory/lib/oasys/tests/src/OasysTest.php" line="53" assertions="2" time="0.202489"/>
+    </testsuite>
+  </testsuite>
+</testsuites>
