@@ -1,9 +1,7 @@
 vendor
 .idea/workspace.xml
 .idea/tasks.xml
-composer.lock
 .composer
 tests/log
 tests/config/keys.php
-tests/metrics
 log
