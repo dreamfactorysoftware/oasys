@@ -14,10 +14,10 @@
 	"require":           {
 		"php":         ">=5.3.18",
 		"ext-curl":    "*",
-		"kisma/kisma": ">=0.2.22"
+		"kisma/kisma": "~0.2@stable"
 	},
 	"require-dev":       {
-		"phpunit/phpunit":          "*",
+		"phpunit/phpunit":          "~3.7@stable",
 		"phpunit/phpunit-selenium": "@stable",
 		"phpunit/phpunit-story":    "@stable",
 		"phpunit/dbunit":           "@stable",
