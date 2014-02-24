@@ -5,3 +5,4 @@ vendor
 tests/log
 tests/config/keys.php
 log
+build/
