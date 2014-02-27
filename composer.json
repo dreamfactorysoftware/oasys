@@ -1,29 +1,25 @@
 {
-	"name":              "dreamfactory/oasys",
-	"description":       "DreamFactory Oasys(tm) Open Authentication System",
-	"keywords":          ["library", "oauth", "oauth2", "openid", "ldap"],
-	"homepage":          "http://dreamfactorysoftware.github.io",
-	"type":              "library",
-	"license":           "Apache-2.0",
-	"authors":           [
+	"name":        "dreamfactory/oasys",
+	"description": "DreamFactory Oasys(tm) Open Authentication System",
+	"keywords":    ["library", "oauth", "oauth2", "openid", "ldap"],
+	"homepage":    "http://dreamfactorysoftware.github.io",
+	"type":        "library",
+	"license":     "Apache-2.0",
+	"authors":     [
 		{
 			"name":  "Jerry Ablan",
 			"email": "jerryablan@dreamfactory.com"
 		}
 	],
-	"require":           {
+	"require":     {
 		"php":         ">=5.3.18",
 		"ext-curl":    "*",
 		"kisma/kisma": "~0.2@stable"
 	},
-	"require-dev":       {
-		"phpunit/phpunit":          "~3.7@stable",
-		"phpunit/phpunit-selenium": "@stable",
-		"phpunit/phpunit-story":    "@stable",
-		"phpunit/dbunit":           "@stable",
-		"phpunit/php-invoker":      "@stable"
+	"require-dev": {
+		"phpunit/phpunit": "~3.7@stable"
 	},
-	"autoload":          {
+	"autoload":    {
 		"psr-4": {
 			"DreamFactory\\Oasys\\": "src/"
 		}

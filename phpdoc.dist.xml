@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdoc>
+	<title>DreamFactory Open Authentication System</title>
+	<parser>
+		<default-package-name>DreamFactory\Oasys</default-package-name>
+		<target>build/doc</target>
+		<markers>
+			<item>TODO</item>
+			<item>FIXME</item>
+		</markers>
+	</parser>
+	<transformer>
+		<target>build/doc</target>
+	</transformer>
+	<files>
+		<directory>src/</directory>
+		<ignore>tests/*</ignore>
+		<ignore>vendor/*</ignore>
+	</files>
+	<transformations>
+		<template name="responsive-twig"/>
+	</transformations>
+</phpdoc>
