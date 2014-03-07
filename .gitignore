@@ -1,7 +1,7 @@
 vendor
-.idea/workspace.xml
-.idea/tasks.xml
+.idea
 .composer
 tests/log
 tests/config/keys.php
 log
+build
