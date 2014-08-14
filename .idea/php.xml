@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PhpUnit" bootstrap_file_path="$PROJECT_DIR$/vendor/autoload.php" configuration_file_path="$PROJECT_DIR$/phpunit-tc.xml" custom_loader_path="" phpunit_phar_path="" />
+  <component name="PhpUnit">
+    <phpunit_settings>
+      <PhpUnitSettings bootstrap_file_path="$PROJECT_DIR$/vendor/autoload.php" configuration_file_path="$PROJECT_DIR$/phpunit-tc.xml" custom_loader_path="" phpunit_phar_path="" />
+    </phpunit_settings>
+  </component>
 </project>
 
