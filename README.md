@@ -1,4 +1,4 @@
-# Oasys (Open Authentication SYStem) v0.4.11
+# Oasys (Open Authentication SYStem) v0.4.12
 
 
 Multi-provider, extensible authentication framework
