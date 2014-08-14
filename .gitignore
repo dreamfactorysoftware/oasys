@@ -1,5 +1,5 @@
-vendor
-.idea
+vendor/
+.idea/
 .composer
 tests/log
 tests/config/keys.php
