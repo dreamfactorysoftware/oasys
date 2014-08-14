@@ -31,7 +31,7 @@ use Kisma\Core\Utility\Option;
  * LegacyOAuthClient
  * A base that knows how to talk dirty. Er, uhm, I mean, OAuth v1.x
  */
-abstract class BaseLegacyOAuthProvider extends BaseProvider implements LegacyOAuthServiceLike
+abstract class LegacyOAuthClient extends BaseProvider implements LegacyOAuthServiceLike
 {
 	//**************************************************************************
 	//* Methods
