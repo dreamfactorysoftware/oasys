@@ -727,9 +727,11 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			$_profile->setProviderId( $this->_providerId );
 			$this->setConfig( 'provider_user_id', $_id = $_profile->getUserId() );
 
-			//	For posterity
+			//	For posterity - Check if method exists so testing works.
 			/** @noinspection PhpUndefinedMethodInspection */
-			Oasys::getStore()->setProviderUserId( $_id );
+            if ( method_exists( Oasys::getStore(), 'setProviderUserId' ) ) {
+                Oasys::getStore()->setProviderUserId( $_id );
+            }
 
 			//	A tag
 			Log::debug( 'User profile updated [' . $this->_providerId . ':' . $_id . ']' );
