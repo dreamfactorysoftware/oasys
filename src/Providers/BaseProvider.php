@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -291,8 +291,8 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array(), array $curlOptions = array() )
 	{
-		$_headers = $headers ? : array();
-		$_payload = $payload ? : array();
+		$_headers = $headers ?: array();
+		$_payload = $payload ?: array();
 
 		//	Get the service endpoint and make the url spiffy
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
@@ -749,6 +749,7 @@ abstract class BaseProvider extends Seed implements ProviderLike, HttpMethod
 	public function setSingleUser( $singleUser )
 	{
 		$this->_singleUser = $singleUser;
+
 		return $this;
 	}
 

@@ -18,6 +18,12 @@ const GITHUB_CLIENT_ID = 'client_id';
 const GITHUB_CLIENT_SECRET = 'client_secret';
 
 /**
+ * Google Plus keys
+ */
+const GOOGLE_CLIENT_ID = 'client_id';
+const GOOGLE_CLIENT_SECRET = 'client_secret';
+
+/**
  * Twitter keys
  */
 const TWITTER_CONSUMER_KEY = 'consumer_id';

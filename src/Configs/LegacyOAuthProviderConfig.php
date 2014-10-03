@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Enums\Flows;
-use Kisma\Core\Enums\HttpMethod;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -111,19 +110,19 @@ class LegacyOAuthProviderConfig extends BaseProviderConfig
 		return parent::toJson(
 			$returnAll,
 			array(
-				 'consumerKey',
-				 'consumerSecret',
-				 'signatureMethod',
-				 'authorizeUrl',
-				 'authType',
-				 'flowType',
-				 'token',
-				 'accessToken',
-				 'accessTokenSecret',
-				 'accessTokenExpires',
-				 'refreshToken',
-				 'refreshTokenExpires',
-				 'redirectUri',
+				'consumerKey',
+				'consumerSecret',
+				'signatureMethod',
+				'authorizeUrl',
+				'authType',
+				'flowType',
+				'token',
+				'accessToken',
+				'accessTokenSecret',
+				'accessTokenExpires',
+				'refreshToken',
+				'refreshTokenExpires',
+				'redirectUri',
 			)
 		);
 	}

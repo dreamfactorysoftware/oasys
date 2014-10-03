@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ namespace DreamFactory\Oasys\Stores;
 
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
-use Kisma\Core\Utility\Option;
 use Kisma\Core\Utility;
+use Kisma\Core\Utility\Option;
 
 /**
  * FileSystem
@@ -65,7 +65,7 @@ class FileSystem extends BaseOasysStore
 	public function __construct( $storageId, $storagePath = null, $contents = array() )
 	{
 		$this->_storageId = $storageId;
-		$this->_storagePath = $storagePath ? : Option::get( $contents, 'storage_path', rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR ), true );
+		$this->_storagePath = $storagePath ?: Option::get( $contents, 'storage_path', rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR ), true );
 		$this->_fileName = Option::get( $contents, 'file_name', static::KEY_PREFIX . sha1( static::KEY_PREFIX . $storageId ), true );
 
 		parent::__construct( $contents );

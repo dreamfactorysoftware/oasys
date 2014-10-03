@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,8 @@ $_config = null;
 //	Choose the provider to test
 //$_providerId = 'facebook';
 //$_providerId = 'github';
-$_providerId = 'twitter';
+//$_providerId = 'twitter';
+$_providerId = 'google_plus';
 
 switch ( $_providerId )
 {
@@ -52,6 +53,14 @@ switch ( $_providerId )
 			'client_secret' => GITHUB_CLIENT_SECRET,
 		);
 		break;
+
+    case 'google_plus':
+        $_config = array(
+            'flow_type'     => Flows::CLIENT_SIDE,
+            'client_id'     => GOOGLE_CLIENT_ID,
+            'client_secret' => GOOGLE_CLIENT_SECRET,
+        );
+        break;
 
 	case 'twitter':
 		array(

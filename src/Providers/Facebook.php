@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,110 +35,110 @@ use Kisma\Core\Utility\Option;
  */
 class Facebook extends BaseOAuthProvider
 {
-    //*************************************************************************
-    //	Constants
-    //*************************************************************************
+	//*************************************************************************
+	//	Constants
+	//*************************************************************************
 
-    /**
-     * @var string
-     */
-    const DEFAULT_SCOPE = 'email,user_about_me,user_birthday,user_hometown,user_website,read_stream,offline_access,publish_stream,read_friendlists';
+	/**
+	 * @var string
+	 */
+	const DEFAULT_SCOPE = 'email,user_about_me,user_birthday,user_hometown,user_website,read_stream,offline_access,publish_stream,read_friendlists';
 
-    //*************************************************************************
-    //	Methods
-    //*************************************************************************
+	//*************************************************************************
+	//	Methods
+	//*************************************************************************
 
-    /**
-     * Revoke a user's app auth on Facebook
-     *
-     * @param string $providerUserId
-     *
-     * @throws \DreamFactory\Platform\Exceptions\BadRequestException
-     */
-    protected function _revokeAuthorization( $providerUserId = null )
-    {
-        $_id = $providerUserId ? : null;
+	/**
+	 * Revoke a user's app auth on Facebook
+	 *
+	 * @param string $providerUserId
+	 *
+	 * @throws \DreamFactory\Platform\Exceptions\BadRequestException
+	 */
+	protected function _revokeAuthorization( $providerUserId = null )
+	{
+		$_id = $providerUserId ?: null;
 
-        if ( empty( $providerUserId ) && null === ( $_id = $this->getConfig( 'provider_user_id' ) ) )
-        {
-            $_profile = $this->getUserData();
+		if ( empty( $providerUserId ) && null === ( $_id = $this->getConfig( 'provider_user_id' ) ) )
+		{
+			$_profile = $this->getUserData();
 
-            if ( !empty( $_profile ) && null !== ( $_id = $_profile->getUserId() ) )
-            {
-                throw new BadRequestException( 'Revocation not possible without provider user ID.' );
-            }
-        }
+			if ( !empty( $_profile ) && null !== ( $_id = $_profile->getUserId() ) )
+			{
+				throw new BadRequestException( 'Revocation not possible without provider user ID.' );
+			}
+		}
 
-        $_result = $this->fetch( '/' . $_id . '/permissions', array(), HttpMethod::Delete );
+		$_result = $this->fetch( '/' . $_id . '/permissions', array(), HttpMethod::Delete );
 
-        if ( true !== ( $_success = Option::get( $_result, 'result', false ) ) )
-        {
-            if ( HttpResponse::BadRequest !== Option::get( $_result, 'code' ) )
-            {
-                Log::error( 'Facebook revocation for user ID "' . $_id . '" FAILED.' );
+		if ( true !== ( $_success = Option::get( $_result, 'result', false ) ) )
+		{
+			if ( HttpResponse::BadRequest !== Option::get( $_result, 'code' ) )
+			{
+				Log::error( 'Facebook revocation for user ID "' . $_id . '" FAILED.' );
 
-                return;
-            }
-            else
-            {
-                Log::debug( 'Facebook revocation for user ID "' . $_id . '" already completed.' );
-            }
-        }
-        else
-        {
-            Log::debug( 'Facebook revocation for user ID "' . $_id . '" successful.' );
-        }
+				return;
+			}
+			else
+			{
+				Log::debug( 'Facebook revocation for user ID "' . $_id . '" already completed.' );
+			}
+		}
+		else
+		{
+			Log::debug( 'Facebook revocation for user ID "' . $_id . '" successful.' );
+		}
 
-        parent::_revokeAuthorization();
-    }
+		parent::_revokeAuthorization();
+	}
 
-    /**
-     * Returns this user as a GenericUser
-     *
-     *
-     * @throws \DreamFactory\Oasys\Exceptions\OasysException
-     * @throws \InvalidArgumentException
-     * @return UserLike
-     */
-    public function getUserData()
-    {
-        $_response = parent::getUserData();
+	/**
+	 * Returns this user as a GenericUser
+	 *
+	 *
+	 * @throws \DreamFactory\Oasys\Exceptions\OasysException
+	 * @throws \InvalidArgumentException
+	 * @return UserLike
+	 */
+	public function getUserData()
+	{
+		$_response = parent::getUserData();
 
-        if ( HttpResponse::Ok != ( $_code = Option::get( $_response, 'code', Curl::getLastHttpCode() ) ) )
-        {
-            throw new OasysException( 'Unexpected response code', $_code, null, $_response );
-        }
+		if ( HttpResponse::Ok != ( $_code = Option::get( $_response, 'code', Curl::getLastHttpCode() ) ) )
+		{
+			throw new OasysException( 'Unexpected response code', $_code, null, $_response );
+		}
 
-        $_profile = Option::get( $_response, 'result' );
+		$_profile = Option::get( $_response, 'result' );
 
-        if ( empty( $_profile ) )
-        {
-            throw new \InvalidArgumentException( 'No profile available to convert.' );
-        }
+		if ( empty( $_profile ) )
+		{
+			throw new \InvalidArgumentException( 'No profile available to convert.' );
+		}
 
-        $_profileId = Option::get( $_profile, 'id' );
+		$_profileId = Option::get( $_profile, 'id' );
 
-        $_name = array(
-            'formatted'  => Option::get( $_profile, 'name' ),
-            'familyName' => Option::get( $_profile, 'last_name' ),
-            'givenName'  => Option::get( $_profile, 'first_name' ),
-        );
+		$_name = array(
+			'formatted'  => Option::get( $_profile, 'name' ),
+			'familyName' => Option::get( $_profile, 'last_name' ),
+			'givenName'  => Option::get( $_profile, 'first_name' ),
+		);
 
-        return new GenericUser(
-            array(
-                'user_id'            => $_profileId,
-                'published'          => Option::get( $_profile, 'updated_time' ),
-                'updated'            => Option::get( $_profile, 'updated_time' ),
-                'display_name'       => $_name['formatted'],
-                'name'               => $_name,
-                'preferred_username' => Option::get( $_profile, 'username' ),
-                'gender'             => Option::get( $_profile, 'gender' ),
-                'email_address'      => Option::get( $_profile, 'email' ),
-                'urls'               => array( Option::get( $_profile, 'link' ) ),
-                'relationships'      => Option::get( $_profile, 'friends' ),
-                'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
-                'user_data'          => $_profile,
-            )
-        );
-    }
+		return new GenericUser(
+			array(
+				'user_id'            => $_profileId,
+				'published'          => Option::get( $_profile, 'updated_time' ),
+				'updated'            => Option::get( $_profile, 'updated_time' ),
+				'display_name'       => $_name['formatted'],
+				'name'               => $_name,
+				'preferred_username' => Option::get( $_profile, 'username' ),
+				'gender'             => Option::get( $_profile, 'gender' ),
+				'email_address'      => Option::get( $_profile, 'email' ),
+				'urls'               => array( Option::get( $_profile, 'link' ) ),
+				'relationships'      => Option::get( $_profile, 'friends' ),
+				'thumbnail_url'      => $this->_config->getEndpointUrl() . '/' . $_profileId . '/picture?width=150&height=150',
+				'user_data'          => $_profile,
+			)
+		);
+	}
 }
