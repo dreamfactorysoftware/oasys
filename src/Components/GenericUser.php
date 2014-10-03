@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,11 +221,10 @@ class GenericUser extends Seed implements UserLike
 	/**
 	 * @var array
 	 */
-	protected $_employer
-		= array(
-			'companyName' => null,
-			'title'       => null,
-		);
+	protected $_employer = array(
+		'companyName' => null,
+		'title'       => null,
+	);
 	/**
 	 * @var mixed Either the actual source data from the provider or a user-defined value. Not part of the PoCo spec.
 	 */

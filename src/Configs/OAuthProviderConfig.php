@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
  */
 namespace DreamFactory\Oasys\Configs;
 
+use DreamFactory\Oasys\Enums\AccessTypes;
 use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Enums\GrantTypes;
-use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Enums\OAuthTypes;
-use DreamFactory\Oasys\Enums\AccessTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
 use Kisma\Core\Utility\Option;
 
 /**
@@ -135,24 +135,24 @@ class OAuthProviderConfig extends BaseProviderConfig
 		return parent::toJson(
 			$returnAll,
 			array(
-				 'clientId',
-				 'clientSecret',
-				 'redirectUri',
-				 'scope',
-				 'certificateFile',
-				 'authorizeUrl',
-				 'grantType',
-				 'authType',
-				 'accessType',
-				 'flowType',
-				 'accessTokenParamName',
-				 'authHeaderName',
-				 'accessToken',
-				 'accessTokenType',
-				 'accessTokenSecret',
-				 'accessTokenExpires',
-				 'refreshToken',
-				 'refreshTokenExpires',
+				'clientId',
+				'clientSecret',
+				'redirectUri',
+				'scope',
+				'certificateFile',
+				'authorizeUrl',
+				'grantType',
+				'authType',
+				'accessType',
+				'flowType',
+				'accessTokenParamName',
+				'authHeaderName',
+				'accessToken',
+				'accessTokenType',
+				'accessTokenSecret',
+				'accessTokenExpires',
+				'refreshToken',
+				'refreshTokenExpires',
 			)
 		);
 	}

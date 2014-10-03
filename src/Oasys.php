@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ namespace DreamFactory\Oasys;
 
 use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
-use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
+use DreamFactory\Oasys\Interfaces\ProviderLike;
 use DreamFactory\Oasys\Interfaces\StorageProviderLike;
 use DreamFactory\Oasys\OasysException;
 use DreamFactory\Oasys\Providers\BaseProvider;
@@ -278,7 +278,7 @@ class Oasys extends SeedUtility
 	{
 		list( $_providerId, $_type, $_mapKey, $_generic ) = static::_normalizeProviderId( $providerId );
 
-		$_cacheKey = $_mapKey . ( $_generic ? : null );
+		$_cacheKey = $_mapKey . ( $_generic ?: null );
 
 		if ( null === ( $_provider = Option::get( static::$_providerCache, $_cacheKey ) ) )
 		{
@@ -332,10 +332,10 @@ class Oasys extends SeedUtility
 
 			//	Instantiate!
 			$_provider = $_mirror->newInstanceArgs(
-								 array(
-									 $_providerId,
-									 $_config,
-								 )
+				array(
+					$_providerId,
+					$_config,
+				)
 			);
 
 			//	Cache the current version...
@@ -354,7 +354,7 @@ class Oasys extends SeedUtility
 	 */
 	protected static function _decodeState( $state = null )
 	{
-		if ( null === ( $_state = $state ? : Option::request( 'state' ) ) )
+		if ( null === ( $_state = $state ?: Option::request( 'state' ) ) )
 		{
 			return array();
 		}
@@ -425,16 +425,16 @@ class Oasys extends SeedUtility
 	protected static function _cleanProviderId( $providerId )
 	{
 		$providerId = Inflector::neutralize(
-							   strtolower(
-								   str_ireplace(
-									   array(
-										   'Provider.php',
-										   '.php'
-									   ),
-									   null,
-									   $providerId
-								   )
-							   )
+			strtolower(
+				str_ireplace(
+					array(
+						'Provider.php',
+						'.php'
+					),
+					null,
+					$providerId
+				)
+			)
 		);
 
 		//	GitHub gets special treatment...
@@ -530,8 +530,8 @@ class Oasys extends SeedUtility
 
 		//	Merge in the found templates
 		Oasys::getStore()->set(
-			 'oasys.template_cache',
-			 static::$_templateCache = array_merge( static::$_templateCache, $_list )
+			'oasys.template_cache',
+			static::$_templateCache = array_merge( static::$_templateCache, $_list )
 		);
 
 		Log::debug( 'Cached templates: ' . implode( ', ', array_keys( static::$_templateCache ) ) );

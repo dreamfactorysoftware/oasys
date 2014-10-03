@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@
  */
 namespace DreamFactory\Oasys\Providers\Templates;
 
-use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
 
 /**
  * disqus.config.php.dist

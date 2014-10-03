@@ -1,8 +1,8 @@
 /**
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
- * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * DreamFactory Oasys (Open Authentication SYStem) <https://www.dreamfactory.com/>
+ * Copyright 2012-2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

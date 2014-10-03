@@ -186,7 +186,8 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 			if ( !is_string( $_token['result'] ) )
 			{
 				$_info = $_token['result'];
-			} else
+			}
+			else
 			{
 				parse_str( $_token['result'], $_info );
 			}
@@ -379,15 +380,16 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 	 */
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array(), array $curlOptions = array() )
 	{
-		$_headers = $headers ? : array();
-		$_payload = $payload ? : array();
+		$_headers = $headers ?: array();
+		$_payload = $payload ?: array();
 
 		//	Get the service endpoint and make the url spiffy
 		if ( false === strpos( $resource, 'http://', 0 ) && false === strpos( $resource, 'https://', 0 ) )
 		{
 			$_endpoint = $this->_config->getEndpoint( EndpointTypes::SERVICE );
 			$_url = rtrim( $_endpoint['endpoint'], '/ ' ) . '/' . ltrim( $resource, '/ ' );
-		} else
+		}
+		else
 		{
 			//	Use given url
 			$_url = $_endpoint = $resource;
@@ -595,7 +597,8 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 					{
 						$_payload = json_decode( $payload, $assocArray );
 					}
-				} else
+				}
+				else
 				{
 					if ( !is_string( $_payload ) )
 					{
@@ -614,7 +617,8 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 				if ( is_object( $payload ) )
 				{
 					$_payload = Xml::fromObject( $payload );
-				} else if ( is_array( $payload ) )
+				}
+				else if ( is_array( $payload ) )
 				{
 					$_payload = Xml::fromArray( $payload );
 				}
@@ -678,11 +682,11 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 					break;
 
 				case TokenTypes::BEARER:
-					$_authHeaderName = $_authHeaderName ? : 'Bearer';
+					$_authHeaderName = $_authHeaderName ?: 'Bearer';
 					break;
 
 				case TokenTypes::OAUTH:
-					$_authHeaderName = $_authHeaderName ? : 'OAuth';
+					$_authHeaderName = $_authHeaderName ?: 'OAuth';
 					break;
 
 				case TokenTypes::MAC:
@@ -729,9 +733,10 @@ abstract class BaseOAuthProvider extends BaseProvider implements OAuthServiceLik
 
 			//	For posterity - Check if method exists so testing works.
 			/** @noinspection PhpUndefinedMethodInspection */
-            if ( method_exists( Oasys::getStore(), 'setProviderUserId' ) ) {
-                Oasys::getStore()->setProviderUserId( $_id );
-            }
+			if ( method_exists( Oasys::getStore(), 'setProviderUserId' ) )
+			{
+				Oasys::getStore()->setProviderUserId( $_id );
+			}
 
 			//	A tag
 			Log::debug( 'User profile updated [' . $this->_providerId . ':' . $_id . ']' );

@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 namespace DreamFactory\Oasys\Configs;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
+use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use DreamFactory\Oasys\Enums\ProviderConfigTypes;
 use DreamFactory\Oasys\Oasys;
 use DreamFactory\Oasys\Providers\BaseProvider;
 use Kisma\Core\Exceptions;
@@ -30,8 +30,8 @@ use Kisma\Core\Interfaces;
 use Kisma\Core\Seed;
 use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Log;
-use Kisma\Core\Utility\SchemaFormBuilder;
 use Kisma\Core\Utility\Option;
+use Kisma\Core\Utility\SchemaFormBuilder;
 
 /**
  * BaseProviderConfig
@@ -80,7 +80,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 		parent::__construct( $settings );
 
 		//	Load default if one exists and none passed in...
-		$this->_schema = $this->_schema ? : static::loadDefaultSchema( $this->_type );
+		$this->_schema = $this->_schema ?: static::loadDefaultSchema( $this->_type );
 	}
 
 	public function __destruct()
@@ -103,7 +103,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 	public static function createFromTemplate( $providerId, $config = null, $fromTemplate = null )
 	{
 		/** @var array $_defaults */
-		$_defaults = static::getTemplate( $fromTemplate ? : $providerId );
+		$_defaults = static::getTemplate( $fromTemplate ?: $providerId );
 
 		if ( empty( $_defaults ) )
 		{
@@ -402,7 +402,7 @@ abstract class BaseProviderConfig extends Seed implements ProviderConfigLike
 		{
 			$endpoint = array(
 				'endpoint'   => $endpoint,
-				'parameters' => $parameters ? : array()
+				'parameters' => $parameters ?: array()
 			);
 		}
 

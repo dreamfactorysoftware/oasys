@@ -2,13 +2,13 @@
 /**
  * This file is part of the DreamFactory Salesforce Jetpack
  *
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  */
 namespace DreamFactory\Oasys\Providers\Templates;
 
-use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
+use DreamFactory\Oasys\Enums\TokenTypes;
 use DreamFactory\Oasys\Providers\Salesforce;
 
 /**

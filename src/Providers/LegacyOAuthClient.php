@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 namespace DreamFactory\Oasys\Providers;
 
 use DreamFactory\Oasys\Components\GenericUser;
-use DreamFactory\Oasys\Interfaces\LegacyOAuthServiceLike;
+use DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\Flows;
 use DreamFactory\Oasys\Exceptions\OasysConfigurationException;
 use DreamFactory\Oasys\Exceptions\RedirectRequiredException;
+use DreamFactory\Oasys\Interfaces\LegacyOAuthServiceLike;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use DreamFactory\Oasys\Configs\LegacyOAuthProviderConfig;
 use Kisma\Core\Utility\Log;
 use Kisma\Core\Utility\Option;
 
@@ -220,8 +220,8 @@ abstract class LegacyOAuthClient extends BaseProvider implements LegacyOAuthServ
 	protected function _setToken( $token = null, $secret = null )
 	{
 		return $this->setToken(
-			$token ? : $this->_config->getAccessToken(),
-			$secret ? : $this->_config->getAccessTokenSecret()
+			$token ?: $this->_config->getAccessToken(),
+			$secret ?: $this->_config->getAccessTokenSecret()
 		);
 	}
 

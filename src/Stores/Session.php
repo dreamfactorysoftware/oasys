@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ namespace DreamFactory\Oasys\Stores;
 use DreamFactory\Oasys\Exceptions\OasysException;
 use Kisma\Core\Exceptions;
 use Kisma\Core\Interfaces;
-use Kisma\Core\Utility\Inflector;
 use Kisma\Core\Utility\Option;
 use Kisma\Core\Utility\Storage;
 

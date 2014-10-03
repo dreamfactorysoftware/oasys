@@ -3,7 +3,7 @@
  * This file is part of the DreamFactory Oasys (Open Authentication SYStem)
  *
  * DreamFactory Oasys (Open Authentication SYStem) <http://dreamfactorysoftware.github.io>
- * Copyright 2013 DreamFactory Software, Inc. <support@dreamfactory.com>
+ * Copyright 2014 DreamFactory Software, Inc. <support@dreamfactory.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ return array(
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{client_id}}',
 	'client_secret'   => '{{client_secret}}',
-    'scope'           => 'profile email https://www.google.com/m8/feeds/',
-    'endpoint_map'    => array(
-        EndpointTypes::AUTHORIZE    => 'https://accounts.google.com/o/oauth2/auth',
-        EndpointTypes::ACCESS_TOKEN => 'https://accounts.google.com/o/oauth2/token',
-        EndpointTypes::SERVICE      => 'https://www.googleapis.com',
-        EndpointTypes::IDENTITY     => '/plus/v1/people/me',
-    ),
+	'scope'           => 'profile email https://www.google.com/m8/feeds/',
+	'endpoint_map'    => array(
+		EndpointTypes::AUTHORIZE    => 'https://accounts.google.com/o/oauth2/auth',
+		EndpointTypes::ACCESS_TOKEN => 'https://accounts.google.com/o/oauth2/token',
+		EndpointTypes::SERVICE      => 'https://www.googleapis.com',
+		EndpointTypes::IDENTITY     => '/plus/v1/people/me',
+	),
 	'referrer_domain' => 'google.com',
 );

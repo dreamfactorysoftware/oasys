@@ -7,14 +7,13 @@ use DreamFactory\Oasys\Configs\BaseProviderConfig;
 use DreamFactory\Oasys\Enums\DataFormatTypes;
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Interfaces\ProviderConfigLike;
-use DreamFactory\Oasys\Oasys;
 use DreamFactory\Platform\Exceptions\InternalServerErrorException;
 use Kisma\Core\Enums\HttpResponse;
 use Kisma\Core\Exceptions\HttpException;
 use Kisma\Core\Utility\Convert;
 use Kisma\Core\Utility\Curl;
-use Kisma\Core\Utility\Option;
 use Kisma\Core\Utility\Log;
+use Kisma\Core\Utility\Option;
 
 /**
  * Salesforce
@@ -145,20 +144,22 @@ class Salesforce extends BaseOAuthProvider
 			'formatted'  => Option::get( $_profile, 'display_name', $_login ),
 		);
 
-		return new GenericUser( array(
-									'provider_id'        => $this->getProviderId(),
-									'user_id'            => $_profileId,
-									'published'          => Option::get( $_profile, 'last_modified_date' ),
-									'display_name'       => $_name['formatted'],
-									'name'               => $_name,
-									'email_address'      => Option::get( $_profile, 'email' ),
-									'preferred_username' => $_login,
-									'urls'               => (array)Option::get( $_profile, 'urls', array() ),
-									'thumbnail_url'      => Option::getDeep( $_profile, 'photos', 'thumbnail' ),
-									'updated'            => Option::get( $_profile, 'last_modified_date' ),
-									'relationships'      => array(),
-									'user_data'          => $_profile,
-								) );
+		return new GenericUser(
+			array(
+				'provider_id'        => $this->getProviderId(),
+				'user_id'            => $_profileId,
+				'published'          => Option::get( $_profile, 'last_modified_date' ),
+				'display_name'       => $_name['formatted'],
+				'name'               => $_name,
+				'email_address'      => Option::get( $_profile, 'email' ),
+				'preferred_username' => $_login,
+				'urls'               => (array)Option::get( $_profile, 'urls', array() ),
+				'thumbnail_url'      => Option::getDeep( $_profile, 'photos', 'thumbnail' ),
+				'updated'            => Option::get( $_profile, 'last_modified_date' ),
+				'relationships'      => array(),
+				'user_data'          => $_profile,
+			)
+		);
 	}
 
 	/**
@@ -291,13 +292,13 @@ class Salesforce extends BaseOAuthProvider
 	public function getObject( $object, $id, $fields = array() )
 	{
 		return $this->fetch(
-					'/services/data/' .
-					static::API_VERSION_TAG .
-					'/sobjects/' .
-					$object .
-					'/' .
-					$id .
-					( !empty( $fields ) ? '?fields=' . implode( ',', $fields ) : null )
+			'/services/data/' .
+			static::API_VERSION_TAG .
+			'/sobjects/' .
+			$object .
+			'/' .
+			$id .
+			( !empty( $fields ) ? '?fields=' . implode( ',', $fields ) : null )
 		);
 	}
 
@@ -314,9 +315,9 @@ class Salesforce extends BaseOAuthProvider
 	public function updateObject( $object, $id, $fields = array() )
 	{
 		$_response = $this->fetch(
-						  '/services/data/' . static::API_VERSION_TAG . '/sobjects/' . $object . '/' . $id,
-						  json_encode( $fields ),
-						  static::Patch
+			'/services/data/' . static::API_VERSION_TAG . '/sobjects/' . $object . '/' . $id,
+			json_encode( $fields ),
+			static::Patch
 		);
 
 		//	Curl error is false...
@@ -388,7 +389,7 @@ class Salesforce extends BaseOAuthProvider
 	public function fetch( $resource, $payload = array(), $method = self::Get, array $headers = array() )
 	{
 		//	Dynamically insert Force API version
-		$_resource = str_ireplace( static::API_VERSION_TAG, $this->_apiVersion ? : static::DEFAULT_API_VERSION, $resource );
+		$_resource = str_ireplace( static::API_VERSION_TAG, $this->_apiVersion ?: static::DEFAULT_API_VERSION, $resource );
 
 		//	Add our default headers
 		if ( false === array_search( 'X-PrettyPrint: 1', $headers ) )
