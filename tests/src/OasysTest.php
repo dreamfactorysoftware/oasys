@@ -53,7 +53,7 @@ class OasysTest extends \PHPUnit_Framework_TestCase
 	public function testGetProvider()
 	{
 		//	Good
-		$_provider = Oasys::getProvider( 'facebook' );
+		$_provider = Oasys::getProvider( 'google_plus' );
 		$this->assertInstanceOf( 'DreamFactory\\Oasys\\Providers\\BaseProvider', $_provider );
 
 		//	Bad

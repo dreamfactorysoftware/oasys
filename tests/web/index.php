@@ -34,7 +34,8 @@ $_config = null;
 //	Choose the provider to test
 //$_providerId = 'facebook';
 //$_providerId = 'github';
-$_providerId = 'twitter';
+//$_providerId = 'twitter';
+$_providerId = 'google_plus';
 
 switch ( $_providerId )
 {
@@ -52,6 +53,14 @@ switch ( $_providerId )
 			'client_secret' => GITHUB_CLIENT_SECRET,
 		);
 		break;
+
+    case 'google_plus':
+        $_config = array(
+            'flow_type'     => Flows::CLIENT_SIDE,
+            'client_id'     => GOOGLE_CLIENT_ID,
+            'client_secret' => GOOGLE_CLIENT_SECRET,
+        );
+        break;
 
 	case 'twitter':
 		array(
