@@ -32,7 +32,7 @@ return array(
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{client_id}}',
 	'client_secret'   => '{{client_secret}}',
-	'scope'           => 'email,user_about_me,user_birthday,user_hometown,user_website,read_stream,offline_access,publish_stream,read_friendlists',
+	'scope'           => 'public_profile,user_friends,email',
 	'endpoint_map'    => array(
 		EndpointTypes::AUTHORIZE    => 'https://www.facebook.com/dialog/oauth?display=popup',
 		EndpointTypes::ACCESS_TOKEN => 'https://graph.facebook.com/oauth/access_token',
