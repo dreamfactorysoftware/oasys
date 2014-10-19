@@ -1,4 +1,4 @@
-# Oasys (Open Authentication SYStem) v0.4.14
+# Oasys (Open Authentication SYStem) v0.4.15
 Multi-provider, extensible authentication framework
 
 ## Build Status
