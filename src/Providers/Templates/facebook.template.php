@@ -34,7 +34,7 @@ return array(
 	'client_secret'   => '{{client_secret}}',
 	'scope'           => 'public_profile,user_friends,email',
 	'endpoint_map'    => array(
-		EndpointTypes::AUTHORIZE    => 'https://www.facebook.com/dialog/oauth?display=popup',
+		EndpointTypes::AUTHORIZE    => 'https://www.facebook.com/dialog/oauth',
 		EndpointTypes::ACCESS_TOKEN => 'https://graph.facebook.com/oauth/access_token',
 		EndpointTypes::SERVICE      => 'https://graph.facebook.com',
 		EndpointTypes::IDENTITY     => '/me',
