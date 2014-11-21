@@ -1,38 +1,38 @@
 {
-  "name": "dreamfactory/oasys",
-  "description": "DreamFactory Oasys(tm) Open Authentication System",
-  "keywords": [
-    "library",
-    "oauth",
-    "oauth2",
-    "openid",
-    "ldap"
-  ],
-  "homepage": "https://www.dreamfactory.com/",
-  "type": "library",
-  "license": "Apache-2.0",
-  "authors": [
-    {
-      "name": "Jerry Ablan",
-      "email": "jerryablan@dreamfactory.com"
-    }
-  ],
-  "require": {
-    "php": "~5.3",
-    "ext-curl": "*",
-    "kisma/kisma": "~0.2"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "@stable"
-  },
-  "extra": {
-    "branch-alias": {
-      "dev-develop": "0.4.x-dev"
-    }
-  },
-  "autoload": {
-    "psr-4": {
-      "DreamFactory\\Oasys\\": "src/"
-    }
-  }
+	"name":        "dreamfactory/oasys",
+	"description": "DreamFactory Oasys(tm) Open Authentication System",
+	"keywords":    [
+		"library",
+		"oauth",
+		"oauth2",
+		"openid",
+		"ldap"
+	],
+	"homepage":    "https://www.dreamfactory.com/",
+	"type":        "library",
+	"license":     "Apache-2.0",
+	"authors":     [
+		{
+			"name":  "Jerry Ablan",
+			"email": "jerryablan@dreamfactory.com"
+		}
+	],
+	"require":     {
+		"ext-curl":               "*",
+		"kisma/kisma":            "~0.2",
+		"dreamfactory/php-utils": "*"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "@stable"
+	},
+	"extra":       {
+		"branch-alias": {
+			"dev-develop": "0.4.x-dev"
+		}
+	},
+	"autoload":    {
+		"psr-4": {
+			"DreamFactory\\Oasys\\": "src/"
+		}
+	}
 }

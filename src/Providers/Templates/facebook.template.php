@@ -21,6 +21,7 @@ namespace DreamFactory\Oasys\Providers\Templates;
 
 use DreamFactory\Oasys\Enums\EndpointTypes;
 use DreamFactory\Oasys\Enums\ProviderConfigTypes;
+use DreamFactory\Oasys\Providers\Facebook;
 
 /**
  * facebook.config.php.dist
@@ -32,7 +33,7 @@ return array(
 	'type'            => ProviderConfigTypes::OAUTH,
 	'client_id'       => '{{client_id}}',
 	'client_secret'   => '{{client_secret}}',
-	'scope'           => 'public_profile,user_friends,email',
+	'scope'           => Facebook::DEFAULT_SCOPE,
 	'endpoint_map'    => array(
 		EndpointTypes::AUTHORIZE    => 'https://www.facebook.com/dialog/oauth',
 		EndpointTypes::ACCESS_TOKEN => 'https://graph.facebook.com/oauth/access_token',

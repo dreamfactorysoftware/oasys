@@ -42,7 +42,7 @@ class Facebook extends BaseOAuthProvider
 	/**
 	 * @var string
 	 */
-	const DEFAULT_SCOPE = 'email,user_about_me,user_birthday,user_hometown,user_website,read_stream,offline_access,publish_stream,read_friendlists';
+	const DEFAULT_SCOPE = 'public_profile,user_friends,email';
 
 	//*************************************************************************
 	//	Methods

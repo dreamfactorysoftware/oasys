@@ -19,11 +19,9 @@
  */
 namespace DreamFactory\Oasys\Exceptions;
 
-use Kisma\Core\Exceptions\ServiceException;
-
 /**
  * OasysException
  */
-class OasysException extends ServiceException
+class OasysException extends \RuntimeException
 {
 }
